@@ -6,13 +6,13 @@ Original project from https://github.com/richardJG/APRemote
 #include <Arduino.h>
 #include <Softwareserial.h>
 
-//#include <WiFi.h>
-//#include <AsyncTCP.h>
+#include <WiFi.h>
+#include <AsyncTCP.h>
+
+#include <ESPAsyncWebServer.h>
 
 #define WEBSOCKETS_NETWORK_TYPE   NETWORK_ESP32
 #include <WebSocketsServer_Generic.h>
-
-#include <ESPAsyncWebServer.h>
 
 #include <SPIFFS.h>
 #include "credentials.h"
