@@ -1,2 +1,3 @@
-const char * ssid = "JUSTINEG";
-const char * password = "mil4967d5w";
+// Insert your network credentials
+#define ssid "PLUSNET-GN8N"
+#define password "4976937ace"

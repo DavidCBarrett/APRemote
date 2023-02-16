@@ -1,16 +1,23 @@
 /*
-
+Original project from https://github.com/richardJG/APRemote 
 */
-#include <SoftwareSerial.h>
-#include "WiFi.h"
-#include <AsyncTCP.h>
-#include <ESPAsyncWebServer.h>
+
+
+#include <Arduino.h>
+#include <Softwareserial.h>
+
+//#include <WiFi.h>
+//#include <AsyncTCP.h>
+
+#define WEBSOCKETS_NETWORK_TYPE   NETWORK_ESP32
 #include <WebSocketsServer_Generic.h>
+
+#include <ESPAsyncWebServer.h>
+
 #include <SPIFFS.h>
 #include "credentials.h"
 
 /*
- * 
  * credentials.h has two lines as below to define the network credentials to
  * log into
 const char * ssid = "Your_SSID_name";
@@ -29,6 +36,9 @@ void readST( void *pvParameters );
 // void processST( void *pvParameters );
 QueueHandle_t queue;
 
+void sendCMD(int cmd);
+void send2ST(uint8_t cmd[]);
+void CheckBus ( void );
 
 // Seatalk param declarations
 float rsa, stw, sog, xte, aws, dpt, dtw, vlw;    // rudder angle, speed through water, speed over ground, cross track error
@@ -43,14 +53,14 @@ uint8_t newCmd;
    
 
 AsyncWebServer server(80);
-WebSocketsServer webSocket(1337);
+//WebSocketsServer webSocket(1337);
 
 SoftwareSerial mySerial;
 
 void notFound(AsyncWebServerRequest *request) {
   request->send(404, "text/plain", "Not found");
 }
-
+/*
 // Callback: receiving any WebSocket message
 void onWebSocketEvent(uint8_t client_num,
                       WStype_t type,
@@ -95,7 +105,7 @@ void onWebSocketEvent(uint8_t client_num,
     break;
   }
 }
- 
+*/ 
 
 void getData(AsyncWebServerRequest *request) {
 
@@ -314,8 +324,8 @@ void setup()
   server.begin();
 
   // Start WebSocket server and assign callback
-  webSocket.begin();
-  webSocket.onEvent(onWebSocketEvent);
+  //webSocket.begin();
+  //webSocket.onEvent(onWebSocketEvent);
   
   disableCore0WDT();   // disable watchdog timer for serial port handler
    
@@ -333,7 +343,7 @@ void setup()
 
 void loop() // run over and over
 {
-  webSocket.loop();
+  //webSocket.loop();
 }
 /*
  * Core 0 task handles reading data off the seatalk bus
@@ -815,7 +825,7 @@ uint8_t stCmd [10][4] = {
   send2ST(stCmd[cmd]);
 }
 
-bool send2ST(uint8_t cmd[]){
+void send2ST(uint8_t cmd[]){
   CheckBus();
   digitalWrite(LED_PIN, HIGH );
   for( int i = 0; i < 4; i++){
