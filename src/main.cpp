@@ -1,4 +1,21 @@
-// Import required libraries" networks found"
+/*
+WebServer for Raymarine Seatalk 1 based autohelm (with other boat data). 
+Control your autohelm & see boat data using your phone's web browser.
+
+Original project from https://github.com/richardJG/APRemote 
+
+Main changes: 
+1. Migrated to VS Code with PlatformIO enviornment
+2. Swapped out WebSockets_Generic (which caused lots of comple problems) for the Web Socket Server already in ESPAsyncWebServer. 
+   Inpiration / info for the changes taken from the tutorial at https://m1cr0lab-esp32.github.io/remote-control-with-websocket/
+
+libraries used at Feb 20223 were:
+	plerup/EspSoftwareSerial@7.0.0
+  esphome/AsyncTCP-esphome@^1.2.2
+  esphome/ESPAsyncWebServer-esphome@^2.1.0
+*/
+
+// Import required libraries
 #include <Arduino.h>
 #include <SoftwareSerial.h>
 #include <SPIFFS.h>
