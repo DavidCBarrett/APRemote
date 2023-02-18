@@ -13,6 +13,11 @@ libraries used at Feb 20223 were:
 	plerup/EspSoftwareSerial@7.0.0
   esphome/AsyncTCP-esphome@^1.2.2
   esphome/ESPAsyncWebServer-esphome@^2.1.0
+
+// credentials.h contains:
+const char* ssid = "Your SSID";
+const char* password = "your WiFi password";
+
 */
 
 // Import required libraries
