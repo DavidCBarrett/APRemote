@@ -1,44 +1,30 @@
-/*
-Original project from https://github.com/richardJG/APRemote 
-*/
-
-
+// Import required libraries" networks found"
 #include <Arduino.h>
-#include <Softwareserial.h>
-
-#include <WiFi.h>
-#include <AsyncTCP.h>
-
+#include <SoftwareSerial.h>
+#include <SPIFFS.h>
+#include "WiFi.h"
+#include "credentials.h"
 #include <ESPAsyncWebServer.h>
 
-#define WEBSOCKETS_NETWORK_TYPE   NETWORK_ESP32
-#include <WebSocketsServer_Generic.h>
-
-#include <SPIFFS.h>
-#include "credentials.h"
-
-/*
- * credentials.h has two lines as below to define the network credentials to
- * log into
-const char * ssid = "Your_SSID_name";
-const char * password = "Your SSID password";
-*/
-
+// Software Serial config (oh and the LED pin)
 #define MAX_BUF_SIZE 20
 #define RX_IN 14
 #define RX_MON 27
 #define TX_OUT 12
 #define LED_PIN 2
 
-//#define DEBUG
-// tasks to process ST and convert to NMEA
-void readST( void *pvParameters );
-// void processST( void *pvParameters );
-QueueHandle_t queue;
-
+// Function Prototypes ...
 void sendCMD(int cmd);
+void CheckBus(void);
 void send2ST(uint8_t cmd[]);
-void CheckBus ( void );
+
+//#define DEBUG
+
+// tasks to continually read SeaTalk bus, format send data to Web Client
+void readST( void *pvParameters );
+
+// The queue sitting between the read seatalk task and the html webserver (called by client to get ST data for display)
+QueueHandle_t queue;
 
 // Seatalk param declarations
 float rsa, stw, sog, xte, aws, dpt, dtw, vlw;    // rudder angle, speed through water, speed over ground, cross track error
@@ -51,61 +37,50 @@ int dir;              // direction to steer
 uint8_t apAlarm;
 uint8_t newCmd;
    
-
 AsyncWebServer server(80);
-//WebSocketsServer webSocket(1337);
+AsyncWebSocket webSocket("/ws");
 
 SoftwareSerial mySerial;
 
 void notFound(AsyncWebServerRequest *request) {
   request->send(404, "text/plain", "Not found");
 }
-/*
+
 // Callback: receiving any WebSocket message
-void onWebSocketEvent(uint8_t client_num,
-                      WStype_t type,
-                      uint8_t * payload,
-                      size_t length) {
- 
+void onWebSocketEvent(AsyncWebSocket       *server,     //
+                      AsyncWebSocketClient *client,     //
+                      AwsEventType          type,       // the signature of this function is defined
+                      void                 *arg,        // by the `AwsEventHandler` interface
+                      uint8_t              *payload,    //
+                      size_t                length) {   //
+
   // Figure out the type of WebSocket event
   switch(type) {
  
     // Client has disconnected
-    case WStype_DISCONNECTED:
-      Serial.printf("[%u] Disconnected!\n", client_num);
-    break;
+    case WS_EVT_DISCONNECT: {
+        Serial.printf("WebSocket client #%u disconnected\n", client->id());
+      } break;
  
     // New client has connected
-    case WStype_CONNECTED:
-    {
-        IPAddress ip = webSocket.remoteIP(client_num);
-        Serial.printf("[%u] WSsocket connection from ", client_num);
-        Serial.println(ip.toString());
-    }
-    break;
+    case WS_EVT_CONNECT: {
+        Serial.printf("WebSocket client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
+    }  break;
  
     // Handle text messages from client
-    case WStype_TEXT:
- 
+    case WS_EVT_DATA: {
       // Print out raw message
-      Serial.printf("[%u] Received text: %s\r\n", client_num, payload);
+      Serial.printf("[%u] Received text: %s\r\n", client->id(), payload);
       newCmd = payload[0] - '0';
       xQueueSend(queue, &newCmd, portMAX_DELAY);
-    break;
+      } break;
  
     // For everything else: do nothing
-    case WStype_BIN:
-    case WStype_ERROR:
-    case WStype_FRAGMENT_TEXT_START:
-    case WStype_FRAGMENT_BIN_START:
-    case WStype_FRAGMENT:
-    case WStype_FRAGMENT_FIN:
-    break;
-    default:
-    break;
+    case WS_EVT_PONG:
+    case WS_EVT_ERROR:
+      break;
   }
 }
-*/ 
 
 void getData(AsyncWebServerRequest *request) {
 
@@ -205,7 +180,6 @@ void getData(AsyncWebServerRequest *request) {
 #ifdef DEBUG
   Serial.print(apMode);
 #endif
-
   
   APdata = "{\"hdg\":" + String(hdg);
   APdata += ",\"cts\":" + String(cts);
@@ -253,48 +227,33 @@ void getData(AsyncWebServerRequest *request) {
   APdata += ",\"led3\":\"" + L4 + "\"";
   APdata += ",\"alm\":\"" + sALM + "\"";
   APdata += "}";
-
-//  Serial.print(APdata.length());
-//  Serial.println(APdata);
-
  
   request->send(200, "text/plain", APdata); //Send ADC value only to client ajax request
 }
 
-void setup()
-{
-  
-  // Open serial communications and wait for port to open:
+void setup() {
   Serial.begin(115200);
-  while (!Serial) {
-    ; // wait for serial port to connect. Needed for Native USB only
-  }
 
-
-  if(!SPIFFS.begin(true)){
+  Serial.printf("----------------------\n-- Sea Talk Web Remote\n----------------------\n");
+  
+ if(!SPIFFS.begin(true)){
     Serial.println("SPIFFS Setup Error");
     return;
   }
   pinMode(LED_PIN, OUTPUT);
   pinMode(RX_MON, INPUT);
 
+  // Set WiFi to station mode and disconnect from an AP if it was previously connected
   WiFi.mode(WIFI_STA);
+  WiFi.disconnect();
+  delay(100);
   WiFi.begin(ssid, password);
-  while (WiFi.waitForConnectResult() != WL_CONNECTED) {
-    Serial.print(".");
-    delay(500);
+  Serial.printf("Trying to connect to WiFi MAC [%s] ", WiFi.macAddress().c_str());
+  while (WiFi.status() != WL_CONNECTED) {
+    Serial.print('.');
+    delay(1000);
   }
-  IPAddress IP = WiFi.localIP();
-
-//  WiFi.softAP(ssid, password);
-//  IPAddress IP = WiFi.softAPIP();
-  
-  Serial.println("");
-  Serial.print("Web Server: ");
-  Serial.println(ssid);
-  Serial.print("On IP Address: http://");
-  Serial.println(IP);
-
+  Serial.printf(" Connected to %s at %s\n", ssid, WiFi.localIP().toString().c_str());
 
   queue = xQueueCreate(10, sizeof(uint8_t));
   if(queue != NULL){
@@ -321,11 +280,9 @@ void setup()
    
   server.onNotFound(notFound);
 
+  webSocket.onEvent(onWebSocketEvent);    // Assign  WebSocket callback
+  server.addHandler(&webSocket);
   server.begin();
-
-  // Start WebSocket server and assign callback
-  //webSocket.begin();
-  //webSocket.onEvent(onWebSocketEvent);
   
   disableCore0WDT();   // disable watchdog timer for serial port handler
    
@@ -338,13 +295,16 @@ void setup()
     ,   3 // Priority, with 3 (config MAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
     ,  NULL 
     ,  0);
+
+  Serial.println("Setup done");
 }
 
+void loop() {
+ 
+    webSocket.cleanupClients();
 
-void loop() // run over and over
-{
-  //webSocket.loop();
 }
+
 /*
  * Core 0 task handles reading data off the seatalk bus
  * Read data of the Seatalk pick out autopilot command and display info
@@ -361,9 +321,8 @@ void readST(void *pvParameters)
   uint8_t cmdCount;      // number of bytes in command
   int i;
   uint16_t b;
-  UBaseType_t uB;
   uint8_t stBuff[MAX_BUF_SIZE];
- uint32_t mS;
+  uint32_t mS;
   char b1[15];
   uint8_t u;
   uint16_t aveAWA[5] = {0,0,0,0,0};
@@ -376,10 +335,7 @@ void readST(void *pvParameters)
 
   char szOut[100];
 
- 
-  uB = uxTaskGetStackHighWaterMark(NULL);
-  Serial.print("readST HWM = ");
-  Serial.println(uB);
+  Serial.printf("readST Task Stack High Water Mark = %d\n", uxTaskGetStackHighWaterMark(NULL));
 
   mySerial.begin(4800, SWSERIAL_8S1, RX_IN, TX_OUT, true, 256, 256);
   
