@@ -9,10 +9,11 @@ Main changes:
 2. Swapped out WebSockets_Generic (which caused lots of comple problems) for the Web Socket Server already in ESPAsyncWebServer. 
    Inpiration / info for the changes taken from the tutorial at https://m1cr0lab-esp32.github.io/remote-control-with-websocket/
 
-libraries used at Feb 20223 were:
+libraries used at Mar 20223 were:
 	plerup/EspSoftwareSerial@7.0.0
   esphome/AsyncTCP-esphome@^1.2.2
   esphome/ESPAsyncWebServer-esphome@^2.1.0
+  alanswx/ESPAsyncWifiManager
 
 // credentials.h contains:
 const char* ssid = "Your SSID";
@@ -25,8 +26,9 @@ const char* password = "your WiFi password";
 #include <SoftwareSerial.h>
 #include <SPIFFS.h>
 #include "WiFi.h"
-#include "credentials.h"
+//#include "credentials.h"
 #include <ESPAsyncWebServer.h>
+#include <ESPAsyncWiFiManager.h>
 
 // Software Serial config (oh and the LED pin)
 #define MAX_BUF_SIZE 20
@@ -61,6 +63,7 @@ uint8_t newCmd;
    
 AsyncWebServer server(80);
 AsyncWebSocket webSocket("/ws");
+DNSServer dns;
 
 SoftwareSerial mySerial;
 
@@ -253,6 +256,15 @@ void getData(AsyncWebServerRequest *request) {
   request->send(200, "text/plain", APdata); //Send ADC value only to client ajax request
 }
 
+//gets called when WiFiManager enters configuration mode
+void configModeCallback (AsyncWiFiManager *myWiFiManager) {
+  Serial.println("Entered config mode");
+  Serial.println(WiFi.softAPIP());
+  //if you used auto generated SSID, print it
+  Serial.println(myWiFiManager->getConfigPortalSSID());
+  //entered config mode, make led toggle faster
+}
+
 void setup() {
   Serial.begin(115200);
 
@@ -265,10 +277,13 @@ void setup() {
   pinMode(LED_PIN, OUTPUT);
   pinMode(RX_MON, INPUT);
 
+
   // Set WiFi to station mode and disconnect from an AP if it was previously connected
   WiFi.mode(WIFI_STA);
   WiFi.disconnect();
   delay(100);
+
+/*
   WiFi.begin(ssid, password);
   Serial.printf("Trying to connect to WiFi MAC [%s] ", WiFi.macAddress().c_str());
   while (WiFi.status() != WL_CONNECTED) {
@@ -276,7 +291,29 @@ void setup() {
     delay(1000);
   }
   Serial.printf(" Connected to %s at %s\n", ssid, WiFi.localIP().toString().c_str());
+*/
+  //WiFiManager
+  //Local intialization. Once its business is done, there is no need to keep it around
+  AsyncWiFiManager wifiManager(&server,&dns);
+  //reset settings - for testing
+  wifiManager.resetSettings();
 
+  //set callback that gets called when connecting to previous WiFi fails, and enters Access Point mode
+  wifiManager.setAPCallback(configModeCallback);
+
+  //fetches ssid and pass and tries to connect
+  //if it does not connect it starts an access point with the specified name
+  //here  "AutoConnectAP"
+  //and goes into a blocking loop awaiting configuration
+  if (!wifiManager.autoConnect("AutoPilot Remote")) {
+    Serial.println("failed to connect and hit timeout");
+    //reset and try again, or maybe put it to deep sleep
+    ESP.restart();
+    delay(1000);
+  }
+
+  //if you get here you have connected to the WiFi
+  Serial.println("connected...yeey :)");
   queue = xQueueCreate(10, sizeof(uint8_t));
   if(queue != NULL){
     Serial.println("Queue created");
