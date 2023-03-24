@@ -11,18 +11,28 @@ Main changes:
    Inpiration / info for the changes taken from the tutorial at https://m1cr0lab-esp32.github.io/remote-control-with-websocket/
 
 3. Moved from hard coded WiFI credentials to using WiFiManager with AutoPilot Remote Access Point Web page at 192.168.4.1. 
-  Connecting to the AutoPilot Remote network will bring up the web page.
+   Connecting to the AutoPilot Remote network will bring up the web page.
 
-4. Added buttons to ESP32. use is un/sel/down for (future) menu items, or to start a wifimanager connect session...
+4. Added buttons to ESP32. use is up/sel/down for (future) menu items, or to start a wifimanager connect session...
    using "PinButton" (AKA poelstra/MultiButton & poelstra/arduino-multi-button) library from 
    https://github.com/poelstra/arduino-multi-button/?utm_source=platformio&utm_medium=piohome
 
 5. Added heartbeat LED using HeartBeat library by Rob Tillaart 
-  https://github.com/RobTillaart/HeartBeat?utm_source=platformio&utm_medium=piohome
-  Using the onboard LED (GPIO 2). 
+   https://github.com/RobTillaart/HeartBeat?utm_source=platformio&utm_medium=piohome
+   Using the onboard LED (GPIO 2). 
 
 6. Added "ILI9341 SPI TFT with XPT2046 SPI touch screen" to act as an alternative AP remote UI device, when phone or wifi isnt working
    Library is Bodmer/TFT_eSPI at https://github.com/Bodmer/TFT_eSPI?utm_source=platformio&utm_medium=piohome
+
+7. Using phone as a webclient, when the phone autolocks, it drops the websocket connection & had to refresh the page to get connection back. 
+   In the client' Javascript, changed from WebSocket to ReconnectingWebSocket to give auto-reconnect on unlock.
+       Reconnecting websockets javascript: https://github.com/joewalnes/reconnecting-websocket; 
+       Reconnecting websocketsexample: https://mpolinowski.github.io/docs/Development/Javascript/2021-09-10--websocket-recconects/2021-09-10/
+   Had to change webserver setup code to include "server.serveStatic("/", SPIFFS, "/");". I beleive this serves all files requested by the 
+   client from the SPIFF file system.
+
+8. Browser's inspector was grumbling "favicon.ico" was missing. Favicon files created using https://favicon.io/favicon-generator/ and added to data directory. 
+   Link tags added to HTML head as suggested on above page.
 
 libraries used at Mar 20223 were:
 	plerup/EspSoftwareSerial@7.0.0
@@ -39,9 +49,7 @@ TODO'S:
 
  2. Finish TFT touch screen alternative UI.
 
- 3. When phone screen locks, the ESP32 reports websocket disconnected. Need to refresh after unlock. 
-    Ideally need to add websockets reconnection code to the HTML see here https://github.com/joewalnes/reconnecting-websocket 
-    or here https://stackoverflow.com/questions/22431751/websocket-how-to-automatically-reconnect-after-it-dies 
+ 3. esp32 only works (connects to wifi) when there is an active serial monitor connected in platformio. work out why and fix.
 
 */
 
@@ -396,11 +404,14 @@ void setup() {
     request->send(SPIFFS, "/index.html", "text/html");
   });
 
+  // serve up all other files requested by the broswer in the Filesystem (css, js, ...)
+  server.serveStatic("/", SPIFFS, "/");
+
   // css file
-  server.on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send(SPIFFS, "/style.css", "text/css");
-    mySerial.enableRx(true);
-  });
+  // server.on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request){
+  //   request->send(SPIFFS, "/style.css", "text/css");
+  //   mySerial.enableRx(true);
+  // });
   
  // Receive an HTTP GET request every second to update
  // display details
