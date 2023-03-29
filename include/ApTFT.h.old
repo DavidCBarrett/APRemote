@@ -1,0 +1,20 @@
+
+#ifndef _ApTFT_H
+#define _ApTFT_H
+
+// ------------------------------------------------
+// Headers to include
+// ------------------------------------------------
+#include <Arduino.h>
+#include "GUIslice.h"
+#include "GUIslice_drv.h"
+
+// Define debug message function
+// from GUISlice generated main.cpp - needed for compile.
+static int16_t DebugOut(char ch) { if (ch == (char)'\n') Serial.println(""); else Serial.write(ch); return 0; }
+
+extern gslc_tsGui  m_gui;
+
+extern void InitGUIslice_gen();
+
+#endif // _ApTFT_H
