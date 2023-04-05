@@ -244,6 +244,10 @@ bool CbSlidePos(void* pvGui,void* pvElemRef,int16_t nPos)
 //<Tick Callback !Start!>
 //<Tick Callback !End!>
 
+void ApGslc_Update() {
+  gslc_Update(&m_gui);  
+}
+
 void setup()
 {
   // ------------------------------------------------
@@ -283,7 +287,7 @@ void setup()
 void loop()
 {
 
-  APWiFi_Tick();
+//  APWiFi_Tick();
 
   HB.beat();
   TXHB.beat();

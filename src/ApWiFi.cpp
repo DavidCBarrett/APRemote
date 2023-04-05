@@ -4,34 +4,12 @@
 #include <ESPAsyncWebServer.h>
 #include <ESPAsyncWiFiManager.h>
 
+#include "main.h"
 #include "SeaTalk.h"
 
 AsyncWebServer server(80);
 AsyncWebSocket webSocket("/ws");
 DNSServer dns;
-
-//WiFiManager
-AsyncWiFiManager wifiManager(&server,&dns);
-
-void onWifiEvent(WiFiEvent_t event) {
- switch (event) {
-		case WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_CONNECTED:
-			Serial.println("Connected or reconnected to WiFi");
-			break;
-		case WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
-      Serial.print("WiFi Disconnected. Reason: ");
-//      status("WiFI Disconnected");
-     // Serial.println(info.wifi_sta_disconnected.reason)
-			Serial.println("Enabling WiFi autoconnect");
-			WiFi.setAutoReconnect(true);
-			break;
-		default: break;
-  }
-}
-
-void notFound(AsyncWebServerRequest *request) {
-  request->send(404, "text/plain", "Not found");
-}
 
 // Callback: receiving any WebSocket message
 void onWebSocketEvent(AsyncWebSocket       *server,     //
@@ -221,21 +199,46 @@ void getData(AsyncWebServerRequest *request) {
 
 }  
 
+void onWifiEvent(WiFiEvent_t event) {
+ switch (event) {
+		case WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_CONNECTED:
+			Serial.println("Connected or reconnected to WiFi");
+			break;
+		case WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
+      Serial.print("WiFi Disconnected. Reason: ");
+//      status("WiFI Disconnected");
+     // Serial.println(info.wifi_sta_disconnected.reason)
+			Serial.println("Enabling WiFi autoconnect");
+			WiFi.setAutoReconnect(true);
+			break;
+		default: break;
+  }
+}
+
+void notFound(AsyncWebServerRequest *request) {
+  request->send(404, "text/plain", "Not found");
+}
+
+
 //gets called when WiFiManager enters configuration mode
 void configModeCallback (AsyncWiFiManager *myWiFiManager) {
   Serial.println("Entered config mode");
   Serial.println(WiFi.softAPIP());
   //if you used auto generated SSID, print it
   Serial.println(myWiFiManager->getConfigPortalSSID());
-  //entered config mode, make led toggle faster
+  
+  ApGslc_Update();
 }
 
 void ApWiFi_Init() {
 
-    if(!SPIFFS.begin(true)){
-    Serial.println("SPIFFS Setup Error");
-    return;
-  }
+     if(!SPIFFS.begin(true)){
+     Serial.println("SPIFFS Setup Error");
+     return;
+   }
+
+  //WiFiManager
+  AsyncWiFiManager wifiManager(&server,&dns);
 
 // Set WiFi to station mode and disconnect from an AP if it was previously connected
 //   WiFi.begin();
@@ -244,15 +247,17 @@ void ApWiFi_Init() {
 //   delay(100);
 
   // handler for WiFi eventns (connects and disconnect events).
-  WiFi.onEvent(onWifiEvent);
+  // dcb WiFi.onEvent(onWifiEvent);
 
   //reset settings - uncomment for testing
   //wifiManager.resetSettings();
 
+  wifiManager.setConfigPortalTimeout(2);  // WiFi config portal time out set to 2 secs
+  wifiManager.setTryConnectDuringConfigPortal(false);
   wifiManager.setDebugOutput(true);
 
   // set callback that gets called when connecting to previous WiFi fails, and enters Access Point mode
-  wifiManager.setAPCallback(configModeCallback);
+//dcb  wifiManager.setAPCallback(configModeCallback);
 
   // fetches ssid and pass and tries to connect
   // if it does not connect it starts an access point with the specified name
@@ -260,8 +265,8 @@ void ApWiFi_Init() {
   if (!wifiManager.autoConnect("AutoPilot Remote")) {
     Serial.println("failed to connect and hit timeout");
     //reset and try again, or maybe put it to deep sleep
-    ESP.restart();
-    delay(1000);
+    //ESP.restart();
+    //delay(1000);
   }
 
   // if you get here you have connected to the WiFi
