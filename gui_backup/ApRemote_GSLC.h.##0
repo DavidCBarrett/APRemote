@@ -47,26 +47,22 @@
 // Enumerations for pages, elements, fonts, images
 // ------------------------------------------------
 //<Enum !Start!>
-enum {E_PG_BASE,E_PG_DIAG,E_PG_APR,E_PG_SPLASH_SCREEN,E_PG_DATA
-      ,E_PG_WIFI};
-enum {E_ELEM_BOX4,E_ELEM_BTN_APR_AUTO,E_ELEM_BTN_APR_MINUS_ONE
+enum {E_PG_BASE,E_PG_DIAG,E_PG_APR,E_PG_SPLASH_SCREEN,E_PG_DATA};
+enum {E_ELEM_BASE_PAGE_LEFT,E_ELEM_BOX4,E_ELEM_BTN35,E_ELEM_BTN36
+      ,E_ELEM_BTN_APR_AUTO,E_ELEM_BTN_APR_MINUS_ONE
       ,E_ELEM_BTN_APR_MINUS_TEN,E_ELEM_BTN_APR_PLUS_ONE
       ,E_ELEM_BTN_APR_PLUS_TEN,E_ELEM_BTN_APR_PORT_TACK
       ,E_ELEM_BTN_APR_STBD_TACK,E_ELEM_BTN_APR_STDBY
-      ,E_ELEM_BTN_APR_TRACK,E_ELEM_BTN_APR_WIND,E_ELEM_BTN_BASE_APR
-      ,E_ELEM_BTN_BASE_DATA,E_ELEM_BTN_BASE_DIAG,E_ELEM_BTN_BASE_WIFI
-      ,E_ELEM_BTN_WIFI_CONFIGURE_WIFI,E_ELEM_BTN_WIFI_RESET_WIFI
-      ,E_ELEM_BTN_WIFI_WIFI_INFO,E_ELEM_RADIO_APR_AUTO
+      ,E_ELEM_BTN_APR_TRACK,E_ELEM_BTN_APR_WIND
+      ,E_ELEM_BTN_BASE_PAGE_RIGHT,E_ELEM_RADIO_APR_AUTO
       ,E_ELEM_RADIO_APR_STANDBY,E_ELEM_RADIO_APR_TRACK
       ,E_ELEM_RADIO_APR_WIND,E_ELEM_TEXT10,E_ELEM_TEXT20,E_ELEM_TEXT21
       ,E_ELEM_TEXT22,E_ELEM_TEXT23,E_ELEM_TEXT24,E_ELEM_TEXT25
       ,E_ELEM_TEXT26,E_ELEM_TEXT27,E_ELEM_TEXT28,E_ELEM_TEXT29
       ,E_ELEM_TEXT30,E_ELEM_TEXT31,E_ELEM_TEXT32,E_ELEM_TEXT8
-      ,E_ELEM_TEXT9,E_ELEM_TEXTBOX_APR_DISPLAY
-      ,E_ELEM_TEXTBOX_BASE_STATUS,E_ELEM_TEXTBOX_DATA_DEPTH
-      ,E_ELEM_TEXTBOX_DATA_HDG,E_ELEM_TEXTBOX_DATA_SOG
-      ,E_ELEM_TEXTBOX_DATA_SOW,E_ELEM_TEXTBOX_DATA_WDIR
-      ,E_ELEM_TEXTBOX_DATA_WIND,E_ELEM_TEXTBOX_DIAG_LOG
+      ,E_ELEM_TEXT9,E_ELEM_TEXTBOX4,E_ELEM_TEXTBOX5,E_ELEM_TEXTBOX6
+      ,E_ELEM_TEXTBOX7,E_ELEM_TEXTBOX8,E_ELEM_TEXTBOX9
+      ,E_ELEM_TEXTBOX_APR_DISPLAY,E_ELEM_TEXTBOX_DIAG_LOG
       ,E_ELEM_TEXT_SW_BUILD_DATE,E_TXTSCROLL_DIAG_LOG};
 enum {E_GROUP1};
 // Must use separate enum for fonts with MAX_FONT at end to use gslc_FontSet.
@@ -82,9 +78,9 @@ enum {E_BUILTIN10X16,E_BUILTIN15X24,E_BUILTIN20X32,E_BUILTIN5X8
 // Define the maximum number of elements and pages
 // ------------------------------------------------
 //<ElementDefines !Start!>
-#define MAX_PAGE                6
+#define MAX_PAGE                5
 
-#define MAX_ELEM_PG_BASE 5 // # Elems total on page
+#define MAX_ELEM_PG_BASE 4 // # Elems total on page
 #define MAX_ELEM_PG_BASE_RAM MAX_ELEM_PG_BASE // # Elems in RAM
 
 #define MAX_ELEM_PG_DIAG 4 // # Elems total on page
@@ -98,9 +94,6 @@ enum {E_BUILTIN10X16,E_BUILTIN15X24,E_BUILTIN20X32,E_BUILTIN5X8
 
 #define MAX_ELEM_PG_DATA 12 // # Elems total on page
 #define MAX_ELEM_PG_DATA_RAM MAX_ELEM_PG_DATA // # Elems in RAM
-
-#define MAX_ELEM_PG_WIFI 3 // # Elems total on page
-#define MAX_ELEM_PG_WIFI_RAM MAX_ELEM_PG_WIFI // # Elems in RAM
 //<ElementDefines !End!>
 
 // ------------------------------------------------
@@ -122,10 +115,6 @@ gslc_tsElem                     m_asPopup1Elem[MAX_ELEM_PG_SPLASH_SCREEN_RAM];
 gslc_tsElemRef                  m_asPopup1ElemRef[MAX_ELEM_PG_SPLASH_SCREEN];
 gslc_tsElem                     m_asPage3Elem[MAX_ELEM_PG_DATA_RAM];
 gslc_tsElemRef                  m_asPage3ElemRef[MAX_ELEM_PG_DATA];
-gslc_tsElem                     m_asPage4Elem[MAX_ELEM_PG_WIFI_RAM];
-gslc_tsElemRef                  m_asPage4ElemRef[MAX_ELEM_PG_WIFI];
-gslc_tsXTextbox                 m_sTextbox11;
-char                            m_acTextboxBuf11[20]; // NRows=1 NCols=20
 gslc_tsXTextbox                 m_sTextbox3;
 char                            m_acTextboxBuf3[168]; // NRows=6 NCols=28
 gslc_tsXSlider                  m_sTextScroll3;
@@ -158,8 +147,6 @@ char                            m_acTextboxBuf9[5]; // NRows=1 NCols=5
 
 // Element References for direct access
 //<Extern_References !Start!>
-extern gslc_tsElemRef* m_pEleBtnWifiWifiInfo;
-extern gslc_tsElemRef* m_pElemBrnBaseWiFi;
 extern gslc_tsElemRef* m_pElemBtnAprAuto;
 extern gslc_tsElemRef* m_pElemBtnAprMinusOne;
 extern gslc_tsElemRef* m_pElemBtnAprMinusTen;
@@ -170,11 +157,6 @@ extern gslc_tsElemRef* m_pElemBtnAprStandby;
 extern gslc_tsElemRef* m_pElemBtnAprStbdTack;
 extern gslc_tsElemRef* m_pElemBtnAprTrack;
 extern gslc_tsElemRef* m_pElemBtnAprWind;
-extern gslc_tsElemRef* m_pElemBtnBaseApr;
-extern gslc_tsElemRef* m_pElemBtnBaseData;
-extern gslc_tsElemRef* m_pElemBtnBaseDiag;
-extern gslc_tsElemRef* m_pElemBtnWifiConfigureWifi;
-extern gslc_tsElemRef* m_pElemBtnWifiResetWifi;
 extern gslc_tsElemRef* m_pElemRadioButtonAprAuto;
 extern gslc_tsElemRef* m_pElemRadioButtonAprStandby;
 extern gslc_tsElemRef* m_pElemRadioButtonAprTrack;
@@ -187,9 +169,7 @@ extern gslc_tsElemRef* m_pElemTextboxDataSow;
 extern gslc_tsElemRef* m_pElemTextboxDataWDir;
 extern gslc_tsElemRef* m_pElemTextboxDataWind;
 extern gslc_tsElemRef* m_pElemTextboxDiagLog;
-extern gslc_tsElemRef* m_pElemTextboxStatus;
 extern gslc_tsElemRef* m_pTextSlider10;
-extern gslc_tsElemRef* m_pTextSlider11;
 extern gslc_tsElemRef* m_pTextSlider4;
 extern gslc_tsElemRef* m_pTextSlider4;
 extern gslc_tsElemRef* m_pTextSlider4;
@@ -239,7 +219,6 @@ void InitGUIslice_gen()
   gslc_PageAdd(&m_gui,E_PG_APR,m_asPage2Elem,MAX_ELEM_PG_APR_RAM,m_asPage2ElemRef,MAX_ELEM_PG_APR);
   gslc_PageAdd(&m_gui,E_PG_SPLASH_SCREEN,m_asPopup1Elem,MAX_ELEM_PG_SPLASH_SCREEN_RAM,m_asPopup1ElemRef,MAX_ELEM_PG_SPLASH_SCREEN);
   gslc_PageAdd(&m_gui,E_PG_DATA,m_asPage3Elem,MAX_ELEM_PG_DATA_RAM,m_asPage3ElemRef,MAX_ELEM_PG_DATA);
-  gslc_PageAdd(&m_gui,E_PG_WIFI,m_asPage4Elem,MAX_ELEM_PG_WIFI_RAM,m_asPage4ElemRef,MAX_ELEM_PG_WIFI);
 
   // Now mark E_PG_BASE as a "base" page which means that it's elements
   // are always visible. This is useful for common page elements.
@@ -257,38 +236,25 @@ void InitGUIslice_gen()
   // PAGE: E_PG_BASE
   
   
-  // create E_ELEM_BTN_BASE_DIAG button with text label
-  pElemRef = gslc_ElemCreateBtnTxt(&m_gui,E_ELEM_BTN_BASE_DIAG,E_PG_BASE,
+  // create E_ELEM_BASE_PAGE_LEFT button with text label
+  pElemRef = gslc_ElemCreateBtnTxt(&m_gui,E_ELEM_BASE_PAGE_LEFT,E_PG_BASE,
     (gslc_tsRect){10,290,40,20},(char*)"Diag",0,E_BUILTIN5X8,&CbBtnCommon);
   gslc_ElemSetFillEn(&m_gui,pElemRef,false);
-  m_pElemBtnBaseDiag = pElemRef;
   
-  // create E_ELEM_BTN_BASE_APR button with text label
-  pElemRef = gslc_ElemCreateBtnTxt(&m_gui,E_ELEM_BTN_BASE_APR,E_PG_BASE,
+  // create E_ELEM_BTN_BASE_PAGE_RIGHT button with text label
+  pElemRef = gslc_ElemCreateBtnTxt(&m_gui,E_ELEM_BTN_BASE_PAGE_RIGHT,E_PG_BASE,
     (gslc_tsRect){190,290,40,20},(char*)"APR",0,E_BUILTIN5X8,&CbBtnCommon);
   gslc_ElemSetFillEn(&m_gui,pElemRef,false);
-  m_pElemBtnBaseApr = pElemRef;
   
-  // create E_ELEM_BTN_BASE_WIFI button with text label
-  pElemRef = gslc_ElemCreateBtnTxt(&m_gui,E_ELEM_BTN_BASE_WIFI,E_PG_BASE,
+  // create E_ELEM_BTN35 button with text label
+  pElemRef = gslc_ElemCreateBtnTxt(&m_gui,E_ELEM_BTN35,E_PG_BASE,
     (gslc_tsRect){70,290,40,20},(char*)"Wi-Fi",0,E_BUILTIN5X8,&CbBtnCommon);
   gslc_ElemSetFillEn(&m_gui,pElemRef,false);
-  m_pElemBrnBaseWiFi = pElemRef;
   
-  // create E_ELEM_BTN_BASE_DATA button with text label
-  pElemRef = gslc_ElemCreateBtnTxt(&m_gui,E_ELEM_BTN_BASE_DATA,E_PG_BASE,
+  // create E_ELEM_BTN36 button with text label
+  pElemRef = gslc_ElemCreateBtnTxt(&m_gui,E_ELEM_BTN36,E_PG_BASE,
     (gslc_tsRect){130,290,40,20},(char*)"Data",0,E_BUILTIN5X8,&CbBtnCommon);
   gslc_ElemSetFillEn(&m_gui,pElemRef,false);
-  m_pElemBtnBaseData = pElemRef;
-   
-  // Create textbox
-  pElemRef = gslc_ElemXTextboxCreate(&m_gui,E_ELEM_TEXTBOX_BASE_STATUS,E_PG_BASE,&m_sTextbox11,
-    (gslc_tsRect){10,270,240,18},E_BUILTIN10X16,
-    (char*)&m_acTextboxBuf11,1,20);
-  gslc_ElemXTextboxWrapSet(&m_gui,pElemRef,false);
-  gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_BLACK);
-  gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_GRAY,GSLC_COL_GRAY,GSLC_COL_GRAY);
-  m_pElemTextboxStatus = pElemRef;
 
   // -----------------------------------
   // PAGE: E_PG_DIAG
@@ -302,12 +268,12 @@ void InitGUIslice_gen()
   gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_BLACK);
    
   // Create wrapping box for textbox E_ELEM_TEXTBOX_DIAG_LOG and scrollbar
-  pElemRef = gslc_ElemCreateBox(&m_gui,GSLC_ID_AUTO,E_PG_DIAG,(gslc_tsRect){10,45,220,220});
+  pElemRef = gslc_ElemCreateBox(&m_gui,GSLC_ID_AUTO,E_PG_DIAG,(gslc_tsRect){10,45,220,235});
   gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_GRAY,GSLC_COL_BLACK,GSLC_COL_BLACK);
   
   // Create textbox
   pElemRef = gslc_ElemXTextboxCreate(&m_gui,E_ELEM_TEXTBOX_DIAG_LOG,E_PG_DIAG,&m_sTextbox3,
-    (gslc_tsRect){10+2,45+4,220-4-20,220-7},E_BUILTIN5X8,
+    (gslc_tsRect){10+2,45+4,220-4-20,235-7},E_BUILTIN5X8,
     (char*)&m_acTextboxBuf3,6,28);
   gslc_ElemXTextboxWrapSet(&m_gui,pElemRef,false);
   gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_YELLOW);
@@ -316,7 +282,7 @@ void InitGUIslice_gen()
 
   // Create vertical scrollbar for textbox
   pElemRef = gslc_ElemXSliderCreate(&m_gui,E_TXTSCROLL_DIAG_LOG,E_PG_DIAG,&m_sTextScroll3,
-          (gslc_tsRect){10+220-2-20,45+4,20,220-8},0,100,0,5,true);
+          (gslc_tsRect){10+220-2-20,45+4,20,235-8},0,100,0,5,true);
   gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_BLUE,GSLC_COL_BLACK,GSLC_COL_BLUE);
   gslc_ElemXSliderSetPosFunc(&m_gui,pElemRef,&CbSlidePos);
   m_pTextSliderDiagLog = pElemRef;
@@ -519,7 +485,7 @@ void InitGUIslice_gen()
   
    
   // Create textbox
-  pElemRef = gslc_ElemXTextboxCreate(&m_gui,E_ELEM_TEXTBOX_DATA_SOG,E_PG_DATA,&m_sTextbox4,
+  pElemRef = gslc_ElemXTextboxCreate(&m_gui,E_ELEM_TEXTBOX4,E_PG_DATA,&m_sTextbox4,
     (gslc_tsRect){105,20,122,34},E_BUILTIN20X32,
     (char*)&m_acTextboxBuf4,1,5);
   gslc_ElemXTextboxWrapSet(&m_gui,pElemRef,false);
@@ -528,7 +494,7 @@ void InitGUIslice_gen()
   m_pElemTextboxDataSog = pElemRef;
    
   // Create textbox
-  pElemRef = gslc_ElemXTextboxCreate(&m_gui,E_ELEM_TEXTBOX_DATA_SOW,E_PG_DATA,&m_sTextbox5,
+  pElemRef = gslc_ElemXTextboxCreate(&m_gui,E_ELEM_TEXTBOX5,E_PG_DATA,&m_sTextbox5,
     (gslc_tsRect){108,65,122,34},E_BUILTIN20X32,
     (char*)&m_acTextboxBuf5,1,5);
   gslc_ElemXTextboxWrapSet(&m_gui,pElemRef,false);
@@ -537,7 +503,7 @@ void InitGUIslice_gen()
   m_pElemTextboxDataSow = pElemRef;
    
   // Create textbox
-  pElemRef = gslc_ElemXTextboxCreate(&m_gui,E_ELEM_TEXTBOX_DATA_WIND,E_PG_DATA,&m_sTextbox6,
+  pElemRef = gslc_ElemXTextboxCreate(&m_gui,E_ELEM_TEXTBOX6,E_PG_DATA,&m_sTextbox6,
     (gslc_tsRect){108,105,122,34},E_BUILTIN20X32,
     (char*)&m_acTextboxBuf6,1,5);
   gslc_ElemXTextboxWrapSet(&m_gui,pElemRef,false);
@@ -546,7 +512,7 @@ void InitGUIslice_gen()
   m_pElemTextboxDataWind = pElemRef;
    
   // Create textbox
-  pElemRef = gslc_ElemXTextboxCreate(&m_gui,E_ELEM_TEXTBOX_DATA_WDIR,E_PG_DATA,&m_sTextbox7,
+  pElemRef = gslc_ElemXTextboxCreate(&m_gui,E_ELEM_TEXTBOX7,E_PG_DATA,&m_sTextbox7,
     (gslc_tsRect){108,150,122,34},E_BUILTIN20X32,
     (char*)&m_acTextboxBuf7,1,5);
   gslc_ElemXTextboxWrapSet(&m_gui,pElemRef,false);
@@ -555,7 +521,7 @@ void InitGUIslice_gen()
   m_pElemTextboxDataWDir = pElemRef;
    
   // Create textbox
-  pElemRef = gslc_ElemXTextboxCreate(&m_gui,E_ELEM_TEXTBOX_DATA_HDG,E_PG_DATA,&m_sTextbox8,
+  pElemRef = gslc_ElemXTextboxCreate(&m_gui,E_ELEM_TEXTBOX8,E_PG_DATA,&m_sTextbox8,
     (gslc_tsRect){108,190,122,34},E_BUILTIN20X32,
     (char*)&m_acTextboxBuf8,1,5);
   gslc_ElemXTextboxWrapSet(&m_gui,pElemRef,false);
@@ -564,7 +530,7 @@ void InitGUIslice_gen()
   m_pElemTextboxDataHdg = pElemRef;
    
   // Create textbox
-  pElemRef = gslc_ElemXTextboxCreate(&m_gui,E_ELEM_TEXTBOX_DATA_DEPTH,E_PG_DATA,&m_sTextbox9,
+  pElemRef = gslc_ElemXTextboxCreate(&m_gui,E_ELEM_TEXTBOX9,E_PG_DATA,&m_sTextbox9,
     (gslc_tsRect){108,230,122,34},E_BUILTIN20X32,
     (char*)&m_acTextboxBuf9,1,5);
   gslc_ElemXTextboxWrapSet(&m_gui,pElemRef,false);
@@ -601,25 +567,6 @@ void InitGUIslice_gen()
   pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT32,E_PG_DATA,(gslc_tsRect){15,230,90,24},
     (char*)"Depth",0,E_BUILTIN15X24);
   gslc_ElemSetFillEn(&m_gui,pElemRef,false);
-
-  // -----------------------------------
-  // PAGE: E_PG_WIFI
-  
-  
-  // create E_ELEM_BTN_WIFI_CONFIGURE_WIFI button with text label
-  pElemRef = gslc_ElemCreateBtnTxt(&m_gui,E_ELEM_BTN_WIFI_CONFIGURE_WIFI,E_PG_WIFI,
-    (gslc_tsRect){70,35,100,25},(char*)"Configure Wi-Fi",0,E_BUILTIN5X8,&CbBtnCommon);
-  m_pElemBtnWifiConfigureWifi = pElemRef;
-  
-  // create E_ELEM_BTN_WIFI_WIFI_INFO button with text label
-  pElemRef = gslc_ElemCreateBtnTxt(&m_gui,E_ELEM_BTN_WIFI_WIFI_INFO,E_PG_WIFI,
-    (gslc_tsRect){70,80,100,25},(char*)"Wi-Fi Info",0,E_BUILTIN5X8,&CbBtnCommon);
-  m_pEleBtnWifiWifiInfo = pElemRef;
-  
-  // create E_ELEM_BTN_WIFI_RESET_WIFI button with text label
-  pElemRef = gslc_ElemCreateBtnTxt(&m_gui,E_ELEM_BTN_WIFI_RESET_WIFI,E_PG_WIFI,
-    (gslc_tsRect){70,125,100,25},(char*)"Reset Wi-Fi",0,E_BUILTIN5X8,&CbBtnCommon);
-  m_pElemBtnWifiResetWifi = pElemRef;
 //<InitGUI !End!>
 
 //<Startup !Start!>

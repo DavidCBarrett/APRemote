@@ -6,6 +6,7 @@
 
 #include "main.h"
 #include "SeaTalk.h"
+#include "ApRemote_GSLC_Externs.h"
 
 AsyncWebServer server(80);
 AsyncWebSocket webSocket("/ws");
@@ -270,7 +271,8 @@ void ApWiFi_Init() {
   }
 
   // if you get here you have connected to the WiFi
-  Serial.println("connected...to WiFI.");
+  Serial.println("Connected to WiFI.");
+  gslc_ElemXTextboxAdd(&m_gui, m_pElemTextboxStatus, (char*)"Connected to WiFI.");
 
  // Send web page to client
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){

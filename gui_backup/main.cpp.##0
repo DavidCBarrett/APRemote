@@ -94,8 +94,6 @@ HeartBeatDiag RXHB;
 
 // Save some element references for direct access
 //<Save_References !Start!>
-gslc_tsElemRef* m_pEleBtnWifiWifiInfo= NULL;
-gslc_tsElemRef* m_pElemBrnBaseWiFi= NULL;
 gslc_tsElemRef* m_pElemBtnAprAuto = NULL;
 gslc_tsElemRef* m_pElemBtnAprMinusOne= NULL;
 gslc_tsElemRef* m_pElemBtnAprMinusTen= NULL;
@@ -106,11 +104,6 @@ gslc_tsElemRef* m_pElemBtnAprStandby= NULL;
 gslc_tsElemRef* m_pElemBtnAprStbdTack= NULL;
 gslc_tsElemRef* m_pElemBtnAprTrack= NULL;
 gslc_tsElemRef* m_pElemBtnAprWind = NULL;
-gslc_tsElemRef* m_pElemBtnBaseApr = NULL;
-gslc_tsElemRef* m_pElemBtnBaseData= NULL;
-gslc_tsElemRef* m_pElemBtnBaseDiag= NULL;
-gslc_tsElemRef* m_pElemBtnWifiConfigureWifi= NULL;
-gslc_tsElemRef* m_pElemBtnWifiResetWifi= NULL;
 gslc_tsElemRef* m_pElemRadioButtonAprAuto= NULL;
 gslc_tsElemRef* m_pElemRadioButtonAprStandby= NULL;
 gslc_tsElemRef* m_pElemRadioButtonAprTrack= NULL;
@@ -123,7 +116,6 @@ gslc_tsElemRef* m_pElemTextboxDataSow= NULL;
 gslc_tsElemRef* m_pElemTextboxDataWDir= NULL;
 gslc_tsElemRef* m_pElemTextboxDataWind= NULL;
 gslc_tsElemRef* m_pElemTextboxDiagLog= NULL;
-gslc_tsElemRef* m_pElemTextboxStatus= NULL;
 gslc_tsElemRef* m_pTextSliderDiagLog= NULL;
 //<Save_References !End!>
 
@@ -145,16 +137,16 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
     // From the element's ID we can determine which button was pressed.
     switch (pElem->nId) {
 //<Button Enums !Start!>
-      case E_ELEM_BTN_BASE_DIAG:
+      case E_ELEM_BASE_PAGE_LEFT:
         gslc_SetPageCur(&m_gui, E_PG_DIAG);
         break;
-      case E_ELEM_BTN_BASE_APR:
+      case E_ELEM_BTN_BASE_PAGE_RIGHT:
         gslc_SetPageCur(&m_gui, E_PG_APR);
         break;
-      case E_ELEM_BTN_BASE_WIFI:
-        gslc_SetPageCur(&m_gui, E_PG_WIFI);
+      case E_ELEM_BTN35:
+        gslc_SetPageCur(&m_gui, E_PG_DIAG);
         break;
-      case E_ELEM_BTN_BASE_DATA:
+      case E_ELEM_BTN36:
         gslc_SetPageCur(&m_gui, E_PG_DATA);
         break;
       case E_ELEM_BTN_APR_STDBY:
@@ -177,12 +169,7 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
         break;
       case E_ELEM_BTN_APR_PORT_TACK:
         break;
-      case E_ELEM_BTN_WIFI_CONFIGURE_WIFI:
-        break;
-      case E_ELEM_BTN_WIFI_WIFI_INFO:
-        break;
-      case E_ELEM_BTN_WIFI_RESET_WIFI:
-        break;
+
 //<Button Enums !End!>
       default:
         break;
@@ -280,21 +267,19 @@ void setup()
   while(!Serial) delay(100);
   delay(500);
 
+  Serial.printf("----------------------\n-- Sea Talk Web Remote\n----------------------\n");
+  
+
   // ------------------------------------------------
   // Create graphic elements
   // ------------------------------------------------
   gslc_InitDebug(&DebugOut);
   InitGUIslice_gen();
 
-  Serial.printf("----------------------\n-- Sea Talk Web Remote\n----------------------\n");
-  gslc_ElemXTextboxAdd(&m_gui, m_pElemTextboxDiagLog, (char*)"----------------------\n-- Sea Talk Web Remote\n----------------------\n");
-
   ApWiFi_Init();
 
   Seatalk_Init();
 
-  gslc_ElemXTextboxAdd(&m_gui, m_pElemTextboxStatus, (char*)"Setup Done.");
-  gslc_ElemXTextboxAdd(&m_gui, m_pElemTextboxDiagLog, (char*)"Setup Done\n.");
 }
 
 // -----------------------------------
