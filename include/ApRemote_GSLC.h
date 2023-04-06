@@ -67,7 +67,7 @@ enum {E_ELEM_BOX4,E_ELEM_BTN_APR_AUTO,E_ELEM_BTN_APR_MINUS_ONE
       ,E_ELEM_TEXTBOX_DATA_HDG,E_ELEM_TEXTBOX_DATA_SOG
       ,E_ELEM_TEXTBOX_DATA_SOW,E_ELEM_TEXTBOX_DATA_WDIR
       ,E_ELEM_TEXTBOX_DATA_WIND,E_ELEM_TEXTBOX_DIAG_LOG
-      ,E_ELEM_TEXT_SW_BUILD_DATE,E_TXTSCROLL11,E_TXTSCROLL_DIAG_LOG};
+      ,E_ELEM_TEXT_SW_BUILD_DATE,E_TXTSCROLL_DIAG_LOG};
 enum {E_GROUP1};
 // Must use separate enum for fonts with MAX_FONT at end to use gslc_FontSet.
 enum {E_BUILTIN10X16,E_BUILTIN15X24,E_BUILTIN20X32,E_BUILTIN5X8
@@ -84,7 +84,7 @@ enum {E_BUILTIN10X16,E_BUILTIN15X24,E_BUILTIN20X32,E_BUILTIN5X8
 //<ElementDefines !Start!>
 #define MAX_PAGE                6
 
-#define MAX_ELEM_PG_BASE 7 // # Elems total on page
+#define MAX_ELEM_PG_BASE 5 // # Elems total on page
 #define MAX_ELEM_PG_BASE_RAM MAX_ELEM_PG_BASE // # Elems in RAM
 
 #define MAX_ELEM_PG_DIAG 4 // # Elems total on page
@@ -125,8 +125,7 @@ gslc_tsElemRef                  m_asPage3ElemRef[MAX_ELEM_PG_DATA];
 gslc_tsElem                     m_asPage4Elem[MAX_ELEM_PG_WIFI_RAM];
 gslc_tsElemRef                  m_asPage4ElemRef[MAX_ELEM_PG_WIFI];
 gslc_tsXTextbox                 m_sTextbox11;
-char                            m_acTextboxBuf11[60]; // NRows=3 NCols=20
-gslc_tsXSlider                  m_sTextScroll11;
+char                            m_acTextboxBuf11[35]; // NRows=1 NCols=35
 gslc_tsXTextbox                 m_sTextbox3;
 char                            m_acTextboxBuf3[168]; // NRows=6 NCols=28
 gslc_tsXSlider                  m_sTextScroll3;
@@ -190,13 +189,13 @@ extern gslc_tsElemRef* m_pElemTextboxDataWind;
 extern gslc_tsElemRef* m_pElemTextboxDiagLog;
 extern gslc_tsElemRef* m_pElemTextboxStatus;
 extern gslc_tsElemRef* m_pTextSlider10;
-extern gslc_tsElemRef* m_pTextSlider11;
 extern gslc_tsElemRef* m_pTextSlider4;
 extern gslc_tsElemRef* m_pTextSlider4;
 extern gslc_tsElemRef* m_pTextSlider4;
 extern gslc_tsElemRef* m_pTextSlider4;
 extern gslc_tsElemRef* m_pTextSlider4;
 extern gslc_tsElemRef* m_pTextSlider4;
+extern gslc_tsElemRef* m_pTextSliderBaseStatus;
 extern gslc_tsElemRef* m_pTextSliderDiagLog;
 //<Extern_References !End!>
 
@@ -282,25 +281,14 @@ void InitGUIslice_gen()
   gslc_ElemSetFillEn(&m_gui,pElemRef,false);
   m_pElemBtnBaseData = pElemRef;
    
-  // Create wrapping box for textbox E_ELEM_TEXTBOX_BASE_STATUS and scrollbar
-  pElemRef = gslc_ElemCreateBox(&m_gui,GSLC_ID_AUTO,E_PG_BASE,(gslc_tsRect){10,255,122,30});
-  gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_GRAY,GSLC_COL_BLACK,GSLC_COL_GRAY);
-  
   // Create textbox
   pElemRef = gslc_ElemXTextboxCreate(&m_gui,E_ELEM_TEXTBOX_BASE_STATUS,E_PG_BASE,&m_sTextbox11,
-    (gslc_tsRect){10+2,255+4,122-4-20,30-7},E_BUILTIN5X8,
-    (char*)&m_acTextboxBuf11,3,20);
-  gslc_ElemXTextboxWrapSet(&m_gui,pElemRef,true);
+    (gslc_tsRect){20,270,212,10},E_BUILTIN5X8,
+    (char*)&m_acTextboxBuf11,1,35);
+  gslc_ElemXTextboxWrapSet(&m_gui,pElemRef,false);
   gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_YELLOW);
   gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_GRAY,GSLC_COL_BLACK,GSLC_COL_GRAY);
   m_pElemTextboxStatus = pElemRef;
-
-  // Create vertical scrollbar for textbox
-  pElemRef = gslc_ElemXSliderCreate(&m_gui,E_TXTSCROLL11,E_PG_BASE,&m_sTextScroll11,
-          (gslc_tsRect){10+122-2-20,255+4,20,30-8},0,100,0,5,true);
-  gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_BLUE,GSLC_COL_BLACK,GSLC_COL_BLUE);
-  gslc_ElemXSliderSetPosFunc(&m_gui,pElemRef,&CbSlidePos);
-  m_pTextSlider11 = pElemRef;
 
   // -----------------------------------
   // PAGE: E_PG_DIAG

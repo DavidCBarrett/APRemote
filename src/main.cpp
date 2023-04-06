@@ -124,7 +124,6 @@ gslc_tsElemRef* m_pElemTextboxDataWDir= NULL;
 gslc_tsElemRef* m_pElemTextboxDataWind= NULL;
 gslc_tsElemRef* m_pElemTextboxDiagLog= NULL;
 gslc_tsElemRef* m_pElemTextboxStatus= NULL;
-gslc_tsElemRef* m_pTextSlider11   = NULL;
 gslc_tsElemRef* m_pTextSliderDiagLog= NULL;
 //<Save_References !End!>
 
@@ -159,16 +158,16 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
         gslc_SetPageCur(&m_gui, E_PG_DATA);
         break;
       case E_ELEM_BTN_APR_STDBY:
-        gslc_ElemXTextboxAdd(&m_gui, m_pElemTextboxStatus, (char*)"Standby");
+        gslc_ElemXTextboxAdd(&m_gui, m_pElemTextboxStatus, (char*)"\nStandby");
         break;
       case E_ELEM_BTN_APR_AUTO:
-        gslc_ElemXTextboxAdd(&m_gui, m_pElemTextboxStatus, (char*)"Auto");
+        gslc_ElemXTextboxAdd(&m_gui, m_pElemTextboxStatus, (char*)"\nAuto");
         break;
       case E_ELEM_BTN_APR_WIND:
-        gslc_ElemXTextboxAdd(&m_gui, m_pElemTextboxStatus, (char*)"Wind");
+        gslc_ElemXTextboxAdd(&m_gui, m_pElemTextboxStatus, (char*)"\nWind");
         break;
       case E_ELEM_BTN_APR_TRACK:
-        gslc_ElemXTextboxAdd(&m_gui, m_pElemTextboxStatus, (char*)"Track");
+        gslc_ElemXTextboxAdd(&m_gui, m_pElemTextboxStatus, (char*)"\nTrack");
         break;
       case E_ELEM_BTN_APR_PLUS_ONE:
         break;
@@ -253,12 +252,6 @@ bool CbSlidePos(void* pvGui,void* pvElemRef,int16_t nPos)
       gslc_ElemXTextboxScrollSet(pGui,m_pElemTextboxDiagLog,nVal,100);  // DCB: use slider position to set text box scroll posn
       break;
 
-    case E_TXTSCROLL11:
-      // Fetch the slider position
-      nVal = gslc_ElemXSliderGetPos(pGui,m_pTextSlider11);
-      gslc_ElemXTextboxScrollSet(pGui,m_pElemTextboxStatus,nVal,100);   // DCB: use slider position to set text box scroll posn
-
-      break;
 //<Slider Enums !End!>
     default:
       break;
@@ -300,6 +293,7 @@ void setup()
 
   Serial.printf("----------------------\n-- Sea Talk Web Remote\n----------------------\n");
   gslc_ElemXTextboxAdd(&m_gui, m_pElemTextboxDiagLog, (char*)"----------------------\n-- Sea Talk Web Remote\n----------------------\n");
+  gslc_ElemXTextboxAdd(&m_gui, m_pElemTextboxStatus, (char*)"--Seatalk APR--\n");
 
   ApWiFi_Init();
 
