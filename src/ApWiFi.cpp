@@ -8,9 +8,12 @@
 #include "SeaTalk.h"
 #include "ApRemote_GSLC_Externs.h"
 
+#define APSSID "AutoPilot Remote"
+
 AsyncWebServer server(80);
 AsyncWebSocket webSocket("/ws");
 DNSServer dns;
+AsyncWiFiManager wifiManager(&server,&dns);
 
 // Callback: receiving any WebSocket message
 void onWebSocketEvent(AsyncWebSocket       *server,     //
@@ -231,29 +234,8 @@ void configModeCallback (AsyncWiFiManager *myWiFiManager) {
   ApGslc_Update();
 }
 
-void ApWiFi_Init() {
-
-     if(!SPIFFS.begin(true)){
-     Serial.println("SPIFFS Setup Error");
-     return;
-   }
-
-  //WiFiManager
-  AsyncWiFiManager wifiManager(&server,&dns);
-
-// Set WiFi to station mode and disconnect from an AP if it was previously connected
-//   WiFi.begin();
-//   delay(500);
-//   WiFi.disconnect();
-//   delay(100);
-
-  // handler for WiFi eventns (connects and disconnect events).
-  // dcb WiFi.onEvent(onWifiEvent);
-
-  //reset settings - uncomment for testing
-  //wifiManager.resetSettings();
-
-  wifiManager.setConfigPortalTimeout(2);  // WiFi config portal time out set to 2 secs
+void ApWiFi_Connect() {
+ wifiManager.setConfigPortalTimeout(2);  // WiFi config portal time out set to 2 secs
   wifiManager.setTryConnectDuringConfigPortal(false);
   wifiManager.setDebugOutput(true);
 
@@ -262,8 +244,8 @@ void ApWiFi_Init() {
 
   // fetches ssid and pass and tries to connect
   // if it does not connect it starts an access point with the specified name
-  // "AutoPilot Remote" and goes into a blocking loop awaiting configuration
-  if (!wifiManager.autoConnect("AutoPilot Remote")) {
+  // as per the "#define APSSID ..."" and goes into a blocking loop awaiting configuration
+  if (!wifiManager.autoConnect(APSSID)) {
     Serial.println("failed to connect and hit timeout");
     //reset and try again, or maybe put it to deep sleep
     //ESP.restart();
@@ -272,7 +254,8 @@ void ApWiFi_Init() {
 
   // if you get here you have connected to the WiFi
   Serial.println("Connected to WiFI.");
-  gslc_ElemXTextboxAdd(&m_gui, m_pElemTextboxStatus, (char*)"\nConnected to WiFI.");
+  gslc_ElemXTextboxAdd(&m_gui, m_pElemTextboxStatus,  (char*)"\nConnected to WiFI.");
+  gslc_ElemXTextboxAdd(&m_gui, m_pElemTextboxDiagLog, (char*)"Connected to WiFI.\n");
 
  // Send web page to client
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
@@ -285,7 +268,6 @@ void ApWiFi_Init() {
   // serve up all other files requested by the broswer in the Filesystem (css, js, ...)
   server.serveStatic("/", SPIFFS, "/");
 
-    
   // Receive an HTTP GET request every second to update display details
   server.on("/getData", HTTP_GET, getData);
    
@@ -294,11 +276,48 @@ void ApWiFi_Init() {
   webSocket.onEvent(onWebSocketEvent);    // Assign  WebSocket callback
   server.addHandler(&webSocket);
   server.begin();
+}
 
+void ApWiFi_Init() {
+
+     if(!SPIFFS.begin(true)){
+     Serial.println("SPIFFS Setup Error");
+     return;
+   }
+
+// Set WiFi to station mode and disconnect from an AP if it was previously connected
+//   WiFi.begin();
+//   delay(500);
+//   WiFi.disconnect();
+//   delay(100);
+
+  // handler for WiFi eventns (connect and disconnect events).
+  // dcb WiFi.onEvent(onWifiEvent);
+
+  //reset settings - uncomment for testing
+  //wifiManager.resetSettings();
+
+  void ApWiFi_Connect();
 }
 
 void APWiFi_Tick() {
     
   webSocket.cleanupClients();
 
+}
+
+void APWiFi_ConfigPortal() {
+
+  WiFi.disconnect();
+  delay(100);
+
+  gslc_ElemXTextboxAdd(&m_gui, m_pElemTextboxStatus, (char*)"\nEntering WiFi AP Mode");  
+
+  wifiManager.setConfigPortalTimeout(60);               // WiFi config portal time out set to 60 secs
+  wifiManager.setTryConnectDuringConfigPortal(false);
+  wifiManager.startConfigPortal(APSSID);
+
+  gslc_ElemXTextboxAdd(&m_gui, m_pElemTextboxStatus, (char*)"\nExiting WiFi AP Mode");
+
+   ApWiFi_Connect();
 }

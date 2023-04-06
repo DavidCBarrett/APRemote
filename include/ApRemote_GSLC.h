@@ -283,7 +283,7 @@ void InitGUIslice_gen()
    
   // Create textbox
   pElemRef = gslc_ElemXTextboxCreate(&m_gui,E_ELEM_TEXTBOX_BASE_STATUS,E_PG_BASE,&m_sTextbox11,
-    (gslc_tsRect){20,270,212,10},E_BUILTIN5X8,
+    (gslc_tsRect){20,270,212,20},E_BUILTIN5X8,
     (char*)&m_acTextboxBuf11,1,35);
   gslc_ElemXTextboxWrapSet(&m_gui,pElemRef,false);
   gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_YELLOW);

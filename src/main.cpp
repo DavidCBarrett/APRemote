@@ -182,6 +182,7 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
       case E_ELEM_BTN_APR_PORT_TACK:
         break;
       case E_ELEM_BTN_WIFI_CONFIGURE_WIFI:
+        APWiFi_ConfigPortal();
         break;
       case E_ELEM_BTN_WIFI_WIFI_INFO:
         break;
@@ -308,6 +309,8 @@ void setup()
 // -----------------------------------
 void loop()
 {
+  char cDisp[20];
+
   HB.beat();
   TXHB.beat();
   RXHB.beat();
@@ -324,10 +327,13 @@ void loop()
   // ------------------------------------------------
   
   //TODO - Add update code for any text, gauges, or sliders
-  
+  sprintf(cDisp, "%d Mag", hdg);
+  gslc_ElemXTextboxAdd(&m_gui, m_pElemTextboxAprDisplay, cDisp);
+
   // ------------------------------------------------
   // Periodically call GUIslice update function
   // ------------------------------------------------
   gslc_Update(&m_gui);
-    
+  
+  delay (100);
 }
