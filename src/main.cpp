@@ -124,6 +124,7 @@ gslc_tsElemRef* m_pElemTextboxDataWDir= NULL;
 gslc_tsElemRef* m_pElemTextboxDataWind= NULL;
 gslc_tsElemRef* m_pElemTextboxDiagLog= NULL;
 gslc_tsElemRef* m_pElemTextboxStatus= NULL;
+gslc_tsElemRef* m_pTextSlider11   = NULL;
 gslc_tsElemRef* m_pTextSliderDiagLog= NULL;
 //<Save_References !End!>
 
@@ -158,12 +159,16 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
         gslc_SetPageCur(&m_gui, E_PG_DATA);
         break;
       case E_ELEM_BTN_APR_STDBY:
+        gslc_ElemXTextboxAdd(&m_gui, m_pElemTextboxStatus, (char*)"Standby");
         break;
       case E_ELEM_BTN_APR_AUTO:
+        gslc_ElemXTextboxAdd(&m_gui, m_pElemTextboxStatus, (char*)"Auto");
         break;
       case E_ELEM_BTN_APR_WIND:
+        gslc_ElemXTextboxAdd(&m_gui, m_pElemTextboxStatus, (char*)"Wind");
         break;
       case E_ELEM_BTN_APR_TRACK:
+        gslc_ElemXTextboxAdd(&m_gui, m_pElemTextboxStatus, (char*)"Track");
         break;
       case E_ELEM_BTN_APR_PLUS_ONE:
         break;
@@ -245,8 +250,15 @@ bool CbSlidePos(void* pvGui,void* pvElemRef,int16_t nPos)
     case E_TXTSCROLL_DIAG_LOG:
       // Fetch the slider position
       nVal = gslc_ElemXSliderGetPos(pGui,m_pTextSliderDiagLog);
+      gslc_ElemXTextboxScrollSet(pGui,m_pElemTextboxDiagLog,nVal,100);  // DCB: use slider position to set text box scroll posn
       break;
 
+    case E_TXTSCROLL11:
+      // Fetch the slider position
+      nVal = gslc_ElemXSliderGetPos(pGui,m_pTextSlider11);
+      gslc_ElemXTextboxScrollSet(pGui,m_pElemTextboxStatus,nVal,100);   // DCB: use slider position to set text box scroll posn
+
+      break;
 //<Slider Enums !End!>
     default:
       break;
@@ -293,8 +305,8 @@ void setup()
 
   Seatalk_Init();
 
-  gslc_ElemXTextboxAdd(&m_gui, m_pElemTextboxStatus, (char*)"Setup Done.");
-  gslc_ElemXTextboxAdd(&m_gui, m_pElemTextboxDiagLog, (char*)"Setup Done\n.");
+  gslc_ElemXTextboxAdd(&m_gui, m_pElemTextboxDiagLog, (char*)"Setup Done.\n");
+  gslc_ElemXTextboxAdd(&m_gui, m_pElemTextboxStatus, (char*)"\nSetup Done.");
 }
 
 // -----------------------------------
@@ -302,9 +314,6 @@ void setup()
 // -----------------------------------
 void loop()
 {
-
-  APWiFi_Tick();
-
   HB.beat();
   TXHB.beat();
   RXHB.beat();
@@ -313,6 +322,8 @@ void loop()
   // btnUp.update();
   btnDown.update();
   btnSelect.update();
+
+  APWiFi_Tick();
 
   // ------------------------------------------------
   // Update GUI Elements
@@ -326,4 +337,3 @@ void loop()
   gslc_Update(&m_gui);
     
 }
-

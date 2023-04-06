@@ -272,7 +272,7 @@ void ApWiFi_Init() {
 
   // if you get here you have connected to the WiFi
   Serial.println("Connected to WiFI.");
-  gslc_ElemXTextboxAdd(&m_gui, m_pElemTextboxStatus, (char*)"Connected to WiFI.");
+  gslc_ElemXTextboxAdd(&m_gui, m_pElemTextboxStatus, (char*)"\nConnected to WiFI.");
 
  // Send web page to client
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
