@@ -268,6 +268,7 @@ void setup()
   delay(500);
 
   Serial.printf("----------------------\n-- Sea Talk Web Remote\n----------------------\n");
+  
 
   // ------------------------------------------------
   // Create graphic elements
@@ -287,7 +288,7 @@ void setup()
 void loop()
 {
 
-//  APWiFi_Tick();
+  APWiFi_Tick();
 
   HB.beat();
   TXHB.beat();
