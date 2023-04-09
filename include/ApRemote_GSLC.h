@@ -64,9 +64,9 @@ enum {E_ELEM_BOX4,E_ELEM_BTN_APR_AUTO,E_ELEM_BTN_APR_MINUS_ONE
       ,E_ELEM_TEXT30,E_ELEM_TEXT31,E_ELEM_TEXT32,E_ELEM_TEXT8
       ,E_ELEM_TEXT9,E_ELEM_TEXTBOX_APR_DISPLAY
       ,E_ELEM_TEXTBOX_BASE_STATUS,E_ELEM_TEXTBOX_DATA_DEPTH
-      ,E_ELEM_TEXTBOX_DATA_HDG,E_ELEM_TEXTBOX_DATA_SOG
-      ,E_ELEM_TEXTBOX_DATA_SOW,E_ELEM_TEXTBOX_DATA_WDIR
-      ,E_ELEM_TEXTBOX_DATA_WIND,E_ELEM_TEXTBOX_DIAG_LOG
+      ,E_ELEM_TEXTBOX_DATA_HDG,E_ELEM_TEXTBOX_DATA_SOW
+      ,E_ELEM_TEXTBOX_DATA_WDIR,E_ELEM_TEXTBOX_DATA_WIND
+      ,E_ELEM_TEXTBOX_DIAG_LOG,E_ELEM_TEXT_DATA_SOG
       ,E_ELEM_TEXT_SW_BUILD_DATE,E_TXTSCROLL_DIAG_LOG};
 enum {E_GROUP1};
 // Must use separate enum for fonts with MAX_FONT at end to use gslc_FontSet.
@@ -135,8 +135,6 @@ gslc_tsXCheckbox                m_asXRadio11;
 gslc_tsXCheckbox                m_asXRadio12;
 gslc_tsXTextbox                 m_sTextbox10;
 char                            m_acTextboxBuf10[28]; // NRows=1 NCols=28
-gslc_tsXTextbox                 m_sTextbox4;
-char                            m_acTextboxBuf4[5]; // NRows=1 NCols=5
 gslc_tsXTextbox                 m_sTextbox5;
 char                            m_acTextboxBuf5[5]; // NRows=1 NCols=5
 gslc_tsXTextbox                 m_sTextbox6;
@@ -179,17 +177,16 @@ extern gslc_tsElemRef* m_pElemRadioButtonAprAuto;
 extern gslc_tsElemRef* m_pElemRadioButtonAprStandby;
 extern gslc_tsElemRef* m_pElemRadioButtonAprTrack;
 extern gslc_tsElemRef* m_pElemRadioButtonAprWind;
+extern gslc_tsElemRef* m_pElemTextDataSog;
 extern gslc_tsElemRef* m_pElemTextboxAprDisplay;
 extern gslc_tsElemRef* m_pElemTextboxDataDepth;
 extern gslc_tsElemRef* m_pElemTextboxDataHdg;
-extern gslc_tsElemRef* m_pElemTextboxDataSog;
 extern gslc_tsElemRef* m_pElemTextboxDataSow;
 extern gslc_tsElemRef* m_pElemTextboxDataWDir;
 extern gslc_tsElemRef* m_pElemTextboxDataWind;
 extern gslc_tsElemRef* m_pElemTextboxDiagLog;
 extern gslc_tsElemRef* m_pElemTextboxStatus;
 extern gslc_tsElemRef* m_pTextSlider10;
-extern gslc_tsElemRef* m_pTextSlider4;
 extern gslc_tsElemRef* m_pTextSlider4;
 extern gslc_tsElemRef* m_pTextSlider4;
 extern gslc_tsElemRef* m_pTextSlider4;
@@ -519,15 +516,6 @@ void InitGUIslice_gen()
   
    
   // Create textbox
-  pElemRef = gslc_ElemXTextboxCreate(&m_gui,E_ELEM_TEXTBOX_DATA_SOG,E_PG_DATA,&m_sTextbox4,
-    (gslc_tsRect){105,20,122,34},E_BUILTIN20X32,
-    (char*)&m_acTextboxBuf4,1,5);
-  gslc_ElemXTextboxWrapSet(&m_gui,pElemRef,false);
-  gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_YELLOW);
-  gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_GRAY,GSLC_COL_BLACK,GSLC_COL_BLACK);
-  m_pElemTextboxDataSog = pElemRef;
-   
-  // Create textbox
   pElemRef = gslc_ElemXTextboxCreate(&m_gui,E_ELEM_TEXTBOX_DATA_SOW,E_PG_DATA,&m_sTextbox5,
     (gslc_tsRect){108,65,122,34},E_BUILTIN20X32,
     (char*)&m_acTextboxBuf5,1,5);
@@ -601,6 +589,16 @@ void InitGUIslice_gen()
   pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT32,E_PG_DATA,(gslc_tsRect){15,230,90,24},
     (char*)"Depth",0,E_BUILTIN15X24);
   gslc_ElemSetFillEn(&m_gui,pElemRef,false);
+  
+  // Create E_ELEM_TEXT_DATA_SOG runtime modifiable text
+  static char m_sDisplayText33[7] = "22";
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT_DATA_SOG,E_PG_DATA,(gslc_tsRect){105,20,110,26},
+    (char*)m_sDisplayText33,7,E_BUILTIN15X24);
+  gslc_ElemSetTxtAlign(&m_gui,pElemRef,GSLC_ALIGN_MID_MID);
+  gslc_ElemSetTxtMargin(&m_gui,pElemRef,1);
+  gslc_ElemSetFrameEn(&m_gui,pElemRef,true);
+  gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_BLACK,GSLC_COL_BLACK,GSLC_COL_BLACK);
+  m_pElemTextDataSog = pElemRef;
 
   // -----------------------------------
   // PAGE: E_PG_WIFI
