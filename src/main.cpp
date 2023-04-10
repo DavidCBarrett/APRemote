@@ -325,10 +325,10 @@ void loop()
   // ------------------------------------------------
   // Update GUI Elements
   // ------------------------------------------------
-  /*
+  
   //TODO - Add update code for any text, gauges, or sliders
   sprintf(cDisp, "%d Mag", hdg);
-  gslc_ElemXTextboxAdd(&m_gui, m_pElemTextboxAprDisplay, cDisp);
+  gslc_ElemSetTxtStr(&m_gui, m_pElemTextAprDisplay, cDisp);
 
   sog = random(0,1000) / 50.0;
 
@@ -336,20 +336,20 @@ void loop()
   gslc_ElemSetTxtStr(&m_gui, m_pElemTextDataSog, cDisp);
 
   sprintf(cDisp, "%.1f", stw);
-  gslc_ElemXTextboxAdd(&m_gui, m_pElemTextboxDataSow, cDisp);
+  gslc_ElemSetTxtStr(&m_gui, m_pElemTextDataSow, cDisp);
 
   sprintf(cDisp, "%.1f", aws);
-  gslc_ElemXTextboxAdd(&m_gui, m_pElemTextboxDataWind, cDisp);
+  gslc_ElemSetTxtStr(&m_gui, m_pElemTextDataWind, cDisp);
 
   sprintf(cDisp, "%d Mag", awa);
-  gslc_ElemXTextboxAdd(&m_gui, m_pElemTextboxDataWDir, cDisp);
+  gslc_ElemSetTxtStr(&m_gui, m_pElemTextDataWDir, cDisp);
 
   sprintf(cDisp, "%d Mag", hdg);
-  gslc_ElemXTextboxAdd(&m_gui, m_pElemTextboxAprDisplay, cDisp);
+  gslc_ElemSetTxtStr(&m_gui, m_pElemTextAprDisplay, cDisp);
 
   sprintf(cDisp, "%.1f", dpt);
-  gslc_ElemXTextboxAdd(&m_gui, m_pElemTextboxDataDepth, cDisp);
-*/
+  gslc_ElemSetTxtStr(&m_gui, m_pElemTextDataDepth, cDisp);
+
   // ------------------------------------------------
   // Periodically call GUIslice update function
   // ------------------------------------------------
