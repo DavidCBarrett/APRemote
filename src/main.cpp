@@ -94,7 +94,6 @@ HeartBeatDiag RXHB;
 
 // Save some element references for direct access
 //<Save_References !Start!>
-gslc_tsElemRef* m_pEleBtnWifiWifiInfo= NULL;
 gslc_tsElemRef* m_pElemBrnBaseWiFi= NULL;
 gslc_tsElemRef* m_pElemBtnAprAuto = NULL;
 gslc_tsElemRef* m_pElemBtnAprMinusOne= NULL;
@@ -109,8 +108,8 @@ gslc_tsElemRef* m_pElemBtnAprWind = NULL;
 gslc_tsElemRef* m_pElemBtnBaseApr = NULL;
 gslc_tsElemRef* m_pElemBtnBaseData= NULL;
 gslc_tsElemRef* m_pElemBtnBaseDiag= NULL;
-gslc_tsElemRef* m_pElemBtnWifiConfigureWifi= NULL;
-gslc_tsElemRef* m_pElemBtnWifiResetWifi= NULL;
+gslc_tsElemRef* m_pElemBtnWifiConfigure= NULL;
+gslc_tsElemRef* m_pElemBtnWifiReset= NULL;
 gslc_tsElemRef* m_pElemRadioButtonAprAuto= NULL;
 gslc_tsElemRef* m_pElemRadioButtonAprStandby= NULL;
 gslc_tsElemRef* m_pElemRadioButtonAprTrack= NULL;
@@ -122,9 +121,15 @@ gslc_tsElemRef* m_pElemTextDataSog= NULL;
 gslc_tsElemRef* m_pElemTextDataSow= NULL;
 gslc_tsElemRef* m_pElemTextDataWDir= NULL;
 gslc_tsElemRef* m_pElemTextDataWind= NULL;
+gslc_tsElemRef* m_pElemTextWifiClientSSID= NULL;
+gslc_tsElemRef* m_pElemTextWifiIp = NULL;
+gslc_tsElemRef* m_pElemTextWifiSSID= NULL;
+gslc_tsElemRef* m_pElemTextWifiStatus= NULL;
 gslc_tsElemRef* m_pElemTextboxDiagLog= NULL;
 gslc_tsElemRef* m_pElemTextboxStatus= NULL;
+gslc_tsElemRef* m_pElemTextboxWiFiDiag= NULL;
 gslc_tsElemRef* m_pTextSliderDiagLog= NULL;
+gslc_tsElemRef* m_pTextSliderWifiDiag= NULL;
 //<Save_References !End!>
 
 // Define debug message function
@@ -181,12 +186,10 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
         break;
       case E_ELEM_BTN_APR_PORT_TACK:
         break;
-      case E_ELEM_BTN_WIFI_CONFIGURE_WIFI:
+      case E_ELEM_BTN_WIFI_CONFIGURE:
         APWiFi_ConfigPortal();
         break;
-      case E_ELEM_BTN_WIFI_WIFI_INFO:
-        break;
-      case E_ELEM_BTN_WIFI_RESET_WIFI:
+      case E_ELEM_BTN_WIFI_RESET:
         break;
 //<Button Enums !End!>
       default:
@@ -253,6 +256,11 @@ bool CbSlidePos(void* pvGui,void* pvElemRef,int16_t nPos)
       gslc_ElemXTextboxScrollSet(pGui,m_pElemTextboxDiagLog,nVal,100);  // DCB: use slider position to set text box scroll posn
       break;
 
+    case E_TXTSCROLL_WIFI_DIAG:
+      // Fetch the slider position
+      nVal = gslc_ElemXSliderGetPos(pGui,m_pTextSliderWifiDiag);
+      gslc_ElemXTextboxScrollSet(pGui,m_pTextSliderWifiDiag,nVal,100);  // DCB: use slider position to set text box scroll posn
+      break;
 //<Slider Enums !End!>
     default:
       break;

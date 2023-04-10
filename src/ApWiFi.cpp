@@ -29,11 +29,13 @@ void onWebSocketEvent(AsyncWebSocket       *server,     //
     // Client has disconnected
     case WS_EVT_DISCONNECT: {
         Serial.printf("WebSocket client #%u disconnected\n", client->id());
+        gslc_ElemXTextboxPrintf(&m_gui, m_pElemTextboxWiFiDiag, "WebSocket client #%u disconnected\n", client->id());
       } break;
  
     // New client has connected
     case WS_EVT_CONNECT: {
         Serial.printf("WebSocket client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
+        gslc_ElemXTextboxPrintf(&m_gui, m_pElemTextboxWiFiDiag, "WebSocket client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
     }  break;
  
     // Handle text messages from client
@@ -207,9 +209,14 @@ void onWifiEvent(WiFiEvent_t event) {
  switch (event) {
 		case WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_CONNECTED:
 			Serial.println("Connected or reconnected to WiFi");
+      gslc_ElemSetTxtPrintf(&m_gui, m_pElemTextWifiStatus,  "Connected");
+      gslc_ElemSetTxtPrintf(&m_gui, m_pElemTextWifiSSID,    "%s", wifiManager.getConfiguredSTASSID());
+      gslc_ElemSetTxtPrintf(&m_gui, m_pElemTextWifiIp,      "%s", WiFi.localIP().toString());
+      
 			break;
 		case WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
       Serial.print("WiFi Disconnected. Reason: ");
+      gslc_ElemSetTxtPrintf(&m_gui, m_pElemTextWifiStatus, "Disconnected");
 //      status("WiFI Disconnected");
      // Serial.println(info.wifi_sta_disconnected.reason)
 			Serial.println("Enabling WiFi autoconnect");
@@ -226,8 +233,9 @@ void notFound(AsyncWebServerRequest *request) {
 
 //gets called when WiFiManager enters configuration mode
 void configModeCallback (AsyncWiFiManager *myWiFiManager) {
-  Serial.println("Entered config mode");
-  Serial.println(WiFi.softAPIP());
+  Serial.printf("Entered config mode, AP=%s\n", WiFi.softAPIP());
+  gslc_ElemXTextboxPrintf(&m_gui, m_pElemTextboxWiFiDiag, "Entered config mode, AP=%s\n", WiFi.softAPIP());
+
   //if you used auto generated SSID, print it
   Serial.println(myWiFiManager->getConfigPortalSSID());
   
@@ -235,7 +243,7 @@ void configModeCallback (AsyncWiFiManager *myWiFiManager) {
 }
 
 void ApWiFi_Connect() {
- wifiManager.setConfigPortalTimeout(2);  // WiFi config portal time out set to 2 secs
+  wifiManager.setConfigPortalTimeout(2);  // WiFi config portal time out set to 2 secs
   wifiManager.setTryConnectDuringConfigPortal(false);
   wifiManager.setDebugOutput(true);
 
@@ -254,14 +262,19 @@ void ApWiFi_Connect() {
 
   // if you get here you have connected to the WiFi
   Serial.println("Connected to WiFI.");
+  
   gslc_ElemXTextboxAdd(&m_gui, m_pElemTextboxStatus,  (char*)"\nConnected to WiFI.");
   gslc_ElemXTextboxAdd(&m_gui, m_pElemTextboxDiagLog, (char*)"Connected to WiFI.\n");
-
+ 
  // Send web page to client
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
     mySerial.enableRx(false);
     IPAddress Ip = request->client()->remoteIP();
     Serial.println("[" + Ip.toString() + "], requested " + request->url());
+  
+    Serial.printf("[%s], requested %s", Ip.toString(), request->url());
+    gslc_ElemXTextboxPrintf(&m_gui, m_pElemTextboxWiFiDiag, "[%s], requested %s", Ip.toString(), request->url());
+
     request->send(SPIFFS, "/index.html", "text/html");
   });
 
@@ -285,6 +298,10 @@ void ApWiFi_Init() {
      return;
    }
 
+  gslc_ElemXTextboxPrintf(&m_gui, m_pElemTextboxWiFiDiag, "WiFi Diag\n");
+
+  gslc_ElemSetTxtPrintf(&m_gui, m_pElemTextWifiStatus, "Disconnected");
+
 // Set WiFi to station mode and disconnect from an AP if it was previously connected
 //   WiFi.begin();
 //   delay(500);
@@ -292,12 +309,12 @@ void ApWiFi_Init() {
 //   delay(100);
 
   // handler for WiFi eventns (connect and disconnect events).
-  // dcb WiFi.onEvent(onWifiEvent);
+  WiFi.onEvent(onWifiEvent);
 
   //reset settings - uncomment for testing
   //wifiManager.resetSettings();
 
-  void ApWiFi_Connect();
+  ApWiFi_Connect();
 }
 
 void APWiFi_Tick() {
@@ -312,12 +329,14 @@ void APWiFi_ConfigPortal() {
   delay(100);
 
   gslc_ElemXTextboxAdd(&m_gui, m_pElemTextboxStatus, (char*)"\nEntering WiFi AP Mode");  
+  gslc_ElemXTextboxPrintf(&m_gui, m_pElemTextboxWiFiDiag, "Entering WiFi AP Mode\n");
 
   wifiManager.setConfigPortalTimeout(60);               // WiFi config portal time out set to 60 secs
   wifiManager.setTryConnectDuringConfigPortal(false);
   wifiManager.startConfigPortal(APSSID);
 
   gslc_ElemXTextboxAdd(&m_gui, m_pElemTextboxStatus, (char*)"\nExiting WiFi AP Mode");
+  gslc_ElemXTextboxPrintf(&m_gui, m_pElemTextboxWiFiDiag, "Exiting WiFi AP Mode\n");
 
    ApWiFi_Connect();
 }
