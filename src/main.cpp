@@ -1,6 +1,6 @@
 //<App !Start!>
 // FILE: [main.cpp]
-// Created by GUIslice Builder version: [0.17.b20]
+// Created by GUIslice Builder version: [0.17.b21]
 //
 // GUIslice Builder Generated File
 //
@@ -115,13 +115,13 @@ gslc_tsElemRef* m_pElemRadioButtonAprAuto= NULL;
 gslc_tsElemRef* m_pElemRadioButtonAprStandby= NULL;
 gslc_tsElemRef* m_pElemRadioButtonAprTrack= NULL;
 gslc_tsElemRef* m_pElemRadioButtonAprWind= NULL;
+gslc_tsElemRef* m_pElemTextAprDisplay= NULL;
+gslc_tsElemRef* m_pElemTextDataDepth= NULL;
+gslc_tsElemRef* m_pElemTextDataHdg= NULL;
 gslc_tsElemRef* m_pElemTextDataSog= NULL;
-gslc_tsElemRef* m_pElemTextboxAprDisplay= NULL;
-gslc_tsElemRef* m_pElemTextboxDataDepth= NULL;
-gslc_tsElemRef* m_pElemTextboxDataHdg= NULL;
-gslc_tsElemRef* m_pElemTextboxDataSow= NULL;
-gslc_tsElemRef* m_pElemTextboxDataWDir= NULL;
-gslc_tsElemRef* m_pElemTextboxDataWind= NULL;
+gslc_tsElemRef* m_pElemTextDataSow= NULL;
+gslc_tsElemRef* m_pElemTextDataWDir= NULL;
+gslc_tsElemRef* m_pElemTextDataWind= NULL;
 gslc_tsElemRef* m_pElemTextboxDiagLog= NULL;
 gslc_tsElemRef* m_pElemTextboxStatus= NULL;
 gslc_tsElemRef* m_pTextSliderDiagLog= NULL;

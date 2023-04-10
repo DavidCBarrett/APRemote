@@ -1,6 +1,6 @@
 //<File !Start!>
 // FILE: [ApRemote_GSLC.h]
-// Created by GUIslice Builder version: [0.17.b20]
+// Created by GUIslice Builder version: [0.17.b21]
 //
 // GUIslice Builder Generated GUI Framework File
 //
@@ -62,12 +62,10 @@ enum {E_ELEM_BOX4,E_ELEM_BTN_APR_AUTO,E_ELEM_BTN_APR_MINUS_ONE
       ,E_ELEM_TEXT22,E_ELEM_TEXT23,E_ELEM_TEXT24,E_ELEM_TEXT25
       ,E_ELEM_TEXT26,E_ELEM_TEXT27,E_ELEM_TEXT28,E_ELEM_TEXT29
       ,E_ELEM_TEXT30,E_ELEM_TEXT31,E_ELEM_TEXT32,E_ELEM_TEXT8
-      ,E_ELEM_TEXT9,E_ELEM_TEXTBOX_APR_DISPLAY
-      ,E_ELEM_TEXTBOX_BASE_STATUS,E_ELEM_TEXTBOX_DATA_DEPTH
-      ,E_ELEM_TEXTBOX_DATA_HDG,E_ELEM_TEXTBOX_DATA_SOW
-      ,E_ELEM_TEXTBOX_DATA_WDIR,E_ELEM_TEXTBOX_DATA_WIND
-      ,E_ELEM_TEXTBOX_DIAG_LOG,E_ELEM_TEXT_DATA_SOG
-      ,E_ELEM_TEXT_SW_BUILD_DATE,E_TXTSCROLL_DIAG_LOG};
+      ,E_ELEM_TEXT9,E_ELEM_TEXTBOX_BASE_STATUS,E_ELEM_TEXTBOX_DIAG_LOG
+      ,E_ELEM_TEXT_APR_DISPLAY,E_ELEM_TEXT_DATA_SOG,E_ELEM_TEXT_DEPTH
+      ,E_ELEM_TEXT_HDG,E_ELEM_TEXT_SOW,E_ELEM_TEXT_SW_BUILD_DATE
+      ,E_ELEM_TEXT_WIND,E_ELEM_TEXT_W_DIR,E_TXTSCROLL_DIAG_LOG};
 enum {E_GROUP1};
 // Must use separate enum for fonts with MAX_FONT at end to use gslc_FontSet.
 enum {E_BUILTIN10X16,E_BUILTIN15X24,E_BUILTIN20X32,E_BUILTIN5X8
@@ -133,18 +131,6 @@ gslc_tsXCheckbox                m_asXRadio9;
 gslc_tsXCheckbox                m_asXRadio10;
 gslc_tsXCheckbox                m_asXRadio11;
 gslc_tsXCheckbox                m_asXRadio12;
-gslc_tsXTextbox                 m_sTextbox10;
-char                            m_acTextboxBuf10[28]; // NRows=1 NCols=28
-gslc_tsXTextbox                 m_sTextbox5;
-char                            m_acTextboxBuf5[5]; // NRows=1 NCols=5
-gslc_tsXTextbox                 m_sTextbox6;
-char                            m_acTextboxBuf6[5]; // NRows=1 NCols=5
-gslc_tsXTextbox                 m_sTextbox7;
-char                            m_acTextboxBuf7[5]; // NRows=1 NCols=5
-gslc_tsXTextbox                 m_sTextbox8;
-char                            m_acTextboxBuf8[5]; // NRows=1 NCols=5
-gslc_tsXTextbox                 m_sTextbox9;
-char                            m_acTextboxBuf9[5]; // NRows=1 NCols=5
 
 #define MAX_STR                 100
 
@@ -177,21 +163,15 @@ extern gslc_tsElemRef* m_pElemRadioButtonAprAuto;
 extern gslc_tsElemRef* m_pElemRadioButtonAprStandby;
 extern gslc_tsElemRef* m_pElemRadioButtonAprTrack;
 extern gslc_tsElemRef* m_pElemRadioButtonAprWind;
+extern gslc_tsElemRef* m_pElemTextAprDisplay;
+extern gslc_tsElemRef* m_pElemTextDataDepth;
+extern gslc_tsElemRef* m_pElemTextDataHdg;
 extern gslc_tsElemRef* m_pElemTextDataSog;
-extern gslc_tsElemRef* m_pElemTextboxAprDisplay;
-extern gslc_tsElemRef* m_pElemTextboxDataDepth;
-extern gslc_tsElemRef* m_pElemTextboxDataHdg;
-extern gslc_tsElemRef* m_pElemTextboxDataSow;
-extern gslc_tsElemRef* m_pElemTextboxDataWDir;
-extern gslc_tsElemRef* m_pElemTextboxDataWind;
+extern gslc_tsElemRef* m_pElemTextDataSow;
+extern gslc_tsElemRef* m_pElemTextDataWDir;
+extern gslc_tsElemRef* m_pElemTextDataWind;
 extern gslc_tsElemRef* m_pElemTextboxDiagLog;
 extern gslc_tsElemRef* m_pElemTextboxStatus;
-extern gslc_tsElemRef* m_pTextSlider10;
-extern gslc_tsElemRef* m_pTextSlider4;
-extern gslc_tsElemRef* m_pTextSlider4;
-extern gslc_tsElemRef* m_pTextSlider4;
-extern gslc_tsElemRef* m_pTextSlider4;
-extern gslc_tsElemRef* m_pTextSlider4;
 extern gslc_tsElemRef* m_pTextSliderBaseStatus;
 extern gslc_tsElemRef* m_pTextSliderDiagLog;
 //<Extern_References !End!>
@@ -474,15 +454,14 @@ void InitGUIslice_gen()
   gslc_ElemSetTxtAlign(&m_gui,pElemRef,GSLC_ALIGN_MID_MID);
   gslc_ElemSetFillEn(&m_gui,pElemRef,false);
   gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_GREEN);
-   
-  // Create textbox
-  pElemRef = gslc_ElemXTextboxCreate(&m_gui,E_ELEM_TEXTBOX_APR_DISPLAY,E_PG_APR,&m_sTextbox10,
-    (gslc_tsRect){20,10,200,50},E_BUILTIN20X32,
-    (char*)&m_acTextboxBuf10,1,28);
-  gslc_ElemXTextboxWrapSet(&m_gui,pElemRef,false);
-  gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_MAGENTA);
+  
+  // Create E_ELEM_TEXT_APR_DISPLAY text label
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT_APR_DISPLAY,E_PG_APR,(gslc_tsRect){20,5,200,45},
+    (char*)"",0,E_BUILTIN20X32);
+  gslc_ElemSetTxtAlign(&m_gui,pElemRef,GSLC_ALIGN_MID_MID);
+  gslc_ElemSetFrameEn(&m_gui,pElemRef,true);
   gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_WHITE,GSLC_COL_BLACK,GSLC_COL_BLACK);
-  m_pElemTextboxAprDisplay = pElemRef;
+  m_pElemTextAprDisplay = pElemRef;
 
   // -----------------------------------
   // PAGE: E_PG_SPLASH_SCREEN
@@ -514,91 +493,96 @@ void InitGUIslice_gen()
   // -----------------------------------
   // PAGE: E_PG_DATA
   
-   
-  // Create textbox
-  pElemRef = gslc_ElemXTextboxCreate(&m_gui,E_ELEM_TEXTBOX_DATA_SOW,E_PG_DATA,&m_sTextbox5,
-    (gslc_tsRect){108,65,122,34},E_BUILTIN20X32,
-    (char*)&m_acTextboxBuf5,1,5);
-  gslc_ElemXTextboxWrapSet(&m_gui,pElemRef,false);
-  gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_YELLOW);
-  gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_GRAY,GSLC_COL_BLACK,GSLC_COL_BLACK);
-  m_pElemTextboxDataSow = pElemRef;
-   
-  // Create textbox
-  pElemRef = gslc_ElemXTextboxCreate(&m_gui,E_ELEM_TEXTBOX_DATA_WIND,E_PG_DATA,&m_sTextbox6,
-    (gslc_tsRect){108,105,122,34},E_BUILTIN20X32,
-    (char*)&m_acTextboxBuf6,1,5);
-  gslc_ElemXTextboxWrapSet(&m_gui,pElemRef,false);
-  gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_YELLOW);
-  gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_GRAY,GSLC_COL_BLACK,GSLC_COL_BLACK);
-  m_pElemTextboxDataWind = pElemRef;
-   
-  // Create textbox
-  pElemRef = gslc_ElemXTextboxCreate(&m_gui,E_ELEM_TEXTBOX_DATA_WDIR,E_PG_DATA,&m_sTextbox7,
-    (gslc_tsRect){108,150,122,34},E_BUILTIN20X32,
-    (char*)&m_acTextboxBuf7,1,5);
-  gslc_ElemXTextboxWrapSet(&m_gui,pElemRef,false);
-  gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_YELLOW);
-  gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_GRAY,GSLC_COL_BLACK,GSLC_COL_BLACK);
-  m_pElemTextboxDataWDir = pElemRef;
-   
-  // Create textbox
-  pElemRef = gslc_ElemXTextboxCreate(&m_gui,E_ELEM_TEXTBOX_DATA_HDG,E_PG_DATA,&m_sTextbox8,
-    (gslc_tsRect){108,190,122,34},E_BUILTIN20X32,
-    (char*)&m_acTextboxBuf8,1,5);
-  gslc_ElemXTextboxWrapSet(&m_gui,pElemRef,false);
-  gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_YELLOW);
-  gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_GRAY,GSLC_COL_BLACK,GSLC_COL_BLACK);
-  m_pElemTextboxDataHdg = pElemRef;
-   
-  // Create textbox
-  pElemRef = gslc_ElemXTextboxCreate(&m_gui,E_ELEM_TEXTBOX_DATA_DEPTH,E_PG_DATA,&m_sTextbox9,
-    (gslc_tsRect){108,230,122,34},E_BUILTIN20X32,
-    (char*)&m_acTextboxBuf9,1,5);
-  gslc_ElemXTextboxWrapSet(&m_gui,pElemRef,false);
-  gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_YELLOW);
-  gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_GRAY,GSLC_COL_BLACK,GSLC_COL_BLACK);
-  m_pElemTextboxDataDepth = pElemRef;
   
   // Create E_ELEM_TEXT27 text label
-  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT27,E_PG_DATA,(gslc_tsRect){15,25,54,24},
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT27,E_PG_DATA,(gslc_tsRect){10,25,54,24},
     (char*)"SOG",0,E_BUILTIN15X24);
   gslc_ElemSetFillEn(&m_gui,pElemRef,false);
   
   // Create E_ELEM_TEXT28 text label
-  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT28,E_PG_DATA,(gslc_tsRect){15,65,54,24},
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT28,E_PG_DATA,(gslc_tsRect){10,65,54,24},
     (char*)"SOW",0,E_BUILTIN15X24);
   gslc_ElemSetFillEn(&m_gui,pElemRef,false);
   
   // Create E_ELEM_TEXT29 text label
-  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT29,E_PG_DATA,(gslc_tsRect){15,110,72,24},
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT29,E_PG_DATA,(gslc_tsRect){10,105,72,24},
     (char*)"Wind",0,E_BUILTIN15X24);
   gslc_ElemSetFillEn(&m_gui,pElemRef,false);
   
   // Create E_ELEM_TEXT30 text label
-  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT30,E_PG_DATA,(gslc_tsRect){15,150,90,24},
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT30,E_PG_DATA,(gslc_tsRect){10,145,90,24},
     (char*)"W.Dir",0,E_BUILTIN15X24);
   gslc_ElemSetFillEn(&m_gui,pElemRef,false);
   
   // Create E_ELEM_TEXT31 text label
-  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT31,E_PG_DATA,(gslc_tsRect){10,190,54,24},
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT31,E_PG_DATA,(gslc_tsRect){10,185,54,24},
     (char*)"Hdg",0,E_BUILTIN15X24);
   gslc_ElemSetFillEn(&m_gui,pElemRef,false);
   
   // Create E_ELEM_TEXT32 text label
-  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT32,E_PG_DATA,(gslc_tsRect){15,230,90,24},
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT32,E_PG_DATA,(gslc_tsRect){10,225,90,24},
     (char*)"Depth",0,E_BUILTIN15X24);
   gslc_ElemSetFillEn(&m_gui,pElemRef,false);
   
   // Create E_ELEM_TEXT_DATA_SOG runtime modifiable text
   static char m_sDisplayText33[7] = "22";
-  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT_DATA_SOG,E_PG_DATA,(gslc_tsRect){105,20,110,26},
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT_DATA_SOG,E_PG_DATA,(gslc_tsRect){130,20,100,26},
     (char*)m_sDisplayText33,7,E_BUILTIN15X24);
   gslc_ElemSetTxtAlign(&m_gui,pElemRef,GSLC_ALIGN_MID_MID);
   gslc_ElemSetTxtMargin(&m_gui,pElemRef,1);
   gslc_ElemSetFrameEn(&m_gui,pElemRef,true);
   gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_BLACK,GSLC_COL_BLACK,GSLC_COL_BLACK);
   m_pElemTextDataSog = pElemRef;
+  
+  // Create E_ELEM_TEXT_SOW runtime modifiable text
+  static char m_sDisplayText34[7] = "22";
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT_SOW,E_PG_DATA,(gslc_tsRect){130,61,100,26},
+    (char*)m_sDisplayText34,7,E_BUILTIN15X24);
+  gslc_ElemSetTxtAlign(&m_gui,pElemRef,GSLC_ALIGN_MID_MID);
+  gslc_ElemSetTxtMargin(&m_gui,pElemRef,1);
+  gslc_ElemSetFrameEn(&m_gui,pElemRef,true);
+  gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_BLACK,GSLC_COL_BLACK,GSLC_COL_BLACK);
+  m_pElemTextDataSow = pElemRef;
+  
+  // Create E_ELEM_TEXT_WIND runtime modifiable text
+  static char m_sDisplayText35[7] = "22";
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT_WIND,E_PG_DATA,(gslc_tsRect){130,102,100,26},
+    (char*)m_sDisplayText35,7,E_BUILTIN15X24);
+  gslc_ElemSetTxtAlign(&m_gui,pElemRef,GSLC_ALIGN_MID_MID);
+  gslc_ElemSetTxtMargin(&m_gui,pElemRef,1);
+  gslc_ElemSetFrameEn(&m_gui,pElemRef,true);
+  gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_BLACK,GSLC_COL_BLACK,GSLC_COL_BLACK);
+  m_pElemTextDataWind = pElemRef;
+  
+  // Create E_ELEM_TEXT_W_DIR runtime modifiable text
+  static char m_sDisplayText36[7] = "22";
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT_W_DIR,E_PG_DATA,(gslc_tsRect){130,143,100,26},
+    (char*)m_sDisplayText36,7,E_BUILTIN15X24);
+  gslc_ElemSetTxtAlign(&m_gui,pElemRef,GSLC_ALIGN_MID_MID);
+  gslc_ElemSetTxtMargin(&m_gui,pElemRef,1);
+  gslc_ElemSetFrameEn(&m_gui,pElemRef,true);
+  gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_BLACK,GSLC_COL_BLACK,GSLC_COL_BLACK);
+  m_pElemTextDataWDir = pElemRef;
+  
+  // Create E_ELEM_TEXT_HDG runtime modifiable text
+  static char m_sDisplayText37[7] = "22";
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT_HDG,E_PG_DATA,(gslc_tsRect){130,184,100,26},
+    (char*)m_sDisplayText37,7,E_BUILTIN15X24);
+  gslc_ElemSetTxtAlign(&m_gui,pElemRef,GSLC_ALIGN_MID_MID);
+  gslc_ElemSetTxtMargin(&m_gui,pElemRef,1);
+  gslc_ElemSetFrameEn(&m_gui,pElemRef,true);
+  gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_BLACK,GSLC_COL_BLACK,GSLC_COL_BLACK);
+  m_pElemTextDataHdg = pElemRef;
+  
+  // Create E_ELEM_TEXT_DEPTH runtime modifiable text
+  static char m_sDisplayText38[7] = "22";
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT_DEPTH,E_PG_DATA,(gslc_tsRect){130,225,100,26},
+    (char*)m_sDisplayText38,7,E_BUILTIN15X24);
+  gslc_ElemSetTxtAlign(&m_gui,pElemRef,GSLC_ALIGN_MID_MID);
+  gslc_ElemSetTxtMargin(&m_gui,pElemRef,1);
+  gslc_ElemSetFrameEn(&m_gui,pElemRef,true);
+  gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_BLACK,GSLC_COL_BLACK,GSLC_COL_BLACK);
+  m_pElemTextDataDepth = pElemRef;
 
   // -----------------------------------
   // PAGE: E_PG_WIFI
