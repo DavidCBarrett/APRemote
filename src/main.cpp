@@ -277,6 +277,12 @@ void ApGslc_Update() {
 
 void setup()
 {
+  Serial.begin(115200);
+  while(!Serial) delay(100);
+  delay(500);
+
+  Serial.printf("----------------------\n-- Sea Talk Web Remote\n----------------------\n");
+
   // ------------------------------------------------
   // Initialize
   // ------------------------------------------------
@@ -290,21 +296,18 @@ void setup()
   TXHB.begin(TX_LED, 1);
   RXHB.begin(RX_LED, 1);
 
-  Serial.begin(115200);
-  while(!Serial) delay(100);
-  delay(500);
-
   // ------------------------------------------------
   // Create graphic elements
   // ------------------------------------------------
   gslc_InitDebug(&DebugOut);
   InitGUIslice_gen();
 
-  Serial.printf("----------------------\n-- Sea Talk Web Remote\n----------------------\n");
   gslc_ElemXTextboxAdd(&m_gui, m_pElemTextboxDiagLog, (char*)"----------------------\n-- Sea Talk Web Remote\n----------------------\n");
-  gslc_ElemXTextboxAdd(&m_gui, m_pElemTextboxStatus, (char*)"--Seatalk APR--\n");
+  gslc_Update(&m_gui);
 
   ApWiFi_Init();
+  gslc_ElemXTextboxAdd(&m_gui, m_pElemTextboxDiagLog, (char*)"ApWiFi_Init() done \n");
+  gslc_Update(&m_gui);
 
   Seatalk_Init();
 

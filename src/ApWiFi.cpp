@@ -2,7 +2,8 @@
 #include <SPIFFS.h>
 #include "WiFi.h"
 #include <ESPAsyncWebServer.h>
-#include <ESPAsyncWiFiManager.h>
+//#include <ESPAsyncWiFiManager.h>
+#include <WiFiManager.h>
 
 #include "main.h"
 #include "SeaTalk.h"
@@ -210,10 +211,9 @@ void onWifiEvent(WiFiEvent_t event) {
 		case WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_CONNECTED:
 			Serial.println("Connected or reconnected to WiFi");
       gslc_ElemSetTxtPrintf(&m_gui, m_pElemTextWifiStatus,  "Connected");
-      gslc_ElemSetTxtPrintf(&m_gui, m_pElemTextWifiSSID,    "%s", wifiManager.getConfiguredSTASSID());
-      gslc_ElemSetTxtPrintf(&m_gui, m_pElemTextWifiIp,      "%s", WiFi.localIP().toString());
-      
-			break;
+      gslc_ElemSetTxtPrintf(&m_gui, m_pElemTextWifiSSID,    "%s", WiFi.SSID());
+//      gslc_ElemSetTxtPrintf(&m_gui, m_pElemTextWifiIp,      "%s", WiFi.localIP().toString());
+      break;
 		case WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
       Serial.print("WiFi Disconnected. Reason: ");
       gslc_ElemSetTxtPrintf(&m_gui, m_pElemTextWifiStatus, "Disconnected");
@@ -234,7 +234,7 @@ void notFound(AsyncWebServerRequest *request) {
 //gets called when WiFiManager enters configuration mode
 void configModeCallback (AsyncWiFiManager *myWiFiManager) {
   Serial.printf("Entered config mode, AP=%s\n", WiFi.softAPIP());
-  gslc_ElemXTextboxPrintf(&m_gui, m_pElemTextboxWiFiDiag, "Entered config mode, AP=%s\n", WiFi.softAPIP());
+  gslc_ElemXTextboxPrintf(&m_gui, m_pElemTextboxWiFiDiag, "Entered config mode, AP=%s\n", WiFi.softAPIP().toString());
 
   //if you used auto generated SSID, print it
   Serial.println(myWiFiManager->getConfigPortalSSID());
@@ -243,57 +243,62 @@ void configModeCallback (AsyncWiFiManager *myWiFiManager) {
 }
 
 void ApWiFi_Connect() {
-  wifiManager.setConfigPortalTimeout(2);  // WiFi config portal time out set to 2 secs
+  wifiManager.setConfigPortalTimeout(4);  // WiFi config portal time out set to 4 secs
   wifiManager.setTryConnectDuringConfigPortal(false);
-  wifiManager.setDebugOutput(true);
 
   // set callback that gets called when connecting to previous WiFi fails, and enters Access Point mode
-//dcb  wifiManager.setAPCallback(configModeCallback);
+  wifiManager.setAPCallback(configModeCallback);
 
   // fetches ssid and pass and tries to connect
   // if it does not connect it starts an access point with the specified name
   // as per the "#define APSSID ..."" and goes into a blocking loop awaiting configuration
-  if (!wifiManager.autoConnect(APSSID)) {
+  if (wifiManager.autoConnect(APSSID)) {
+    
+    // if you get here you have connected to WiFi
+    Serial.println("Connected to WiFI.");
+    
+    gslc_ElemXTextboxAdd(&m_gui, m_pElemTextboxStatus,  (char*)"\nConnected to WiFI.");
+    gslc_ElemXTextboxPrintf(&m_gui, m_pElemTextboxWiFiDiag, 
+      "Connected to WiFI.\n SSID %s with pwd: %s", WiFi.SSID(), "TBC");
+    gslc_ElemSetTxtPrintf(&m_gui, m_pElemTextWifiIp,      "%s", WiFi.localIP().toString());
+
+
+    // function to send web page to client defined here (using some c++ magic i don't yet understand...)
+    server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
+      mySerial.enableRx(false);
+      IPAddress Ip = request->client()->remoteIP();
+      Serial.println("[" + Ip.toString() + "], requested " + request->url());
+    
+      Serial.printf("[%s], requested %s", Ip.toString(), request->url());
+      gslc_ElemXTextboxPrintf(&m_gui, m_pElemTextboxWiFiDiag, "[%s], requested %s", Ip.toString(), request->url());
+
+      request->send(SPIFFS, "/index.html", "text/html");
+    });
+
+    // define how to serve up all other files requested by the client broswer (from the Filesystem (css, js, ...))
+    server.serveStatic("/", SPIFFS, "/");
+
+    // ling the getData request to the get data function handling HTTP GET request (received every second to update client display details)
+    server.on("/getData", HTTP_GET, getData);
+    
+    server.onNotFound(notFound);
+
+    webSocket.onEvent(onWebSocketEvent);    // Assign  WebSocket callback
+    server.addHandler(&webSocket);
+    server.begin();
+  }
+  else {
+    // Failed to connect to WiFi
     Serial.println("failed to connect and hit timeout");
-    //reset and try again, or maybe put it to deep sleep
-    //ESP.restart();
-    //delay(1000);
+    gslc_ElemXTextboxPrintf(&m_gui, m_pElemTextboxWiFiDiag, 
+      "Failed to connect to WiFI.\n SSID %s PWD: %s", WiFi.SSID(), "TBC");
   }
 
-  // if you get here you have connected to the WiFi
-  Serial.println("Connected to WiFI.");
-  
-  gslc_ElemXTextboxAdd(&m_gui, m_pElemTextboxStatus,  (char*)"\nConnected to WiFI.");
-  gslc_ElemXTextboxAdd(&m_gui, m_pElemTextboxDiagLog, (char*)"Connected to WiFI.\n");
- 
- // Send web page to client
-  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-    mySerial.enableRx(false);
-    IPAddress Ip = request->client()->remoteIP();
-    Serial.println("[" + Ip.toString() + "], requested " + request->url());
-  
-    Serial.printf("[%s], requested %s", Ip.toString(), request->url());
-    gslc_ElemXTextboxPrintf(&m_gui, m_pElemTextboxWiFiDiag, "[%s], requested %s", Ip.toString(), request->url());
-
-    request->send(SPIFFS, "/index.html", "text/html");
-  });
-
-  // serve up all other files requested by the broswer in the Filesystem (css, js, ...)
-  server.serveStatic("/", SPIFFS, "/");
-
-  // Receive an HTTP GET request every second to update display details
-  server.on("/getData", HTTP_GET, getData);
-   
-  server.onNotFound(notFound);
-
-  webSocket.onEvent(onWebSocketEvent);    // Assign  WebSocket callback
-  server.addHandler(&webSocket);
-  server.begin();
 }
 
 void ApWiFi_Init() {
 
-     if(!SPIFFS.begin(true)){
+  if(!SPIFFS.begin(true)){
      Serial.println("SPIFFS Setup Error");
      return;
    }
@@ -302,6 +307,9 @@ void ApWiFi_Init() {
 
   gslc_ElemSetTxtPrintf(&m_gui, m_pElemTextWifiStatus, "Disconnected");
 
+  wifiManager.setDebugOutput(true);
+
+  wifiManager.setconfigportal
 // Set WiFi to station mode and disconnect from an AP if it was previously connected
 //   WiFi.begin();
 //   delay(500);
