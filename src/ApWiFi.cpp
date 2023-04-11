@@ -13,7 +13,6 @@
 AsyncWebServer server(80);
 AsyncWebSocket webSocket("/ws");
 //DNSServer dns;
-//WiFiManager wm(&server,&dns);
 
 DCBWiFiManager wm;
 
@@ -213,17 +212,19 @@ void onWifiEvent(WiFiEvent_t event) {
 			Serial.println("Connected or reconnected to WiFi");
       gslc_ElemSetTxtPrintf(&m_gui, m_pElemTextWifiStatus,  "Connected");
       gslc_ElemSetTxtPrintf(&m_gui, m_pElemTextWifiSSID,    "%s", WiFi.SSID());
-//      gslc_ElemSetTxtPrintf(&m_gui, m_pElemTextWifiIp,      "%s", WiFi.localIP().toString());
+      gslc_ElemSetTxtPrintf(&m_gui, m_pElemTextWifiIp,      "%s", WiFi.localIP().toString());
       break;
 		case WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
-      Serial.print("WiFi Disconnected. Reason: ");
+      Serial.println("WiFi Disconnected.");
       gslc_ElemSetTxtPrintf(&m_gui, m_pElemTextWifiStatus, "Disconnected");
-//      status("WiFI Disconnected");
-     // Serial.println(info.wifi_sta_disconnected.reason)
-			Serial.println("Enabling WiFi autoconnect");
+      gslc_ElemSetTxtPrintf(&m_gui, m_pElemTextWifiSSID,    " ");
+      gslc_ElemSetTxtPrintf(&m_gui, m_pElemTextWifiIp,      " ");
+
+			Serial.println("Enabling WiFi autoconnect...");
 			WiFi.setAutoReconnect(true);
 			break;
-		default: break;
+		default: 
+      break;
   }
 }
 
@@ -231,16 +232,13 @@ void notFound(AsyncWebServerRequest *request) {
   request->send(404, "text/plain", "Not found");
 }
 
-
 void WiFiConnectedCallback() {
     
     // if you get here you have connected to WiFi
-    Serial.println("Connected to WiFI.");
-    
+        
     gslc_ElemXTextboxAdd(&m_gui, m_pElemTextboxStatus,  (char*)"\nConnected to WiFI.");
     gslc_ElemXTextboxPrintf(&m_gui, m_pElemTextboxWiFiDiag, 
-      "Connected to WiFI.\n SSID %s with pwd: %s", WiFi.SSID(), "TBC");
-    gslc_ElemSetTxtPrintf(&m_gui, m_pElemTextWifiIp,      "%s", WiFi.localIP().toString());
+      "Connected to WiFI.\n SSID %s\n with pwd: %s", WiFi.SSID(), wm.getConfiguredSTAPassword());
 
     // Lambda function route to send web page to client defined in request->send below
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
@@ -281,7 +279,9 @@ void ApWiFi_Setup() {
   // handler for WiFi eventns (connect and disconnect events).
   WiFi.onEvent(onWifiEvent);
 
-   //wm.setConfigPortalTimeout(60);        // WiFi config portal time out set to 60 secs
+  wm.setConfigPortalTimeout(60);        // WiFi config portal time out set to 60 secs
+  wm.setWiFiConnectedCallback(WiFiConnectedCallback);
+  wm.setup(&server, APSSID);
 
 }
 

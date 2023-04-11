@@ -4,13 +4,16 @@
 
 #include <ESPAsyncWebServer.h>
 
+extern String _ssid;
+extern String _pass;
+
 class DCBWiFiManager
 {
 public:
 
   DCBWiFiManager();
 
-  void setup(AsyncWebServer* server, char* APSSID);
+  void setup(AsyncWebServer* server, const char* APSSID);
 
   void process();
 
@@ -21,11 +24,23 @@ public:
 
   void resetSettings();
 
+  void disconnectWiFi();
+
+    String getConfiguredSTASSID(){
+      return _ssid;
+  }
+  String getConfiguredSTAPassword(){
+      return _pass;
+  }
+
   // called when AP mode and config portal is started
   void setWiFiConnectedCallback(std::function<void()>);
 
 private:
 
-    std::function<void()> _wificonnectedcallback;
+
+  bool initWiFi();
+
+  std::function<void()> _wificonnectedcallback;
 };
 #endif 

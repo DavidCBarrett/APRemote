@@ -110,6 +110,7 @@ gslc_tsElemRef* m_pElemBtnBaseApr = NULL;
 gslc_tsElemRef* m_pElemBtnBaseData= NULL;
 gslc_tsElemRef* m_pElemBtnBaseDiag= NULL;
 gslc_tsElemRef* m_pElemBtnWifiConfigure= NULL;
+gslc_tsElemRef* m_pElemBtnWifiDisconnect= NULL;
 gslc_tsElemRef* m_pElemBtnWifiReset= NULL;
 gslc_tsElemRef* m_pElemRadioButtonAprAuto= NULL;
 gslc_tsElemRef* m_pElemRadioButtonAprStandby= NULL;
@@ -192,6 +193,9 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
         break;
       case E_ELEM_BTN_WIFI_RESET:
         wm.resetSettings();
+        break;
+      case E_ELEM_BTN_WIFI_DISCONNECT:
+        wm.disconnectWiFi();
         break;
 //<Button Enums !End!>
       default:

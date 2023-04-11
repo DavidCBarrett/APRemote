@@ -11,6 +11,7 @@
 #include <ESPAsyncWebServer.h>
 #include <AsyncTCP.h>
 #include "SPIFFS.h"
+#include "ApRemote_GSLC_Externs.h"
 
 #include "DCBWiFiManager.h"
 
@@ -26,8 +27,8 @@ const char* PARAM_INPUT_4 = "gateway";
 String _apssid;
 
 //Variables to save values from HTML form
-String ssid;
-String pass;
+String _ssid;
+String _pass;
 String ip;
 String gateway;
 
@@ -54,7 +55,7 @@ bool          startAP                     = false;      // start AP and webserve
 
 
 DCBWiFiManager::DCBWiFiManager() {
-  
+
 }
 
 // Initialize SPIFFS
@@ -100,8 +101,8 @@ void writeFile(fs::FS &fs, const char * path, const char * message){
 }
 
 // Initialize WiFi
-bool initWiFi() {
-  if(ssid=="" || ip==""){
+bool DCBWiFiManager::initWiFi() {
+  if(_ssid=="" || ip==""){
     Serial.println("Undefined SSID or IP address.");
     return false;
   }
@@ -115,7 +116,7 @@ bool initWiFi() {
     Serial.println("STA Failed to configure");
     return false;
   }
-  WiFi.begin(ssid.c_str(), pass.c_str());
+  WiFi.begin(_ssid.c_str(), _pass.c_str());
   Serial.println("Connecting to WiFi...");
 
   unsigned long currentMillis = millis();
@@ -152,6 +153,12 @@ void DCBWiFiManager::resetSettings(){
   if(SPIFFS.exists(gatewayPath)) SPIFFS.remove(gatewayPath);
 }
 
+void DCBWiFiManager::disconnectWiFi() {
+  
+  _server->end();
+  WiFi.disconnect();
+}
+
 void DCBWiFiManager::ConfigPortal() {
     Serial.println("DCBWiFiManager_ConfigPortal");
 
@@ -178,19 +185,19 @@ void DCBWiFiManager::ConfigPortal() {
         if(p->isPost()){
           // HTTP POST ssid value
           if (p->name() == PARAM_INPUT_1) {
-            ssid = p->value().c_str();
+            _ssid = p->value().c_str();
             Serial.print("SSID set to: ");
-            Serial.println(ssid);
+            Serial.println(_ssid);
             // Write file to save value
-            writeFile(SPIFFS, ssidPath, ssid.c_str());
+            writeFile(SPIFFS, ssidPath, _ssid.c_str());
           }
-          // HTTP POST pass value
+          // HTTP POST _pass value
           if (p->name() == PARAM_INPUT_2) {
-            pass = p->value().c_str();
+            _pass = p->value().c_str();
             Serial.print("Password set to: ");
-            Serial.println(pass);
+            Serial.println(_pass);
             // Write file to save value
-            writeFile(SPIFFS, passPath, pass.c_str());
+            writeFile(SPIFFS, passPath, _pass.c_str());
           }
           // HTTP POST ip value
           if (p->name() == PARAM_INPUT_3) {
@@ -216,9 +223,13 @@ void DCBWiFiManager::ConfigPortal() {
       ESP.restart();
     });
     _server->begin();
+
+      gslc_ElemSetTxtPrintf(&m_gui, m_pElemTextWifiStatus,  "AP Mode");
+      gslc_ElemSetTxtPrintf(&m_gui, m_pElemTextWifiSSID,    "%s", _apssid.c_str());
+      gslc_ElemSetTxtPrintf(&m_gui, m_pElemTextWifiIp,      "%s", WiFi.softAPIP().toString());
 }
 
-void DCBWiFiManager::setup(AsyncWebServer* server, char* APSSID) {
+void DCBWiFiManager::setup(AsyncWebServer* server, const char* APSSID) {
   
   _apssid = APSSID;
   _server = server;
@@ -226,12 +237,12 @@ void DCBWiFiManager::setup(AsyncWebServer* server, char* APSSID) {
   initSPIFFS();
 
   // Load values saved in SPIFFS
-  ssid = readFile(SPIFFS, ssidPath);
-  pass = readFile(SPIFFS, passPath);
+  _ssid = readFile(SPIFFS, ssidPath);
+  _pass = readFile(SPIFFS, passPath);
   ip = readFile(SPIFFS, ipPath);
   gateway = readFile (SPIFFS, gatewayPath);
-  Serial.println(ssid);
-  Serial.println(pass);
+  Serial.println(_ssid);
+  Serial.println(_pass);
   Serial.println(ip);
   Serial.println(gateway);
 

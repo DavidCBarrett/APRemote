@@ -55,18 +55,18 @@ enum {E_ELEM_BOX4,E_ELEM_BTN_APR_AUTO,E_ELEM_BTN_APR_MINUS_ONE
       ,E_ELEM_BTN_APR_STBD_TACK,E_ELEM_BTN_APR_STDBY
       ,E_ELEM_BTN_APR_TRACK,E_ELEM_BTN_APR_WIND,E_ELEM_BTN_BASE_APR
       ,E_ELEM_BTN_BASE_DATA,E_ELEM_BTN_BASE_DIAG,E_ELEM_BTN_BASE_WIFI
-      ,E_ELEM_BTN_WIFI_CONFIGURE,E_ELEM_BTN_WIFI_RESET
-      ,E_ELEM_RADIO_APR_AUTO,E_ELEM_RADIO_APR_STANDBY
-      ,E_ELEM_RADIO_APR_TRACK,E_ELEM_RADIO_APR_WIND,E_ELEM_TEXT10
-      ,E_ELEM_TEXT20,E_ELEM_TEXT21,E_ELEM_TEXT22,E_ELEM_TEXT23
-      ,E_ELEM_TEXT24,E_ELEM_TEXT25,E_ELEM_TEXT26,E_ELEM_TEXT27
-      ,E_ELEM_TEXT28,E_ELEM_TEXT29,E_ELEM_TEXT30,E_ELEM_TEXT31
-      ,E_ELEM_TEXT32,E_ELEM_TEXT40,E_ELEM_TEXT41,E_ELEM_TEXT43
-      ,E_ELEM_TEXT45,E_ELEM_TEXT47,E_ELEM_TEXT8,E_ELEM_TEXT9
-      ,E_ELEM_TEXTBOX_BASE_STATUS,E_ELEM_TEXTBOX_DIAG_LOG
-      ,E_ELEM_TEXTBOX_WIFI_DIAG,E_ELEM_TEXT_APR_DISPLAY
-      ,E_ELEM_TEXT_DATA_SOG,E_ELEM_TEXT_DEPTH,E_ELEM_TEXT_HDG
-      ,E_ELEM_TEXT_SOW,E_ELEM_TEXT_SW_BUILD_DATE
+      ,E_ELEM_BTN_WIFI_CONFIGURE,E_ELEM_BTN_WIFI_DISCONNECT
+      ,E_ELEM_BTN_WIFI_RESET,E_ELEM_RADIO_APR_AUTO
+      ,E_ELEM_RADIO_APR_STANDBY,E_ELEM_RADIO_APR_TRACK
+      ,E_ELEM_RADIO_APR_WIND,E_ELEM_TEXT10,E_ELEM_TEXT20,E_ELEM_TEXT21
+      ,E_ELEM_TEXT22,E_ELEM_TEXT23,E_ELEM_TEXT24,E_ELEM_TEXT25
+      ,E_ELEM_TEXT26,E_ELEM_TEXT27,E_ELEM_TEXT28,E_ELEM_TEXT29
+      ,E_ELEM_TEXT30,E_ELEM_TEXT31,E_ELEM_TEXT32,E_ELEM_TEXT40
+      ,E_ELEM_TEXT41,E_ELEM_TEXT43,E_ELEM_TEXT45,E_ELEM_TEXT47
+      ,E_ELEM_TEXT8,E_ELEM_TEXT9,E_ELEM_TEXTBOX_BASE_STATUS
+      ,E_ELEM_TEXTBOX_DIAG_LOG,E_ELEM_TEXTBOX_WIFI_DIAG
+      ,E_ELEM_TEXT_APR_DISPLAY,E_ELEM_TEXT_DATA_SOG,E_ELEM_TEXT_DEPTH
+      ,E_ELEM_TEXT_HDG,E_ELEM_TEXT_SOW,E_ELEM_TEXT_SW_BUILD_DATE
       ,E_ELEM_TEXT_WIFI_CLIENT_SSID,E_ELEM_TEXT_WIFI_IP
       ,E_ELEM_TEXT_WIFI_SSID,E_ELEM_TEXT_WIFI_STATUS,E_ELEM_TEXT_WIND
       ,E_ELEM_TEXT_W_DIR,E_TXTSCROLL_DIAG_LOG,E_TXTSCROLL_WIFI_DIAG};
@@ -101,7 +101,7 @@ enum {E_BUILTIN10X16,E_BUILTIN15X24,E_BUILTIN20X32,E_BUILTIN5X8
 #define MAX_ELEM_PG_DATA 12 // # Elems total on page
 #define MAX_ELEM_PG_DATA_RAM MAX_ELEM_PG_DATA // # Elems in RAM
 
-#define MAX_ELEM_PG_WIFI 14 // # Elems total on page
+#define MAX_ELEM_PG_WIFI 15 // # Elems total on page
 #define MAX_ELEM_PG_WIFI_RAM MAX_ELEM_PG_WIFI // # Elems in RAM
 //<ElementDefines !End!>
 
@@ -164,6 +164,7 @@ extern gslc_tsElemRef* m_pElemBtnBaseApr;
 extern gslc_tsElemRef* m_pElemBtnBaseData;
 extern gslc_tsElemRef* m_pElemBtnBaseDiag;
 extern gslc_tsElemRef* m_pElemBtnWifiConfigure;
+extern gslc_tsElemRef* m_pElemBtnWifiDisconnect;
 extern gslc_tsElemRef* m_pElemBtnWifiReset;
 extern gslc_tsElemRef* m_pElemRadioButtonAprAuto;
 extern gslc_tsElemRef* m_pElemRadioButtonAprStandby;
@@ -602,12 +603,12 @@ void InitGUIslice_gen()
   
   // create E_ELEM_BTN_WIFI_CONFIGURE button with text label
   pElemRef = gslc_ElemCreateBtnTxt(&m_gui,E_ELEM_BTN_WIFI_CONFIGURE,E_PG_WIFI,
-    (gslc_tsRect){10,235,80,25},(char*)"Configure",0,E_BUILTIN5X8,&CbBtnCommon);
+    (gslc_tsRect){10,235,60,25},(char*)"Config",0,E_BUILTIN5X8,&CbBtnCommon);
   m_pElemBtnWifiConfigure = pElemRef;
   
   // create E_ELEM_BTN_WIFI_RESET button with text label
   pElemRef = gslc_ElemCreateBtnTxt(&m_gui,E_ELEM_BTN_WIFI_RESET,E_PG_WIFI,
-    (gslc_tsRect){145,235,80,25},(char*)"Reset",0,E_BUILTIN5X8,&CbBtnCommon);
+    (gslc_tsRect){168,235,60,25},(char*)"Reset",0,E_BUILTIN5X8,&CbBtnCommon);
   m_pElemBtnWifiReset = pElemRef;
   
   // Create E_ELEM_TEXT40 text label
@@ -621,9 +622,9 @@ void InitGUIslice_gen()
   gslc_ElemSetFillEn(&m_gui,pElemRef,false);
   
   // Create E_ELEM_TEXT_WIFI_STATUS runtime modifiable text
-  static char m_sDisplayText42[11] = "Status";
+  static char m_sDisplayText42[21] = "Status";
   pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT_WIFI_STATUS,E_PG_WIFI,(gslc_tsRect){110,38,120,16},
-    (char*)m_sDisplayText42,11,E_BUILTIN10X16);
+    (char*)m_sDisplayText42,21,E_BUILTIN5X8);
   m_pElemTextWifiStatus = pElemRef;
   
   // Create E_ELEM_TEXT43 text label
@@ -632,9 +633,9 @@ void InitGUIslice_gen()
   gslc_ElemSetFillEn(&m_gui,pElemRef,false);
   
   // Create E_ELEM_TEXT_WIFI_SSID runtime modifiable text
-  static char m_sDisplayText44[11] = "SSID";
+  static char m_sDisplayText44[21] = "SSID";
   pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT_WIFI_SSID,E_PG_WIFI,(gslc_tsRect){110,68,120,16},
-    (char*)m_sDisplayText44,11,E_BUILTIN10X16);
+    (char*)m_sDisplayText44,21,E_BUILTIN5X8);
   m_pElemTextWifiSSID = pElemRef;
   
   // Create E_ELEM_TEXT45 text label
@@ -643,9 +644,9 @@ void InitGUIslice_gen()
   gslc_ElemSetFillEn(&m_gui,pElemRef,false);
   
   // Create E_ELEM_TEXT_WIFI_IP runtime modifiable text
-  static char m_sDisplayText46[11] = "IP";
+  static char m_sDisplayText46[21] = "IP";
   pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT_WIFI_IP,E_PG_WIFI,(gslc_tsRect){110,98,120,16},
-    (char*)m_sDisplayText46,11,E_BUILTIN10X16);
+    (char*)m_sDisplayText46,21,E_BUILTIN5X8);
   m_pElemTextWifiIp = pElemRef;
   
   // Create E_ELEM_TEXT47 text label
@@ -654,9 +655,9 @@ void InitGUIslice_gen()
   gslc_ElemSetFillEn(&m_gui,pElemRef,false);
   
   // Create E_ELEM_TEXT_WIFI_CLIENT_SSID runtime modifiable text
-  static char m_sDisplayText48[11] = "C SSID";
+  static char m_sDisplayText48[21] = "C SSID";
   pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT_WIFI_CLIENT_SSID,E_PG_WIFI,(gslc_tsRect){110,128,120,16},
-    (char*)m_sDisplayText48,11,E_BUILTIN10X16);
+    (char*)m_sDisplayText48,21,E_BUILTIN5X8);
   m_pElemTextWifiClientSSID = pElemRef;
    
   // Create wrapping box for textbox E_ELEM_TEXTBOX_WIFI_DIAG and scrollbar
@@ -678,6 +679,11 @@ void InitGUIslice_gen()
   gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_BLUE,GSLC_COL_BLACK,GSLC_COL_BLUE);
   gslc_ElemXSliderSetPosFunc(&m_gui,pElemRef,&CbSlidePos);
   m_pTextSliderWifiDiag = pElemRef;
+  
+  // create E_ELEM_BTN_WIFI_DISCONNECT button with text label
+  pElemRef = gslc_ElemCreateBtnTxt(&m_gui,E_ELEM_BTN_WIFI_DISCONNECT,E_PG_WIFI,
+    (gslc_tsRect){89,235,60,25},(char*)"Discon",0,E_BUILTIN5X8,&CbBtnCommon);
+  m_pElemBtnWifiDisconnect = pElemRef;
 //<InitGUI !End!>
 
 //<Startup !Start!>
