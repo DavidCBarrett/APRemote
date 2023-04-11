@@ -74,7 +74,8 @@ TODO'S:
 #include "HeartBeat.h"
 
 #include "ApEsp32Pins.h"
-#include "ApWiFi.h"
+#include "ApWifi.h"
+#include "DCBWiFiManager.h"
 #include "SeaTalk.h"
 #include "ApRemote_GSLC.h"
 
@@ -187,9 +188,10 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
       case E_ELEM_BTN_APR_PORT_TACK:
         break;
       case E_ELEM_BTN_WIFI_CONFIGURE:
-        APWiFi_ConfigPortal();
+        wm.ConfigPortal();
         break;
       case E_ELEM_BTN_WIFI_RESET:
+        wm.resetSettings();
         break;
 //<Button Enums !End!>
       default:
@@ -305,7 +307,8 @@ void setup()
   gslc_ElemXTextboxAdd(&m_gui, m_pElemTextboxDiagLog, (char*)"----------------------\n-- Sea Talk Web Remote\n----------------------\n");
   gslc_Update(&m_gui);
 
-  ApWiFi_Init();
+  ApWiFi_Setup();
+
   gslc_ElemXTextboxAdd(&m_gui, m_pElemTextboxDiagLog, (char*)"ApWiFi_Init() done \n");
   gslc_Update(&m_gui);
 
@@ -331,7 +334,7 @@ void loop()
   btnDown.update();
   btnSelect.update();
 
-  APWiFi_Tick();
+  APWiFi_Loop();
 
   // ------------------------------------------------
   // Update GUI Elements

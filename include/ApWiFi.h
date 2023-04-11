@@ -3,11 +3,12 @@
 #define _APWIFI_H
 
 #include <Arduino.h>
+#include "DCBWiFiManager.h"
 
-void ApWiFi_Init();
+extern DCBWiFiManager wm;
 
-void APWiFi_Tick();
+void ApWiFi_Setup();
 
-void APWiFi_ConfigPortal();
+void APWiFi_Loop();
 
-#endif // end _APWIFI_H
+#endif // _APWIFI_H
