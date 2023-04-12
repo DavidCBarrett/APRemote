@@ -31,53 +31,22 @@ External events:
   OnUserDisconnectRequest       disconnect from any station, enter APMode.
 
 *********/
+#include "DCBWiFiManager.h"
 
 #include <Arduino.h>
 #include <WiFi.h>
-#include <ESPAsyncWebServer.h>
 #include <AsyncTCP.h>
-#include "SPIFFS.h"
+#include <SPIFFS.h>
+
 #include "ApRemote_GSLC_Externs.h"
 
-#include "DCBWiFiManager.h"
-
-// AsyncWebServer to use ...
-AsyncWebServer* _server;
-
-// Search for parameter in HTTP POST request
-const char* PARAM_INPUT_1 = "ssid";
-const char* PARAM_INPUT_2 = "pass";
-const char* PARAM_INPUT_3 = "ip";
-const char* PARAM_INPUT_4 = "gateway";
-
-String _apssid;
-
-//Variables to save values from HTML form
-String _ssid;
-String _pass;
-String ip;
-String gateway;
-
-// File paths to save input values permanently
-const char* ssidPath = "/ssid.txt";
-const char* passPath = "/pass.txt";
-const char* ipPath = "/ip.txt";
-const char* gatewayPath = "/gateway.txt";
-
-IPAddress localIP;
-//IPAddress localIP(192, 168, 1, 200); // hardcoded
+//IPAddress localIP;
+IPAddress localIP(192, 168, 1, 200); // hardcoded
 
 // Set your Gateway IP address
 IPAddress localGateway;
 //IPAddress localGateway(192, 168, 1, 1); //hardcoded
 IPAddress subnet(255, 255, 0, 0);
-
-// Timer variables
-unsigned long configPortalPreviousMillis  = 0;
-unsigned long configPortalTimeoutMillis   = 120;        // seconds to run Wifi manager's AP config portal 
-unsigned long configPortalStartTimeMillis = millis();
-bool          portalRunning               = false;
-bool          startAP                     = false;      // start AP and webserver if true, else start only webserver
 
 DCBWiFiManager::DCBWiFiManager(AsyncWebServer* server, const char* APSSID) : StateMachine(ST_MAX_STATES) {
 
@@ -86,7 +55,7 @@ if (!SPIFFS.begin(true)) {
   }
   Serial.println("SPIFFS mounted successfully");
 
-_apssid = APSSID;
+  _apssid = APSSID;
   _server = server;
   
   // Load values saved in SPIFFS
@@ -161,13 +130,12 @@ void DCBWiFiManager::OnUserDisconnectRequest() {
     END_TRANSITION_MAP(NULL)
 }
 
-// void DCBWiFiManager::ST_ConnectingToSTA(EventData* pData) {}
-// void DCBWiFiManager::ST_APMode(EventData* pData) {}
-// void DCBWiFiManager::ST_STAMode(EventData* pData) {}
 
-STATE_DEFINE(DCBWiFiManager,     ConnectingToSTA,    NoEventData) {}
-STATE_DEFINE(DCBWiFiManager,     APMode,             NoEventData) {}
-STATE_DEFINE(DCBWiFiManager,     STAMode,            NoEventData) {}
+ENTRY_DEFINE(DCBWiFiManager,     EntryConnectingToSTA,    NoEventData) {}
+STATE_DEFINE(DCBWiFiManager,     ConnectingToSTA,         NoEventData) {}
+ENTRY_DEFINE(DCBWiFiManager,     EntryAPMode,             NoEventData) {}
+STATE_DEFINE(DCBWiFiManager,     APMode,                  NoEventData) {}
+STATE_DEFINE(DCBWiFiManager,     STAMode,                 NoEventData) {}
 
 // Initialize WiFi
 bool DCBWiFiManager::initWiFi() {
