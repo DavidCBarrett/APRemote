@@ -161,27 +161,13 @@ void DCBWiFiManager::OnUserDisconnectRequest() {
     END_TRANSITION_MAP(NULL)
 }
 
-void DCBWiFiManager::ST_ConnectingToSTA(EventData* pData) {}
-void DCBWiFiManager::ST_APMode(EventData* pData) {}
-void DCBWiFiManager::ST_STAMode(EventData* pData) {}
+// void DCBWiFiManager::ST_ConnectingToSTA(EventData* pData) {}
+// void DCBWiFiManager::ST_APMode(EventData* pData) {}
+// void DCBWiFiManager::ST_STAMode(EventData* pData) {}
 
-// STATE_DEFINE(DCBWiFiManager,     ConnectingToSTA,    NoEventData) {
-
-// // in this state, try and connect to STA with supplied ssid & pwd, if succeed, fail, or timeout then transition.
-
-// }
-
-// STATE_DEFINE(DCBWiFiManager,     APMode,             NoEventData) {
-
-// // in this state, nothing to do but service any wifi objects
-
-// }
-
-// STATE_DEFINE(DCBWiFiManager,     STAMode,            NoEventData) {
-
-// // in this state, nothing to do but service any wifi objects
-
-// }
+STATE_DEFINE(DCBWiFiManager,     ConnectingToSTA,    NoEventData) {}
+STATE_DEFINE(DCBWiFiManager,     APMode,             NoEventData) {}
+STATE_DEFINE(DCBWiFiManager,     STAMode,            NoEventData) {}
 
 // Initialize WiFi
 bool DCBWiFiManager::initWiFi() {
