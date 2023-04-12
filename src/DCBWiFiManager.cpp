@@ -50,25 +50,206 @@ IPAddress subnet(255, 255, 0, 0);
 
 DCBWiFiManager::DCBWiFiManager(AsyncWebServer* server, const char* APSSID) : StateMachine(ST_MAX_STATES) {
 
-if (!SPIFFS.begin(true)) {
-    Serial.println("An error has occurred while mounting SPIFFS");
-  }
-  Serial.println("SPIFFS mounted successfully");
-
   _apssid = APSSID;
   _server = server;
   
-  // Load values saved in SPIFFS
-  _ssid = readFile(SPIFFS, ssidPath);
-  _pass = readFile(SPIFFS, passPath);
-  ip = readFile(SPIFFS, ipPath);
-  gateway = readFile (SPIFFS, gatewayPath);
-  Serial.println(_ssid);
-  Serial.println(_pass);
-  Serial.println(ip);
-  Serial.println(gateway);
+  if (SPIFFS.begin(true)) {
+    // Load values saved in SPIFFS
+    _ssid   = readFile(SPIFFS, ssidPath);
+    _pass   = readFile(SPIFFS, passPath);
+    ip      = readFile(SPIFFS, ipPath);
+    gateway = readFile(SPIFFS, gatewayPath);
 
+    Serial.printf("From SPIFFS - SSID:%s, PWD: %s, IP: %s, Gateway: %s\n ", _ssid, _pass, ip.c_str(), gateway.c_str());
+  }
+  else {
+    Serial.println("DCBWiFiManager::DCBWiFiManager An error has occurred while mounting SPIFFS");
+  }
 }
+
+//
+// external events taken by this state machine
+//
+
+void DCBWiFiManager::OnUserConnectRequest() {
+   // given the OnUserConnectRequest event, transition to a new state based upon 
+   // the current state of the state machine - real work is done in the ST_XXX functions
+    BEGIN_TRANSITION_MAP                            // - Current State -
+        TRANSITION_MAP_ENTRY (CANNOT_HAPPEN)        // ST_CONNECTINGTOSTA
+        TRANSITION_MAP_ENTRY (ST_CONNECTINGTOSTA)   // ST_APMODE
+        TRANSITION_MAP_ENTRY (CANNOT_HAPPEN)        // ST_STAMODE
+    END_TRANSITION_MAP(NULL)
+}
+
+void DCBWiFiManager::OnUserDisconnectRequest() {
+   // given the OnUserConnectRequest event, transition to a new state based upon 
+   // the current state of the state machine - real work is done in the ST_XXX functions
+    BEGIN_TRANSITION_MAP                            // - Current State -
+        TRANSITION_MAP_ENTRY (ST_APMODE)            // ST_CONNECTINGTOSTA
+        TRANSITION_MAP_ENTRY (EVENT_IGNORED)        // ST_APMODE
+        TRANSITION_MAP_ENTRY (ST_APMODE)            // ST_STAMODE
+    END_TRANSITION_MAP(NULL)
+}
+
+void DCBWiFiManager::poll() {
+   // hopefully this will just poll the current state, calling the relevant STATE_DEFINE function below.
+    BEGIN_TRANSITION_MAP                            // - Current State -
+        TRANSITION_MAP_ENTRY (ST_CONNECTINGTOSTA)   // ST_CONNECTINGTOSTA
+        TRANSITION_MAP_ENTRY (ST_APMODE)            // ST_APMODE
+        TRANSITION_MAP_ENTRY (ST_STAMODE)           // ST_STAMODE
+    END_TRANSITION_MAP(NULL)
+}
+
+GUARD_DEFINE(DCBWiFiManager,     GuardConnectingToSTA,   NoEventData) {
+  // if no SSID or IP provided, dont proceed
+  if(_ssid=="" || ip==""){
+      Serial.println("GuardConnectingToSTA::Undefined SSID or IP address.");
+      return FALSE; // note use of upper BOOL, TRUE and FALSE in GUARD functions.
+  }
+
+  // Move to station mode, & configure, only proceed to ST_CONNECTINGTOSTA if this succeeds.
+  WiFi.mode(WIFI_STA);
+  localIP.fromString(ip.c_str());
+  localGateway.fromString(gateway.c_str());
+
+  // if configuring WiFi fails, don't proceed.
+  if (!WiFi.config(localIP, localGateway, subnet)){
+    Serial.println("GuardConnectingToSTA::STA Failed to configure");
+    return FALSE;
+  }
+
+  // STA preparations successful, proceed
+  return TRUE;
+}
+
+ENTRY_DEFINE(DCBWiFiManager,     EntryConnectingToSTA,    NoEventData) {
+  // Attempt connecion with provided info.
+  Serial.println("EntryConnectingToSTA::Connecting to WiFi...");
+  WiFi.begin(_ssid.c_str(), _pass.c_str());
+
+  // caputre when we started, to check for timeout later.
+  configPortalPreviousMillis = millis();
+}
+
+STATE_DEFINE(DCBWiFiManager,     ConnectingToSTA,         NoEventData) {
+  // check for connection success, or timeout.
+  if(WiFi.status() == WL_CONNECTED) {
+
+    Serial.printf("ConnectingToSTA::Connected to STA @ %s", WiFi.localIP().toString());
+    // notify client we connected to wifi, calling their conneted function
+    if (_wificonnectedcallback != NULL)
+    {
+      _wificonnectedcallback();
+    }
+
+    // Start the web_server
+    _server->begin();
+
+    //Connecition Success - move to ST_STAMODE
+    InternalEvent(ST_STAMODE);
+  }
+  else {
+    // check for connection timeout
+    if (millis() - configPortalPreviousMillis >= configPortalTimeoutMillis) {
+      Serial.printf("ConnectingToSTA::Connection to %s timeout.", _ssid);
+
+      //Connecition Timed out - move to ST_STAMODE
+      InternalEvent(ST_APMODE);
+    }
+
+    // we havent connected or timed out yet... just wait...
+    // TODO: capture timeout remaining...
+  }
+}
+
+ENTRY_DEFINE(DCBWiFiManager,     EntryAPMode,             NoEventData) {
+  // Setup AP Mode.
+  Serial.println("EntryAPMode");
+  
+  // Ensure disconnected from any WiFi Stations, and set up ApMode.
+  WiFi.disconnect();
+  
+  // Connect to Wi-Fi network with SSID and password
+  Serial.println("Setting AP (Access Point)");
+  // NULL sets an open Access Point
+  WiFi.softAP(_apssid);
+
+  IPAddress IP = WiFi.softAPIP();
+  Serial.print("AP IP address: ");
+  Serial.println(IP); 
+
+  // Web Server Root URL
+  _server->on("/", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send(SPIFFS, "/wifimanager.html", "text/html");
+  });
+  
+  _server->serveStatic("/", SPIFFS, "/");
+  
+  _server->on("/", HTTP_POST, [this](AsyncWebServerRequest *request) {
+    int params = request->params();
+    for(int i=0;i<params;i++){
+      AsyncWebParameter* p = request->getParam(i);
+      if(p->isPost()){
+        // HTTP POST ssid value
+        if (p->name() == PARAM_INPUT_1) {
+          _ssid = p->value().c_str();
+          Serial.print("SSID set to: ");
+          Serial.println(_ssid);
+          // Write file to save value
+          writeFile(SPIFFS, ssidPath, _ssid.c_str());
+        }
+        // HTTP POST _pass value
+        if (p->name() == PARAM_INPUT_2) {
+          _pass = p->value().c_str();
+          Serial.print("Password set to: ");
+          Serial.println(_pass);
+          // Write file to save value
+          writeFile(SPIFFS, passPath, _pass.c_str());
+        }
+        // HTTP POST ip value
+        if (p->name() == PARAM_INPUT_3) {
+          ip = p->value().c_str();
+          Serial.print("IP Address set to: ");
+          Serial.println(ip);
+          // Write file to save value
+          writeFile(SPIFFS, ipPath, ip.c_str());
+        }
+        // HTTP POST gateway value
+        if (p->name() == PARAM_INPUT_4) {
+          gateway = p->value().c_str();
+          Serial.print("Gateway set to: ");
+          Serial.println(gateway);
+          // Write file to save value
+          writeFile(SPIFFS, gatewayPath, gateway.c_str());
+        }
+        //Serial.printf("POST[%s]: %s\n", p->name().c_str(), p->value().c_str());
+      }
+    }
+    request->send(200, "text/plain", "Done. ESP will restart, connect to your router and go to IP address: " + ip);
+    delay(3000);
+    ESP.restart();
+  });
+  _server->begin();
+
+  gslc_ElemSetTxtPrintf(&m_gui, m_pElemTextWifiStatus,  "AP Mode");
+  gslc_ElemSetTxtPrintf(&m_gui, m_pElemTextWifiSSID,    "%s", _apssid.c_str());
+  gslc_ElemSetTxtPrintf(&m_gui, m_pElemTextWifiIp,      "%s", WiFi.softAPIP().toString());
+}
+
+STATE_DEFINE(DCBWiFiManager,     APMode,                  NoEventData) {}
+
+STATE_DEFINE(DCBWiFiManager,     STAMode,                 NoEventData) {}
+
+
+void DCBWiFiManager::resetSettings(){
+
+  // Reset settings by deleting the connection files
+  if(SPIFFS.exists(ssidPath)) SPIFFS.remove(ssidPath);
+  if(SPIFFS.exists(passPath)) SPIFFS.remove(passPath);
+  if(SPIFFS.exists(ipPath)) SPIFFS.remove(ipPath);
+  if(SPIFFS.exists(gatewayPath)) SPIFFS.remove(gatewayPath);
+}
+
 
 // Read File from SPIFFS
 String DCBWiFiManager::readFile(fs::FS &fs, const char * path){
@@ -102,190 +283,4 @@ void DCBWiFiManager::writeFile(fs::FS &fs, const char * path, const char * messa
   } else {
     Serial.println("- frite failed");
   }
-}
-
-//
-// external events taken by this state machine
-//
-
-void DCBWiFiManager::OnUserConnectRequest() {
-   // given the OnUserConnectRequest event, transition to a new state based upon 
-   // the current state of the state machine - real work is done in the ST_XXX functions
-    BEGIN_TRANSITION_MAP                            // - Current State -
-        TRANSITION_MAP_ENTRY (CANNOT_HAPPEN)        // ST_ConnectingToSTA
-        TRANSITION_MAP_ENTRY (ST_CONNECTINGTOSTA)   // ST_APMode
-        TRANSITION_MAP_ENTRY (CANNOT_HAPPEN)        // ST_STAMode
-
-    END_TRANSITION_MAP(NULL)
-}
-
-void DCBWiFiManager::OnUserDisconnectRequest() {
-   // given the OnUserConnectRequest event, transition to a new state based upon 
-   // the current state of the state machine - real work is done in the ST_XXX functions
-    BEGIN_TRANSITION_MAP                            // - Current State -
-        TRANSITION_MAP_ENTRY (ST_APMODE)            // ST_ConnectingToSTA
-        TRANSITION_MAP_ENTRY (EVENT_IGNORED)        // ST_APMode
-        TRANSITION_MAP_ENTRY (ST_APMODE)            // ST_STAMode
-
-    END_TRANSITION_MAP(NULL)
-}
-
-
-ENTRY_DEFINE(DCBWiFiManager,     EntryConnectingToSTA,    NoEventData) {}
-STATE_DEFINE(DCBWiFiManager,     ConnectingToSTA,         NoEventData) {}
-ENTRY_DEFINE(DCBWiFiManager,     EntryAPMode,             NoEventData) {}
-STATE_DEFINE(DCBWiFiManager,     APMode,                  NoEventData) {}
-STATE_DEFINE(DCBWiFiManager,     STAMode,                 NoEventData) {}
-
-// Initialize WiFi
-bool DCBWiFiManager::initWiFi() {
-  if(_ssid=="" || ip==""){
-    Serial.println("Undefined SSID or IP address.");
-    return false;
-  }
-
-  WiFi.mode(WIFI_STA);
-  localIP.fromString(ip.c_str());
-  localGateway.fromString(gateway.c_str());
-
-
-  if (!WiFi.config(localIP, localGateway, subnet)){
-    Serial.println("STA Failed to configure");
-    return false;
-  }
-  WiFi.begin(_ssid.c_str(), _pass.c_str());
-  Serial.println("Connecting to WiFi...");
-
-  unsigned long currentMillis = millis();
-  configPortalPreviousMillis = currentMillis;
-
-  while(WiFi.status() != WL_CONNECTED) {
-    currentMillis = millis();
-    if (currentMillis - configPortalPreviousMillis >= configPortalTimeoutMillis) {
-      Serial.println("Failed to connect.");
-      return false;
-    }
-  }
-
-  Serial.println(WiFi.localIP());
-  return true;
-}
-
-void DCBWiFiManager::setConfigPortalTimeout(unsigned long seconds) {
-  configPortalTimeoutMillis = seconds*1000;
-}
-
-// the client's function to call when wifi connects, to do client specific post connection (e.g. webserver) setup
-void DCBWiFiManager::setWiFiConnectedCallback(std::function<void()> func)
-{
-  _wificonnectedcallback = func;
-}
-
-void DCBWiFiManager::resetSettings(){
-
-  // Reset settings by deleting the connection files
-  if(SPIFFS.exists(ssidPath)) SPIFFS.remove(ssidPath);
-  if(SPIFFS.exists(passPath)) SPIFFS.remove(passPath);
-  if(SPIFFS.exists(ipPath)) SPIFFS.remove(ipPath);
-  if(SPIFFS.exists(gatewayPath)) SPIFFS.remove(gatewayPath);
-}
-
-void DCBWiFiManager::disconnectWiFi() {
-  
-  _server->end();
-  WiFi.disconnect();
-}
-
-void DCBWiFiManager::ConfigPortal() {
-    Serial.println("DCBWiFiManager_ConfigPortal");
-
-      // Connect to Wi-Fi network with SSID and password
-    Serial.println("Setting AP (Access Point)");
-    // NULL sets an open Access Point
-    WiFi.softAP(_apssid);
-
-    IPAddress IP = WiFi.softAPIP();
-    Serial.print("AP IP address: ");
-    Serial.println(IP); 
-
-    // Web Server Root URL
-    _server->on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-      request->send(SPIFFS, "/wifimanager.html", "text/html");
-    });
-    
-    _server->serveStatic("/", SPIFFS, "/");
-    
-    _server->on("/", HTTP_POST, [this](AsyncWebServerRequest *request) {
-      int params = request->params();
-      for(int i=0;i<params;i++){
-        AsyncWebParameter* p = request->getParam(i);
-        if(p->isPost()){
-          // HTTP POST ssid value
-          if (p->name() == PARAM_INPUT_1) {
-            _ssid = p->value().c_str();
-            Serial.print("SSID set to: ");
-            Serial.println(_ssid);
-            // Write file to save value
-            writeFile(SPIFFS, ssidPath, _ssid.c_str());
-          }
-          // HTTP POST _pass value
-          if (p->name() == PARAM_INPUT_2) {
-            _pass = p->value().c_str();
-            Serial.print("Password set to: ");
-            Serial.println(_pass);
-            // Write file to save value
-            writeFile(SPIFFS, passPath, _pass.c_str());
-          }
-          // HTTP POST ip value
-          if (p->name() == PARAM_INPUT_3) {
-            ip = p->value().c_str();
-            Serial.print("IP Address set to: ");
-            Serial.println(ip);
-            // Write file to save value
-            writeFile(SPIFFS, ipPath, ip.c_str());
-          }
-          // HTTP POST gateway value
-          if (p->name() == PARAM_INPUT_4) {
-            gateway = p->value().c_str();
-            Serial.print("Gateway set to: ");
-            Serial.println(gateway);
-            // Write file to save value
-            writeFile(SPIFFS, gatewayPath, gateway.c_str());
-          }
-          //Serial.printf("POST[%s]: %s\n", p->name().c_str(), p->value().c_str());
-        }
-      }
-      request->send(200, "text/plain", "Done. ESP will restart, connect to your router and go to IP address: " + ip);
-      delay(3000);
-      ESP.restart();
-    });
-    _server->begin();
-
-      gslc_ElemSetTxtPrintf(&m_gui, m_pElemTextWifiStatus,  "AP Mode");
-      gslc_ElemSetTxtPrintf(&m_gui, m_pElemTextWifiSSID,    "%s", _apssid.c_str());
-      gslc_ElemSetTxtPrintf(&m_gui, m_pElemTextWifiIp,      "%s", WiFi.softAPIP().toString());
-}
-
-void DCBWiFiManager::setup(AsyncWebServer* server, const char* APSSID) {
-  
-  if(initWiFi()) {
-    Serial.println("DCB says WIFI Connected with saved params");
-
-    // notify client we connected to wifi, calling their conneted function
-    if (_wificonnectedcallback != NULL)
-    {
-      _wificonnectedcallback();
-    }
-
-    // Start the web_server->
-    _server->begin();
-  }
-  else {
-    // Launch the config portal to get WiFi connection parameters.
-    this->ConfigPortal();
-  }
-}
-
-void DCBWiFiManager::process() {
-
 }

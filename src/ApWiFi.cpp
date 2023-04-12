@@ -243,11 +243,9 @@ void WiFiConnectedCallback() {
     // Lambda function route to send web page to client defined in request->send below
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
       mySerial.enableRx(false);
-      IPAddress Ip = request->client()->remoteIP();
-      Serial.println("[" + Ip.toString() + "], requested " + request->url());
-    
-      Serial.printf("[%s], requested %s", Ip.toString(), request->url());
-      gslc_ElemXTextboxPrintf(&m_gui, m_pElemTextboxWiFiDiag, "[%s], requested %s", Ip.toString(), request->url());
+      Serial.printf("[%s], requested %s", request->client()->remoteIP().toString(), request->url());
+      gslc_ElemXTextboxPrintf(&m_gui, m_pElemTextboxWiFiDiag, 
+        "[%s], requested %s", request->client()->remoteIP().toString(), request->url());
 
       request->send(SPIFFS, "/index.html", "text/html");
     });
@@ -266,29 +264,28 @@ void WiFiConnectedCallback() {
 
 void ApWiFi_Setup() {
 
-  if(!SPIFFS.begin(true)){
-     Serial.println("SPIFFS Setup Error");
-     return;
-   }
+  // if(!SPIFFS.begin(true)){
+  //    Serial.println("SPIFFS Setup Error");
+  //    return;
+  //  }
 
   gslc_ElemXTextboxPrintf(&m_gui, m_pElemTextboxWiFiDiag, "WiFi Diag\n");
 
   gslc_ElemSetTxtPrintf(&m_gui, m_pElemTextWifiStatus, "Disconnected");
 
-  WiFi.mode(WIFI_STA);                  // explicitly set mode, esp defaults to STA+AP    
-  // handler for WiFi eventns (connect and disconnect events).
+  // handler for WiFi events (connect and disconnect events).
   WiFi.onEvent(onWifiEvent);
 
-  wm.setConfigPortalTimeout(60);        // WiFi config portal time out set to 60 secs
   wm.setWiFiConnectedCallback(WiFiConnectedCallback);
-  wm.setup(&server, APSSID);
 
+  // give WiFi manager a kick to start the state machine...
+  wm.OnUserConnectRequest();
 }
 
 void APWiFi_Loop() {
     
   webSocket.cleanupClients();
 
-  wm.process();
+  wm.poll();
 
 }
