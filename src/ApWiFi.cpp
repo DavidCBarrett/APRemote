@@ -14,7 +14,7 @@ AsyncWebServer server(80);
 AsyncWebSocket webSocket("/ws");
 //DNSServer dns;
 
-DCBWiFiManager wm;
+DCBWiFiManager wm(&server, APSSID);
 
 // Callback: receiving any WebSocket message
 void onWebSocketEvent(AsyncWebSocket       *server,     //
