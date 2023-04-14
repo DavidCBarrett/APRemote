@@ -214,19 +214,21 @@ void onWifiEvent(WiFiEvent_t event) {
       gslc_ElemSetTxtPrintf(&m_gui, m_pElemTextWifiSSID,    "%s", WiFi.SSID());
       gslc_ElemSetTxtPrintf(&m_gui, m_pElemTextWifiIp,      "%s", WiFi.localIP().toString());
       break;
+
 		case WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
       Serial.println("WiFi Disconnected.");
       gslc_ElemSetTxtPrintf(&m_gui, m_pElemTextWifiStatus, "Disconnected");
       gslc_ElemSetTxtPrintf(&m_gui, m_pElemTextWifiSSID,    " ");
       gslc_ElemSetTxtPrintf(&m_gui, m_pElemTextWifiIp,      " ");
-
 			wm.OnUserDisconnectRequest();
 			break;
+      
 		default: 
-      Serial.printf("Event ID = %d", event);
+      Serial.printf("Event ID = %d\n", event);
       break;
   }
   // TODO: try and get the reason for the disconnect and report it. 
+  // maybe user https://github.com/Neargye/magic_enum to convert from enum to string for output
   // wifi_err_reason_t::WIFI_REASON_4WAY_HANDSHAKE_TIMEOUT;
 }
 
@@ -235,52 +237,46 @@ void notFound(AsyncWebServerRequest *request) {
 }
 
 void WiFiConnectedCallback() {
-    
     // if you get here you have connected to WiFi
-        
     gslc_ElemXTextboxAdd(&m_gui, m_pElemTextboxStatus,  (char*)"\nConnected to WiFI.");
     gslc_ElemXTextboxPrintf(&m_gui, m_pElemTextboxWiFiDiag, 
-      "Connected to WiFI.\n SSID %s\n with pwd: %s", WiFi.SSID(), wm.getConfiguredSTAPassword());
-
-    // Lambda function route to send web page to client defined in request->send below
-    server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-      mySerial.enableRx(false);
-      Serial.printf("[%s], requested %s", request->client()->remoteIP().toString(), request->url());
-      gslc_ElemXTextboxPrintf(&m_gui, m_pElemTextboxWiFiDiag, 
-        "[%s], requested %s", request->client()->remoteIP().toString(), request->url());
-
-      request->send(SPIFFS, "/index.html", "text/html");
-    });
-
-    // define how to serve up all other files requested by the client broswer (from the Filesystem (css, js, ...))
-    server.serveStatic("/", SPIFFS, "/");
-
-    // handling the getData request using the getData function handling HTTP GET request (received every second to update client display details)
-    server.on("/getData", HTTP_GET, getData);
-    
-    server.onNotFound(notFound);
-
-    webSocket.onEvent(onWebSocketEvent);    // Assign  WebSocket callback
-    server.addHandler(&webSocket);
+      "Connected to WiFI.\n SSID %s\n with pwd: %s\n", WiFi.SSID(), wm.getConfiguredSTAPassword());
 }
 
 void ApWiFi_Setup() {
 
-  // if(!SPIFFS.begin(true)){
-  //    Serial.println("SPIFFS Setup Error");
-  //    return;
-  //  }
-
   gslc_ElemXTextboxPrintf(&m_gui, m_pElemTextboxWiFiDiag, "WiFi Diag\n");
-
   gslc_ElemSetTxtPrintf(&m_gui, m_pElemTextWifiStatus, "Disconnected");
 
+  // Setup the Webserver, ready for connections...
+  // Lambda function route to send web page to client defined in request->send below
+  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
+    mySerial.enableRx(false);
+    Serial.printf("[%s], requested %s", request->client()->remoteIP().toString(), request->url());
+    gslc_ElemXTextboxPrintf(&m_gui, m_pElemTextboxWiFiDiag, 
+      "[%s], requested %s", request->client()->remoteIP().toString(), request->url());
+
+    request->send(SPIFFS, "/index.html", "text/html");
+  });
+
+  // Define how to serve up all other files requested by the client broswer (from the Filesystem (css, js, ...))
+  server.serveStatic("/", SPIFFS, "/");
+
+  // Handling the getData request using the getData function handling HTTP GET request (received every second to update client display details)
+  server.on("/getData", HTTP_GET, getData);
+  
+  server.onNotFound(notFound);
+
+  // Assign  WebSocket callback
+  webSocket.onEvent(onWebSocketEvent);                    
+  server.addHandler(&webSocket);
+ 
   // handler for WiFi events (connect and disconnect events).
-  WiFi.onEvent(onWifiEvent);
+  WiFi.onEvent(onWifiEvent);                              
 
   wm.setWiFiConnectedCallback(WiFiConnectedCallback);
-
-  // give WiFi manager a kick to start the state machine...
+ 
+  // give WiFiManager a kick to start the state machine...
   wm.OnUserConnectRequest();
 }
 
@@ -288,6 +284,5 @@ void APWiFi_Loop() {
     
   webSocket.cleanupClients();
 
-  wm.poll();
-
+  wm.poll();  // poll / process the statemachine.
 }

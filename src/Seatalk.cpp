@@ -487,7 +487,7 @@ uint8_t stCmd [10][4] = {
       return;
     break;
   }
-  send2ST(stCmd[cmd]);
+  //DCB disabled due to corruption in debug display - it it this call?? send2ST(stCmd[cmd]);
 }
 
 void send2ST(uint8_t cmd[]){

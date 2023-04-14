@@ -59,6 +59,55 @@ DCBWiFiManager::DCBWiFiManager(AsyncWebServer* server, const char* APSSID) : Sta
   else {
     Serial.println("DCBWiFiManager::DCBWiFiManager An error has occurred while mounting SPIFFS");
   }
+
+  // Web Server setup. Root URL belongs to the application. the wifimanager.html page is a website page served up 
+  // by "serveStatic("/", SPIFFS, "/")"" set up the applicaiton.
+
+  // Handle the posts that happen when the user updates the fields on the wifimanager.html page.
+  _server->on("/", HTTP_POST, [this](AsyncWebServerRequest *request) {
+    int params = request->params();
+    for(int i=0;i<params;i++){
+      AsyncWebParameter* p = request->getParam(i);
+      if(p->isPost()){
+        // HTTP POST ssid value
+        if (p->name() == PARAM_INPUT_1) {
+          _ssid = p->value().c_str();
+          Serial.print("SSID set to: ");
+          Serial.println(_ssid);
+          // Write file to save value
+          writeFile(SPIFFS, ssidPath, _ssid.c_str());
+        }
+        // HTTP POST _pass value
+        if (p->name() == PARAM_INPUT_2) {
+          _pass = p->value().c_str();
+          Serial.print("Password set to: ");
+          Serial.println(_pass);
+          // Write file to save value
+          writeFile(SPIFFS, passPath, _pass.c_str());
+        }
+        // HTTP POST ip value
+        if (p->name() == PARAM_INPUT_3) {
+          ip = p->value().c_str();
+          Serial.print("IP Address set to: ");
+          Serial.println(ip);
+          // Write file to save value
+          writeFile(SPIFFS, ipPath, ip.c_str());
+        }
+        // HTTP POST gateway value
+        if (p->name() == PARAM_INPUT_4) {
+          gateway = p->value().c_str();
+          Serial.print("Gateway set to: ");
+          Serial.println(gateway);
+          // Write file to save value
+          writeFile(SPIFFS, gatewayPath, gateway.c_str());
+        }
+        //Serial.printf("POST[%s]: %s\n", p->name().c_str(), p->value().c_str());
+      }
+    }
+    request->send(200, "text/plain", "Done. ESP will restart, connect to your router and go to IP address: " + ip);
+    delay(3000);
+    ESP.restart();
+  });
 }
 
 //
@@ -111,68 +160,22 @@ ENTRY_DEFINE(DCBWiFiManager,     EntryAPMode,             NoEventData) {
   
   // Start WiFi in AP mode for clients to connect to.
   Serial.println("Setting AP (Access Point)");
-  WiFi.softAP(_apssid);
-
-  IPAddress IP = WiFi.softAPIP();
-  Serial.print("AP IP address: ");
-  Serial.println(IP); 
-
-  // Web Server Root URL
-  _server->on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send(SPIFFS, "/wifimanager.html", "text/html");
-  });
   
-  _server->serveStatic("/", SPIFFS, "/");
-  
-  _server->on("/", HTTP_POST, [this](AsyncWebServerRequest *request) {
-    int params = request->params();
-    for(int i=0;i<params;i++){
-      AsyncWebParameter* p = request->getParam(i);
-      if(p->isPost()){
-        // HTTP POST ssid value
-        if (p->name() == PARAM_INPUT_1) {
-          _ssid = p->value().c_str();
-          Serial.print("SSID set to: ");
-          Serial.println(_ssid);
-          // Write file to save value
-          writeFile(SPIFFS, ssidPath, _ssid.c_str());
-        }
-        // HTTP POST _pass value
-        if (p->name() == PARAM_INPUT_2) {
-          _pass = p->value().c_str();
-          Serial.print("Password set to: ");
-          Serial.println(_pass);
-          // Write file to save value
-          writeFile(SPIFFS, passPath, _pass.c_str());
-        }
-        // HTTP POST ip value
-        if (p->name() == PARAM_INPUT_3) {
-          ip = p->value().c_str();
-          Serial.print("IP Address set to: ");
-          Serial.println(ip);
-          // Write file to save value
-          writeFile(SPIFFS, ipPath, ip.c_str());
-        }
-        // HTTP POST gateway value
-        if (p->name() == PARAM_INPUT_4) {
-          gateway = p->value().c_str();
-          Serial.print("Gateway set to: ");
-          Serial.println(gateway);
-          // Write file to save value
-          writeFile(SPIFFS, gatewayPath, gateway.c_str());
-        }
-        //Serial.printf("POST[%s]: %s\n", p->name().c_str(), p->value().c_str());
-      }
-    }
-    request->send(200, "text/plain", "Done. ESP will restart, connect to your router and go to IP address: " + ip);
-    delay(3000);
-    ESP.restart();
-  });
-  _server->begin();
+  if(WiFi.softAP(_apssid)) {
+    IPAddress IP = WiFi.softAPIP();
+    Serial.print("AP IP address: ");
+    Serial.println(IP); 
 
-  gslc_ElemSetTxtPrintf(&m_gui, m_pElemTextWifiStatus,  "AP Mode");
-  gslc_ElemSetTxtPrintf(&m_gui, m_pElemTextWifiSSID,    "%s", _apssid.c_str());
-  gslc_ElemSetTxtPrintf(&m_gui, m_pElemTextWifiIp,      "%s", WiFi.softAPIP().toString());
+    gslc_ElemSetTxtPrintf(&m_gui, m_pElemTextWifiStatus,  "AP Mode");
+    gslc_ElemSetTxtPrintf(&m_gui, m_pElemTextWifiSSID,    "%s", _apssid.c_str());
+    gslc_ElemSetTxtPrintf(&m_gui, m_pElemTextWifiIp,      "%s", WiFi.softAPIP().toString());
+
+    _server->begin();
+  }
+  else{
+    // Starting AP mode failed....
+    gslc_ElemSetTxtPrintf(&m_gui, m_pElemTextboxWiFiDiag,  "DCBWiFiManager::EntryAPMode - Starting AP Mode failed");
+  };  
 }
 
 STATE_DEFINE(DCBWiFiManager,     APMode,                  NoEventData) {}
