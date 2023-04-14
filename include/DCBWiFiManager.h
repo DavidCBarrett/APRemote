@@ -6,6 +6,7 @@
 #define _DCBWIFIMANAGER_H
 
 #include <ESPAsyncWebServer.h>
+#include <Timeout.h>
 
 #include "StateMachine\StateMachine.h"
 
@@ -30,7 +31,10 @@ public:
   void process();
 
   // sets timeout before webserver loop ends and exits even if there has been no setup.
-  void setConfigPortalTimeout(unsigned long seconds) {configPortalTimeoutMillis = seconds*1000;}
+  void setconnectionlTimeout(unsigned long seconds) {connectionlTimeout_ms = seconds*1000;}
+
+  // Return connection timeout remaining in seconds (for optional display on a GUI).
+  unsigned long getconnectionlTimeLeft() {return WifiConnectTimeout.time_left_ms()/1000;}
 
   void resetSettings();
 
@@ -55,10 +59,8 @@ private:
   String gateway;
 
   // Timer variables
-  // TODO: rename these to connectionTimeout
-  unsigned long configPortalPreviousMillis  = 0;
-  unsigned long configPortalTimeoutMillis   = 60;        // seconds to run Wifi manager's AP config portal 
-  unsigned long configPortalStartTimeMillis = millis();
+  unsigned long connectionlTimeout_ms = 60000;        // seconds to run Wifi manager's AP config portal 
+  Timeout       WifiConnectTimeout;
 
   // File paths to save input values permanently
   const char* ssidPath      = "/ssid.txt";
@@ -75,27 +77,30 @@ private:
   // state enumeration order must match the order of state
   // method entries in the state map
   enum States { 
-      ST_CONNECTINGTOSTA = 0,
+      ST_BOOTUP = 0,
       ST_APMODE,
+      ST_CONNECTINGTOSTA,
       ST_STAMODE,
       ST_MAX_STATES
   };
 
   // state machine state functions
      
+    STATE_DECLARE(DCBWiFiManager,     Bootup,                 NoEventData)
+    ENTRY_DECLARE(DCBWiFiManager,     EntryAPMode,            NoEventData)
+    STATE_DECLARE(DCBWiFiManager,     APMode,                 NoEventData)
     GUARD_DECLARE(DCBWiFiManager,     GuardConnectingToSTA,   NoEventData)
     ENTRY_DECLARE(DCBWiFiManager,     EntryConnectingToSTA,   NoEventData)
     STATE_DECLARE(DCBWiFiManager,     ConnectingToSTA,        NoEventData)
-    ENTRY_DECLARE(DCBWiFiManager,     EntryAPMode,            NoEventData)
-    STATE_DECLARE(DCBWiFiManager,     APMode,                 NoEventData)
     STATE_DECLARE(DCBWiFiManager,     STAMode,                NoEventData)
 
     // State, Guard, entry and exit functions (in that order) are given for  STATE_MAP_ENTRY_ALL_EX map lines
     // (guards can do checks to see if its safe to enter the next state - e.g. motor stopped turning)
     BEGIN_STATE_MAP_EX
-		    STATE_MAP_ENTRY_ALL_EX(&ConnectingToSTA,  &GuardConnectingToSTA,  &EntryConnectingToSTA,    NULL)     // ST_CONNECTINGTOSTA
-        STATE_MAP_ENTRY_ALL_EX(&APMode,           NULL,                   &EntryAPMode,             NULL)     // ST_APMODE
-        STATE_MAP_ENTRY_ALL_EX(&STAMode,          NULL,                   NULL,                     NULL)     // ST_STAMODE
+      STATE_MAP_ENTRY_ALL_EX(&Bootup,           NULL,                   NULL,                     NULL)     // ST_BOOTUP
+      STATE_MAP_ENTRY_ALL_EX(&APMode,           NULL,                   &EntryAPMode,             NULL)     // ST_APMODE
+	    STATE_MAP_ENTRY_ALL_EX(&ConnectingToSTA,  &GuardConnectingToSTA,  &EntryConnectingToSTA,    NULL)     // ST_CONNECTINGTOSTA
+      STATE_MAP_ENTRY_ALL_EX(&STAMode,          NULL,                   NULL,                     NULL)     // ST_STAMODE
     END_STATE_MAP_EX
 
 

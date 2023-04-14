@@ -30,6 +30,8 @@ External events:
   OnUserConnectRequest          Move from AP to STA mode, and try and connect with saved ssid and pwd
   OnUserDisconnectRequest       disconnect from any station, enter APMode.
 
+Using Timoutout libaray from https://github.com/tfeldmann/Arduino-Timeout
+
 *********/
 #include "DCBWiFiManager.h"
 
@@ -39,14 +41,6 @@ External events:
 #include <SPIFFS.h>
 
 #include "ApRemote_GSLC_Externs.h"
-
-//IPAddress localIP;
-IPAddress localIP(192, 168, 1, 200); // hardcoded
-
-// Set your Gateway IP address
-IPAddress localGateway;
-//IPAddress localGateway(192, 168, 1, 1); //hardcoded
-IPAddress subnet(255, 255, 0, 0);
 
 DCBWiFiManager::DCBWiFiManager(AsyncWebServer* server, const char* APSSID) : StateMachine(ST_MAX_STATES) {
 
@@ -75,8 +69,9 @@ void DCBWiFiManager::OnUserConnectRequest() {
    // given the OnUserConnectRequest event, transition to a new state based upon 
    // the current state of the state machine - real work is done in the ST_XXX functions
     BEGIN_TRANSITION_MAP                            // - Current State -
-        TRANSITION_MAP_ENTRY (CANNOT_HAPPEN)        // ST_CONNECTINGTOSTA
+        TRANSITION_MAP_ENTRY (ST_CONNECTINGTOSTA)   // ST_BOOTUP
         TRANSITION_MAP_ENTRY (ST_CONNECTINGTOSTA)   // ST_APMODE
+        TRANSITION_MAP_ENTRY (CANNOT_HAPPEN)        // ST_CONNECTINGTOSTA
         TRANSITION_MAP_ENTRY (CANNOT_HAPPEN)        // ST_STAMODE
     END_TRANSITION_MAP(NULL)
 }
@@ -85,8 +80,9 @@ void DCBWiFiManager::OnUserDisconnectRequest() {
    // given the OnUserConnectRequest event, transition to a new state based upon 
    // the current state of the state machine - real work is done in the ST_XXX functions
     BEGIN_TRANSITION_MAP                            // - Current State -
-        TRANSITION_MAP_ENTRY (ST_APMODE)            // ST_CONNECTINGTOSTA
+        TRANSITION_MAP_ENTRY (CANNOT_HAPPEN)        // ST_BOOTUP
         TRANSITION_MAP_ENTRY (EVENT_IGNORED)        // ST_APMODE
+        TRANSITION_MAP_ENTRY (ST_APMODE)            // ST_CONNECTINGTOSTA
         TRANSITION_MAP_ENTRY (ST_APMODE)            // ST_STAMODE
     END_TRANSITION_MAP(NULL)
 }
@@ -94,72 +90,15 @@ void DCBWiFiManager::OnUserDisconnectRequest() {
 void DCBWiFiManager::poll() {
    // hopefully this will just poll the current state, calling the relevant STATE_DEFINE function below.
     BEGIN_TRANSITION_MAP                            // - Current State -
-        TRANSITION_MAP_ENTRY (ST_CONNECTINGTOSTA)   // ST_CONNECTINGTOSTA
+        TRANSITION_MAP_ENTRY (ST_BOOTUP)            // ST_BOOTUP
         TRANSITION_MAP_ENTRY (ST_APMODE)            // ST_APMODE
+        TRANSITION_MAP_ENTRY (ST_CONNECTINGTOSTA)   // ST_CONNECTINGTOSTA
         TRANSITION_MAP_ENTRY (ST_STAMODE)           // ST_STAMODE
     END_TRANSITION_MAP(NULL)
 }
 
-GUARD_DEFINE(DCBWiFiManager,     GuardConnectingToSTA,   NoEventData) {
-  // if no SSID or IP provided, dont proceed
-  if(_ssid=="" || ip==""){
-      Serial.println("GuardConnectingToSTA::Undefined SSID or IP address.");
-      return FALSE; // note use of upper BOOL, TRUE and FALSE in GUARD functions.
-  }
-
-  // Move to station mode, & configure, only proceed to ST_CONNECTINGTOSTA if this succeeds.
-  WiFi.mode(WIFI_STA);
-  localIP.fromString(ip.c_str());
-  localGateway.fromString(gateway.c_str());
-
-  // if configuring WiFi fails, don't proceed.
-  if (!WiFi.config(localIP, localGateway, subnet)){
-    Serial.println("GuardConnectingToSTA::STA Failed to configure");
-    return FALSE;
-  }
-
-  // STA preparations successful, proceed
-  return TRUE;
-}
-
-ENTRY_DEFINE(DCBWiFiManager,     EntryConnectingToSTA,    NoEventData) {
-  // Attempt connecion with provided info.
-  Serial.println("EntryConnectingToSTA::Connecting to WiFi...");
-  WiFi.begin(_ssid.c_str(), _pass.c_str());
-
-  // caputre when we started, to check for timeout later.
-  configPortalPreviousMillis = millis();
-}
-
-STATE_DEFINE(DCBWiFiManager,     ConnectingToSTA,         NoEventData) {
-  // check for connection success, or timeout.
-  if(WiFi.status() == WL_CONNECTED) {
-
-    Serial.printf("ConnectingToSTA::Connected to STA @ %s", WiFi.localIP().toString());
-    // notify client we connected to wifi, calling their conneted function
-    if (_wificonnectedcallback != NULL)
-    {
-      _wificonnectedcallback();
-    }
-
-    // Start the web_server
-    _server->begin();
-
-    //Connecition Success - move to ST_STAMODE
-    InternalEvent(ST_STAMODE);
-  }
-  else {
-    // check for connection timeout
-    if (millis() - configPortalPreviousMillis >= configPortalTimeoutMillis) {
-      Serial.printf("ConnectingToSTA::Connection to %s timeout.", _ssid);
-
-      //Connecition Timed out - move to ST_STAMODE
-      InternalEvent(ST_APMODE);
-    }
-
-    // we havent connected or timed out yet... just wait...
-    // TODO: capture timeout remaining...
-  }
+STATE_DEFINE(DCBWiFiManager,     Bootup,                  NoEventData) {
+  // Nothing to do.
 }
 
 ENTRY_DEFINE(DCBWiFiManager,     EntryAPMode,             NoEventData) {
@@ -168,10 +107,10 @@ ENTRY_DEFINE(DCBWiFiManager,     EntryAPMode,             NoEventData) {
   
   // Ensure disconnected from any WiFi Stations, and set up ApMode.
   WiFi.disconnect();
+  WiFi.mode(WIFI_MODE_AP);
   
-  // Connect to Wi-Fi network with SSID and password
+  // Start WiFi in AP mode for clients to connect to.
   Serial.println("Setting AP (Access Point)");
-  // NULL sets an open Access Point
   WiFi.softAP(_apssid);
 
   IPAddress IP = WiFi.softAPIP();
@@ -237,6 +176,71 @@ ENTRY_DEFINE(DCBWiFiManager,     EntryAPMode,             NoEventData) {
 }
 
 STATE_DEFINE(DCBWiFiManager,     APMode,                  NoEventData) {}
+
+GUARD_DEFINE(DCBWiFiManager,     GuardConnectingToSTA,   NoEventData) {
+ 
+  IPAddress localIP, localGateway;
+  IPAddress subnet(255, 255, 0, 0);
+ 
+  // if no SSID or IP provided, don't proceed
+  if(_ssid=="" || ip==""){
+      Serial.println("GuardConnectingToSTA::Undefined SSID or IP address.");
+      return FALSE; // note use of upper BOOL, TRUE and FALSE in GUARD functions.
+  }
+
+  // Move to station mode, & configure, only proceed to ST_CONNECTINGTOSTA if this succeeds.
+  WiFi.mode(WIFI_STA);
+  localIP.fromString(ip.c_str());
+  localGateway.fromString(gateway.c_str());
+
+  // if configuring WiFi fails, don't proceed.
+  if (!WiFi.config(localIP, localGateway, subnet)){
+    Serial.println("GuardConnectingToSTA::STA Failed to configure");
+    return FALSE;
+  }
+
+  // STA preparations successful, proceed
+  return TRUE;
+}
+
+ENTRY_DEFINE(DCBWiFiManager,     EntryConnectingToSTA,    NoEventData) {
+  // Attempt connecion with provided info.
+  Serial.println("EntryConnectingToSTA::Connecting to WiFi...");
+  WiFi.begin(_ssid.c_str(), _pass.c_str());
+
+  // start the connection timer.
+  WifiConnectTimeout.start(connectionlTimeout_ms);
+}
+
+STATE_DEFINE(DCBWiFiManager,     ConnectingToSTA,         NoEventData) {
+  // check for connection success, or timeout.
+  if(WiFi.status() == WL_CONNECTED) {
+
+    Serial.printf("ConnectingToSTA::Connected to STA @ %s\n", WiFi.localIP().toString());
+    // notify client we connected to wifi, calling their conneted function
+    if (_wificonnectedcallback != NULL)
+    {
+      _wificonnectedcallback();
+    }
+
+    // Start the web_server
+    _server->begin();
+
+    //Connecition Success - move to ST_STAMODE
+    InternalEvent(ST_STAMODE);
+  }
+  else {
+    // check for connection timeout
+    if (WifiConnectTimeout.time_over()) {
+      Serial.printf("ConnectingToSTA::Connection to %s timeout.\n", _ssid);
+
+      //Connecition Timed out - move to ST_STAMODE
+      InternalEvent(ST_APMODE);
+    }
+
+    // we haven't connected or timed out yet... just wait...
+  }
+}
 
 STATE_DEFINE(DCBWiFiManager,     STAMode,                 NoEventData) {}
 

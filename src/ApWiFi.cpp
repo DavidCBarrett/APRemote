@@ -1,6 +1,6 @@
 
 #include <SPIFFS.h>
-#include "WiFi.h"
+#include <WiFi.h>
 #include <ESPAsyncWebServer.h>
 #include "DCBWiFiManager.h"
 
@@ -220,12 +220,14 @@ void onWifiEvent(WiFiEvent_t event) {
       gslc_ElemSetTxtPrintf(&m_gui, m_pElemTextWifiSSID,    " ");
       gslc_ElemSetTxtPrintf(&m_gui, m_pElemTextWifiIp,      " ");
 
-			Serial.println("Enabling WiFi autoconnect...");
-			WiFi.setAutoReconnect(true);
+			wm.OnUserDisconnectRequest();
 			break;
 		default: 
+      Serial.printf("Event ID = %d", event);
       break;
   }
+  // TODO: try and get the reason for the disconnect and report it. 
+  // wifi_err_reason_t::WIFI_REASON_4WAY_HANDSHAKE_TIMEOUT;
 }
 
 void notFound(AsyncWebServerRequest *request) {

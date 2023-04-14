@@ -55,7 +55,7 @@ enum {E_ELEM_BOX4,E_ELEM_BTN_APR_AUTO,E_ELEM_BTN_APR_MINUS_ONE
       ,E_ELEM_BTN_APR_STBD_TACK,E_ELEM_BTN_APR_STDBY
       ,E_ELEM_BTN_APR_TRACK,E_ELEM_BTN_APR_WIND,E_ELEM_BTN_BASE_APR
       ,E_ELEM_BTN_BASE_DATA,E_ELEM_BTN_BASE_DIAG,E_ELEM_BTN_BASE_WIFI
-      ,E_ELEM_BTN_WIFI_CONFIGURE,E_ELEM_BTN_WIFI_DISCONNECT
+      ,E_ELEM_BTN_WIFI_CONNECT,E_ELEM_BTN_WIFI_DISCONNECT
       ,E_ELEM_BTN_WIFI_RESET,E_ELEM_RADIO_APR_AUTO
       ,E_ELEM_RADIO_APR_STANDBY,E_ELEM_RADIO_APR_TRACK
       ,E_ELEM_RADIO_APR_WIND,E_ELEM_TEXT10,E_ELEM_TEXT20,E_ELEM_TEXT21
@@ -65,8 +65,9 @@ enum {E_ELEM_BOX4,E_ELEM_BTN_APR_AUTO,E_ELEM_BTN_APR_MINUS_ONE
       ,E_ELEM_TEXT41,E_ELEM_TEXT43,E_ELEM_TEXT45,E_ELEM_TEXT47
       ,E_ELEM_TEXT8,E_ELEM_TEXT9,E_ELEM_TEXTBOX_BASE_STATUS
       ,E_ELEM_TEXTBOX_DIAG_LOG,E_ELEM_TEXTBOX_WIFI_DIAG
-      ,E_ELEM_TEXT_APR_DISPLAY,E_ELEM_TEXT_DATA_SOG,E_ELEM_TEXT_DEPTH
-      ,E_ELEM_TEXT_HDG,E_ELEM_TEXT_SOW,E_ELEM_TEXT_SW_BUILD_DATE
+      ,E_ELEM_TEXT_APR_DISPLAY,E_ELEM_TEXT_BASE_WIFI_STRENGTH
+      ,E_ELEM_TEXT_DATA_SOG,E_ELEM_TEXT_DEPTH,E_ELEM_TEXT_HDG
+      ,E_ELEM_TEXT_SOW,E_ELEM_TEXT_SW_BUILD_DATE
       ,E_ELEM_TEXT_WIFI_CLIENT_SSID,E_ELEM_TEXT_WIFI_IP
       ,E_ELEM_TEXT_WIFI_SSID,E_ELEM_TEXT_WIFI_STATUS,E_ELEM_TEXT_WIND
       ,E_ELEM_TEXT_W_DIR,E_TXTSCROLL_DIAG_LOG,E_TXTSCROLL_WIFI_DIAG};
@@ -86,7 +87,7 @@ enum {E_BUILTIN10X16,E_BUILTIN15X24,E_BUILTIN20X32,E_BUILTIN5X8
 //<ElementDefines !Start!>
 #define MAX_PAGE                6
 
-#define MAX_ELEM_PG_BASE 5 // # Elems total on page
+#define MAX_ELEM_PG_BASE 6 // # Elems total on page
 #define MAX_ELEM_PG_BASE_RAM MAX_ELEM_PG_BASE // # Elems in RAM
 
 #define MAX_ELEM_PG_DIAG 4 // # Elems total on page
@@ -163,7 +164,8 @@ extern gslc_tsElemRef* m_pElemBtnAprWind;
 extern gslc_tsElemRef* m_pElemBtnBaseApr;
 extern gslc_tsElemRef* m_pElemBtnBaseData;
 extern gslc_tsElemRef* m_pElemBtnBaseDiag;
-extern gslc_tsElemRef* m_pElemBtnWifiConfigure;
+extern gslc_tsElemRef* m_pElemBtnBaseWiFiStrength;
+extern gslc_tsElemRef* m_pElemBtnWifiConnect;
 extern gslc_tsElemRef* m_pElemBtnWifiDisconnect;
 extern gslc_tsElemRef* m_pElemBtnWifiReset;
 extern gslc_tsElemRef* m_pElemRadioButtonAprAuto;
@@ -273,12 +275,20 @@ void InitGUIslice_gen()
    
   // Create textbox
   pElemRef = gslc_ElemXTextboxCreate(&m_gui,E_ELEM_TEXTBOX_BASE_STATUS,E_PG_BASE,&m_sTextbox11,
-    (gslc_tsRect){14,270,212,20},E_BUILTIN5X8,
+    (gslc_tsRect){14,267,212,20},E_BUILTIN5X8,
     (char*)&m_acTextboxBuf11,1,35);
   gslc_ElemXTextboxWrapSet(&m_gui,pElemRef,false);
   gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_YELLOW);
   gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_GRAY,GSLC_COL_BLACK,GSLC_COL_GRAY);
   m_pElemTextboxStatus = pElemRef;
+  
+  // Create E_ELEM_TEXT_BASE_WIFI_STRENGTH runtime modifiable text
+  static char m_sDisplayText49[7] = "XX%";
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT_BASE_WIFI_STRENGTH,E_PG_BASE,(gslc_tsRect){195,5,35,8},
+    (char*)m_sDisplayText49,7,E_BUILTIN5X8);
+  gslc_ElemSetTxtAlign(&m_gui,pElemRef,GSLC_ALIGN_MID_RIGHT);
+  gslc_ElemSetFillEn(&m_gui,pElemRef,false);
+  m_pElemBtnBaseWiFiStrength = pElemRef;
 
   // -----------------------------------
   // PAGE: E_PG_DIAG
@@ -469,7 +479,7 @@ void InitGUIslice_gen()
   gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_GREEN);
   
   // Create E_ELEM_TEXT_APR_DISPLAY text label
-  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT_APR_DISPLAY,E_PG_APR,(gslc_tsRect){20,5,200,45},
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT_APR_DISPLAY,E_PG_APR,(gslc_tsRect){30,5,180,45},
     (char*)"",0,E_BUILTIN20X32);
   gslc_ElemSetTxtAlign(&m_gui,pElemRef,GSLC_ALIGN_MID_MID);
   gslc_ElemSetFrameEn(&m_gui,pElemRef,true);
@@ -508,38 +518,38 @@ void InitGUIslice_gen()
   
   
   // Create E_ELEM_TEXT27 text label
-  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT27,E_PG_DATA,(gslc_tsRect){10,25,54,24},
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT27,E_PG_DATA,(gslc_tsRect){11,29,54,24},
     (char*)"SOG",0,E_BUILTIN15X24);
   gslc_ElemSetFillEn(&m_gui,pElemRef,false);
   
   // Create E_ELEM_TEXT28 text label
-  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT28,E_PG_DATA,(gslc_tsRect){10,65,54,24},
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT28,E_PG_DATA,(gslc_tsRect){11,69,54,24},
     (char*)"SOW",0,E_BUILTIN15X24);
   gslc_ElemSetFillEn(&m_gui,pElemRef,false);
   
   // Create E_ELEM_TEXT29 text label
-  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT29,E_PG_DATA,(gslc_tsRect){10,105,72,24},
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT29,E_PG_DATA,(gslc_tsRect){11,109,72,24},
     (char*)"Wind",0,E_BUILTIN15X24);
   gslc_ElemSetFillEn(&m_gui,pElemRef,false);
   
   // Create E_ELEM_TEXT30 text label
-  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT30,E_PG_DATA,(gslc_tsRect){10,145,90,24},
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT30,E_PG_DATA,(gslc_tsRect){11,149,90,24},
     (char*)"W.Dir",0,E_BUILTIN15X24);
   gslc_ElemSetFillEn(&m_gui,pElemRef,false);
   
   // Create E_ELEM_TEXT31 text label
-  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT31,E_PG_DATA,(gslc_tsRect){10,185,54,24},
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT31,E_PG_DATA,(gslc_tsRect){11,189,54,24},
     (char*)"Hdg",0,E_BUILTIN15X24);
   gslc_ElemSetFillEn(&m_gui,pElemRef,false);
   
   // Create E_ELEM_TEXT32 text label
-  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT32,E_PG_DATA,(gslc_tsRect){10,225,90,24},
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT32,E_PG_DATA,(gslc_tsRect){11,229,90,24},
     (char*)"Depth",0,E_BUILTIN15X24);
   gslc_ElemSetFillEn(&m_gui,pElemRef,false);
   
   // Create E_ELEM_TEXT_DATA_SOG runtime modifiable text
   static char m_sDisplayText33[7] = "22";
-  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT_DATA_SOG,E_PG_DATA,(gslc_tsRect){130,20,100,26},
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT_DATA_SOG,E_PG_DATA,(gslc_tsRect){131,24,100,26},
     (char*)m_sDisplayText33,7,E_BUILTIN15X24);
   gslc_ElemSetTxtAlign(&m_gui,pElemRef,GSLC_ALIGN_MID_MID);
   gslc_ElemSetTxtMargin(&m_gui,pElemRef,1);
@@ -549,7 +559,7 @@ void InitGUIslice_gen()
   
   // Create E_ELEM_TEXT_SOW runtime modifiable text
   static char m_sDisplayText34[7] = "22";
-  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT_SOW,E_PG_DATA,(gslc_tsRect){130,61,100,26},
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT_SOW,E_PG_DATA,(gslc_tsRect){131,65,100,26},
     (char*)m_sDisplayText34,7,E_BUILTIN15X24);
   gslc_ElemSetTxtAlign(&m_gui,pElemRef,GSLC_ALIGN_MID_MID);
   gslc_ElemSetTxtMargin(&m_gui,pElemRef,1);
@@ -559,7 +569,7 @@ void InitGUIslice_gen()
   
   // Create E_ELEM_TEXT_WIND runtime modifiable text
   static char m_sDisplayText35[7] = "22";
-  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT_WIND,E_PG_DATA,(gslc_tsRect){130,102,100,26},
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT_WIND,E_PG_DATA,(gslc_tsRect){131,106,100,26},
     (char*)m_sDisplayText35,7,E_BUILTIN15X24);
   gslc_ElemSetTxtAlign(&m_gui,pElemRef,GSLC_ALIGN_MID_MID);
   gslc_ElemSetTxtMargin(&m_gui,pElemRef,1);
@@ -569,7 +579,7 @@ void InitGUIslice_gen()
   
   // Create E_ELEM_TEXT_W_DIR runtime modifiable text
   static char m_sDisplayText36[7] = "22";
-  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT_W_DIR,E_PG_DATA,(gslc_tsRect){130,143,100,26},
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT_W_DIR,E_PG_DATA,(gslc_tsRect){131,147,100,26},
     (char*)m_sDisplayText36,7,E_BUILTIN15X24);
   gslc_ElemSetTxtAlign(&m_gui,pElemRef,GSLC_ALIGN_MID_MID);
   gslc_ElemSetTxtMargin(&m_gui,pElemRef,1);
@@ -579,7 +589,7 @@ void InitGUIslice_gen()
   
   // Create E_ELEM_TEXT_HDG runtime modifiable text
   static char m_sDisplayText37[7] = "22";
-  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT_HDG,E_PG_DATA,(gslc_tsRect){130,184,100,26},
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT_HDG,E_PG_DATA,(gslc_tsRect){131,188,100,26},
     (char*)m_sDisplayText37,7,E_BUILTIN15X24);
   gslc_ElemSetTxtAlign(&m_gui,pElemRef,GSLC_ALIGN_MID_MID);
   gslc_ElemSetTxtMargin(&m_gui,pElemRef,1);
@@ -589,7 +599,7 @@ void InitGUIslice_gen()
   
   // Create E_ELEM_TEXT_DEPTH runtime modifiable text
   static char m_sDisplayText38[7] = "22";
-  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT_DEPTH,E_PG_DATA,(gslc_tsRect){130,225,100,26},
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT_DEPTH,E_PG_DATA,(gslc_tsRect){131,229,100,26},
     (char*)m_sDisplayText38,7,E_BUILTIN15X24);
   gslc_ElemSetTxtAlign(&m_gui,pElemRef,GSLC_ALIGN_MID_MID);
   gslc_ElemSetTxtMargin(&m_gui,pElemRef,1);
@@ -601,10 +611,10 @@ void InitGUIslice_gen()
   // PAGE: E_PG_WIFI
   
   
-  // create E_ELEM_BTN_WIFI_CONFIGURE button with text label
-  pElemRef = gslc_ElemCreateBtnTxt(&m_gui,E_ELEM_BTN_WIFI_CONFIGURE,E_PG_WIFI,
-    (gslc_tsRect){10,235,60,25},(char*)"Config",0,E_BUILTIN5X8,&CbBtnCommon);
-  m_pElemBtnWifiConfigure = pElemRef;
+  // create E_ELEM_BTN_WIFI_CONNECT button with text label
+  pElemRef = gslc_ElemCreateBtnTxt(&m_gui,E_ELEM_BTN_WIFI_CONNECT,E_PG_WIFI,
+    (gslc_tsRect){10,235,60,25},(char*)"Connect",0,E_BUILTIN5X8,&CbBtnCommon);
+  m_pElemBtnWifiConnect = pElemRef;
   
   // create E_ELEM_BTN_WIFI_RESET button with text label
   pElemRef = gslc_ElemCreateBtnTxt(&m_gui,E_ELEM_BTN_WIFI_RESET,E_PG_WIFI,
@@ -682,7 +692,7 @@ void InitGUIslice_gen()
   
   // create E_ELEM_BTN_WIFI_DISCONNECT button with text label
   pElemRef = gslc_ElemCreateBtnTxt(&m_gui,E_ELEM_BTN_WIFI_DISCONNECT,E_PG_WIFI,
-    (gslc_tsRect){89,235,60,25},(char*)"Discon",0,E_BUILTIN5X8,&CbBtnCommon);
+    (gslc_tsRect){85,235,70,25},(char*)"Disconnect",0,E_BUILTIN5X8,&CbBtnCommon);
   m_pElemBtnWifiDisconnect = pElemRef;
 //<InitGUI !End!>
 

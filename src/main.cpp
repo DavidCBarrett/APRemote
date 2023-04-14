@@ -78,6 +78,7 @@ TODO'S:
 #include "DCBWiFiManager.h"
 #include "SeaTalk.h"
 #include "ApRemote_GSLC.h"
+#include "APRemote_GSLC_Externs.h"
 
 // ------------------------------------------------
 // Program Globals
@@ -109,7 +110,8 @@ gslc_tsElemRef* m_pElemBtnAprWind = NULL;
 gslc_tsElemRef* m_pElemBtnBaseApr = NULL;
 gslc_tsElemRef* m_pElemBtnBaseData= NULL;
 gslc_tsElemRef* m_pElemBtnBaseDiag= NULL;
-gslc_tsElemRef* m_pElemBtnWifiConfigure= NULL;
+gslc_tsElemRef* m_pElemBtnBaseWiFiStrength= NULL;
+gslc_tsElemRef* m_pElemBtnWifiConnect= NULL;
 gslc_tsElemRef* m_pElemBtnWifiDisconnect= NULL;
 gslc_tsElemRef* m_pElemBtnWifiReset= NULL;
 gslc_tsElemRef* m_pElemRadioButtonAprAuto= NULL;
@@ -188,7 +190,8 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
         break;
       case E_ELEM_BTN_APR_PORT_TACK:
         break;
-      case E_ELEM_BTN_WIFI_CONFIGURE:
+      case E_ELEM_BTN_WIFI_CONNECT:
+        wm.OnUserConnectRequest();
         break;
       case E_ELEM_BTN_WIFI_RESET:
         wm.resetSettings();
@@ -344,6 +347,31 @@ void loop()
   // ------------------------------------------------
   
   //TODO - Add update code for any text, gauges, or sliders
+
+  // Display WiFi Signal Strength or if not applicable, WiFi mode information.
+  switch (WiFi.getMode()) 
+  {
+    case WIFI_MODE_NULL:
+      gslc_ElemSetTxtStr(&m_gui, m_pElemBtnBaseWiFiStrength, "NULL");
+      break;
+    case WIFI_MODE_STA:
+      // For RSSI db to 0-100% conversion see https://stackoverflow.com/questions/15797920/how-to-convert-wifi-signal-strength-from-quality-percent-to-rssi-dbm
+      // Added the /20*20 bit to reduce the resolution to steps of 20 to avoid the reported number "flickering".
+      gslc_ElemSetTxtPrintf(&m_gui, m_pElemBtnBaseWiFiStrength, "%d", (std::min(std::max(2 * (WiFi.RSSI() + 100), 0), 100) /20)*20);
+      break;
+    case WIFI_MODE_AP:
+      gslc_ElemSetTxtStr(&m_gui, m_pElemBtnBaseWiFiStrength, "AP");
+      break;
+    case WIFI_MODE_APSTA:
+      gslc_ElemSetTxtStr(&m_gui, m_pElemBtnBaseWiFiStrength, "APSTA");
+      break;
+    case WIFI_MODE_MAX:
+      gslc_ElemSetTxtStr(&m_gui, m_pElemBtnBaseWiFiStrength, "MAX");
+      break;
+  }
+
+  // Data page items.
+
   sprintf(cDisp, "%d Mag", hdg);
   gslc_ElemSetTxtStr(&m_gui, m_pElemTextAprDisplay, cDisp);
 
@@ -366,6 +394,8 @@ void loop()
 
   sprintf(cDisp, "%.1f", dpt);
   gslc_ElemSetTxtStr(&m_gui, m_pElemTextDataDepth, cDisp);
+
+
 
   // ------------------------------------------------
   // Periodically call GUIslice update function
