@@ -2,11 +2,12 @@
 #include <SPIFFS.h>
 #include <WiFi.h>
 #include <ESPAsyncWebServer.h>
-#include "DCBWiFiManager.h"
 
 #include "main.h"
 #include "SeaTalk.h"
 #include "ApRemote_GSLC_Externs.h"
+#include "DCBWiFiManager.h"
+#include "EnumsToStrings.h"
 
 #define APSSID "AutoPilot Remote"
 
@@ -224,12 +225,10 @@ void onWifiEvent(WiFiEvent_t event) {
 			break;
       
 		default: 
-      Serial.printf("Event ID = %d\n", event);
+      Serial.printf("Event ID = %s\n", WiFiEvent_tToString(event));
+      gslc_ElemSetTxtPrintf(&m_gui, m_pElemTextboxWiFiDiag, "Event ID = %s\n", WiFiEvent_tToString(event));
       break;
   }
-  // TODO: try and get the reason for the disconnect and report it. 
-  // maybe user https://github.com/Neargye/magic_enum to convert from enum to string for output
-  // wifi_err_reason_t::WIFI_REASON_4WAY_HANDSHAKE_TIMEOUT;
 }
 
 void notFound(AsyncWebServerRequest *request) {
