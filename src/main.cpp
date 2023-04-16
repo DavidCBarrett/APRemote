@@ -322,14 +322,23 @@ void setup()
 
   gslc_ElemXTextboxAdd(&m_gui, m_pElemTextboxDiagLog, (char*)"Setup Done.\n");
   gslc_ElemXTextboxAdd(&m_gui, m_pElemTextboxStatus, (char*)"\nSetup Done.");
+
+   // Insert some text
+  gslc_ElemXTextboxAdd(&m_gui,m_pElemTextboxDiagLog,(char*)"Welcome\n");
+  gslc_ElemXTextboxAdd(&m_gui,m_pElemTextboxDiagLog,(char*)"Hi ");
+  gslc_ElemXTextboxAdd(&m_gui,m_pElemTextboxDiagLog,(char*)"Long line here that may wrap\n");
+  gslc_ElemXTextboxAdd(&m_gui,m_pElemTextboxDiagLog,(char*)"End...\n");
 }
+
+// Free-running counter for display
+unsigned  m_nCount = 0;
 
 // -----------------------------------
 // Main event loop
 // -----------------------------------
 void loop()
 {
-  char cDisp[20];
+  char cDisp[MAX_STR];
 
   HB.beat();
   TXHB.beat();
@@ -395,7 +404,13 @@ void loop()
   sprintf(cDisp, "%.1f", dpt);
   gslc_ElemSetTxtStr(&m_gui, m_pElemTextDataDepth, cDisp);
 
+  // General counter
+  m_nCount++;
 
+  if ((m_nCount % 5000) == 0) {
+    snprintf(cDisp,MAX_STR,"Step %u\n",m_nCount);
+    gslc_ElemXTextboxAdd(&m_gui,m_pElemTextboxDiagLog,cDisp);
+  }
 
   // ------------------------------------------------
   // Periodically call GUIslice update function

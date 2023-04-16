@@ -130,7 +130,7 @@ gslc_tsElemRef                  m_asPage4ElemRef[MAX_ELEM_PG_WIFI];
 gslc_tsXTextbox                 m_sTextbox11;
 char                            m_acTextboxBuf11[35]; // NRows=1 NCols=35
 gslc_tsXTextbox                 m_sTextbox3;
-char                            m_acTextboxBuf3[168]; // NRows=6 NCols=28
+char                            m_acTextboxBuf3[756]; // NRows=21 NCols=36
 gslc_tsXSlider                  m_sTextScroll3;
 gslc_tsXCheckbox                m_asXRadio9;
 gslc_tsXCheckbox                m_asXRadio10;
@@ -302,21 +302,21 @@ void InitGUIslice_gen()
   gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_BLACK);
    
   // Create wrapping box for textbox E_ELEM_TEXTBOX_DIAG_LOG and scrollbar
-  pElemRef = gslc_ElemCreateBox(&m_gui,GSLC_ID_AUTO,E_PG_DIAG,(gslc_tsRect){10,45,220,200});
+  pElemRef = gslc_ElemCreateBox(&m_gui,GSLC_ID_AUTO,E_PG_DIAG,(gslc_tsRect){10,40,218,210});
   gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_GRAY,GSLC_COL_BLACK,GSLC_COL_BLACK);
   
   // Create textbox
   pElemRef = gslc_ElemXTextboxCreate(&m_gui,E_ELEM_TEXTBOX_DIAG_LOG,E_PG_DIAG,&m_sTextbox3,
-    (gslc_tsRect){10+2,45+4,220-4-20,200-7},E_BUILTIN5X8,
-    (char*)&m_acTextboxBuf3,6,28);
-  gslc_ElemXTextboxWrapSet(&m_gui,pElemRef,false);
+    (gslc_tsRect){10+2,40+4,218-4-20,210-7},E_BUILTIN5X8,
+    (char*)&m_acTextboxBuf3,21,36);
+  gslc_ElemXTextboxWrapSet(&m_gui,pElemRef,true);
   gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_YELLOW);
   gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_GRAY,GSLC_COL_BLACK,GSLC_COL_BLACK);
   m_pElemTextboxDiagLog = pElemRef;
 
   // Create vertical scrollbar for textbox
   pElemRef = gslc_ElemXSliderCreate(&m_gui,E_TXTSCROLL_DIAG_LOG,E_PG_DIAG,&m_sTextScroll3,
-          (gslc_tsRect){10+220-2-20,45+4,20,200-8},0,100,0,5,true);
+          (gslc_tsRect){10+218-2-20,40+4,20,210-8},0,100,0,5,true);
   gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_BLUE,GSLC_COL_BLACK,GSLC_COL_BLUE);
   gslc_ElemXSliderSetPosFunc(&m_gui,pElemRef,&CbSlidePos);
   m_pTextSliderDiagLog = pElemRef;
