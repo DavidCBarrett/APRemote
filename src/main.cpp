@@ -114,9 +114,13 @@ gslc_tsElemRef* m_pElemBtnBaseDiag= NULL;
 gslc_tsElemRef* m_pElemBtnDiagClear= NULL;
 gslc_tsElemRef* m_pElemBtnDiagPause= NULL;
 gslc_tsElemRef* m_pElemBtnDiagPlay= NULL;
+gslc_tsElemRef* m_pElemBtnWiFiClear= NULL;
+gslc_tsElemRef* m_pElemBtnWiFiPause= NULL;
 gslc_tsElemRef* m_pElemBtnWifiConnect= NULL;
 gslc_tsElemRef* m_pElemBtnWifiDisconnect= NULL;
+gslc_tsElemRef* m_pElemBtnWifiPlay= NULL;
 gslc_tsElemRef* m_pElemBtnWifiReset= NULL;
+gslc_tsElemRef* m_pElemDiagStatus = NULL;
 gslc_tsElemRef* m_pElemRadioButtonAprAuto= NULL;
 gslc_tsElemRef* m_pElemRadioButtonAprStandby= NULL;
 gslc_tsElemRef* m_pElemRadioButtonAprTrack= NULL;
@@ -133,7 +137,6 @@ gslc_tsElemRef* m_pElemTextWifiIp = NULL;
 gslc_tsElemRef* m_pElemTextWifiSSID= NULL;
 gslc_tsElemRef* m_pElemTextWifiStatus= NULL;
 gslc_tsElemRef* m_pElemTextboxDiagLog= NULL;
-gslc_tsElemRef* m_pElemTextboxStatus= NULL;
 gslc_tsElemRef* m_pElemTextboxWiFiDiag= NULL;
 gslc_tsElemRef* m_pElemTxtBaseWiFiStrength= NULL;
 gslc_tsElemRef* m_pTextSliderDiagLog= NULL;
@@ -149,6 +152,7 @@ GSLC_Txt_Helper txtBaseWiFiStrength(&m_gui, &m_pElemTxtBaseWiFiStrength);
 
 // DIAG Page
 GSLC_TextBox_Helper txtDiagLog(&m_gui, &m_pElemTextboxDiagLog);
+GSLC_Txt_Helper txtDiagStatus(&m_gui, &m_pElemDiagStatus);
 
 // WiFi Page
 GSLC_Txt_Helper txtWiFiStatus(&m_gui, &m_pElemTextWifiStatus);
@@ -159,6 +163,7 @@ GSLC_TextBox_Helper txtWiFiDiag(&m_gui, &m_pElemTextboxWiFiDiag);
 
 // APR Page
 GSLC_Txt_Helper txtAprDisplay(&m_gui, &m_pElemTextAprDisplay);
+
 
 // Data Page
 GSLC_Txt_Helper txtDataSog(&m_gui, &m_pElemTextDataSog);
@@ -205,16 +210,16 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
         txtDiagLog.clear();
         break;
       case E_ELEM_BTN_APR_STDBY:
-        gslc_ElemXTextboxAdd(&m_gui, m_pElemTextboxStatus, (char*)"\nStandby");
+        txtDiagLog.printf("TFT Standby\n");
         break;
       case E_ELEM_BTN_APR_AUTO:
-        gslc_ElemXTextboxAdd(&m_gui, m_pElemTextboxStatus, (char*)"\nAuto");
+        txtDiagLog.printf("TFT Auto\n");
         break;
       case E_ELEM_BTN_APR_WIND:
-        gslc_ElemXTextboxAdd(&m_gui, m_pElemTextboxStatus, (char*)"\nWind");
+        txtDiagLog.printf("TFT Wind\n");
         break;
       case E_ELEM_BTN_APR_TRACK:
-        gslc_ElemXTextboxAdd(&m_gui, m_pElemTextboxStatus, (char*)"\nTrack");
+        txtDiagLog.printf("TFT Track\n");
         break;
       case E_ELEM_BTN_APR_PLUS_ONE:
         break;
@@ -236,6 +241,15 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
         break;
       case E_ELEM_BTN_WIFI_DISCONNECT:
         wm.OnUserDisconnectRequest();
+        break;
+      case E_ELEM_BTN_WIFI_PLAY:
+        txtWiFiDiag.setTextOutStatus(GSLC_TextBox_Helper::TxtOutStatusEnum::TxtOutPlay);
+        break;
+      case E_ELEM_BTN_WIFI_PAUSE:
+        txtWiFiDiag.setTextOutStatus(GSLC_TextBox_Helper::TxtOutStatusEnum::TxtOutPaused);
+        break;
+      case E_ELEM_BTN_WIFI_CLEAR:
+        txtWiFiDiag.clear();
         break;
 //<Button Enums !End!>
       default:
@@ -305,7 +319,7 @@ bool CbSlidePos(void* pvGui,void* pvElemRef,int16_t nPos)
     case E_TXTSCROLL_WIFI_DIAG:
       // Fetch the slider position
       nVal = gslc_ElemXSliderGetPos(pGui,m_pTextSliderWifiDiag);
-      gslc_ElemXTextboxScrollSet(pGui,m_pTextSliderWifiDiag,nVal,100);  // DCB: use slider position to set text box scroll posn
+      gslc_ElemXTextboxScrollSet(pGui,m_pElemTextboxWiFiDiag,nVal,100);  // DCB: use slider position to set text box scroll posn
       break;
 //<Slider Enums !End!>
     default:
@@ -359,9 +373,8 @@ void setup()
   Seatalk_Init();
 
   txtDiagLog.printf("Setup Done.\n");
-  gslc_ElemXTextboxAdd(&m_gui, m_pElemTextboxStatus, (char*)"\nSetup Done.");
-
-   // Insert some text
+  
+  // Insert some text
   txtDiagLog.printf("Welcome\n");
   txtDiagLog.printf("Hi ");
   txtDiagLog.printf("Long line here that may wrap or may not that is the purpose of this test\n");
@@ -433,12 +446,25 @@ void loop()
   txtDataWDir.printf("%d Mag", awa);
   txtDataDepth.printf("%.1f", dpt);
 
-  if ((m_nCount++ % 5) == 0) txtDiagLog.printf("Step %d\n",m_nCount);
+  //if ((m_nCount++ % 5) == 0) txtWiFiDiag.printf("Step %d\n",m_nCount);
+
+  // Slider / Scroll bar updates
+  // Adjust the range of the slider based on how full the char buffer attached to the relevan text box is 
+  // just for the WiFi Diag text box for now...
+
+  gslc_tsElemRef* pElemRef  = (gslc_tsElemRef*)(m_pElemTextboxDiagLog);
+  gslc_tsElem*    pElem     = gslc_GetElemFromRef(&m_gui,pElemRef);
+  // Fetch the element's extended data structure
+  gslc_tsXTextbox* pBox;
+  pBox = (gslc_tsXTextbox*)(pElem->pXData);
+
+  txtDiagLog.printf("BY= %u\n", pBox->nBufPosY);
+  txtDiagStatus.printf("WRS= %u, SP= %u\n", pBox->nWndRowStart, pBox->nScrollPos);
 
   // ------------------------------------------------
   // Periodically call GUIslice update function
   // ------------------------------------------------
   gslc_Update(&m_gui);
   
-  delay (100);
+  delay (200);
 }

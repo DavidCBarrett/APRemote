@@ -226,7 +226,7 @@ void onWifiEvent(WiFiEvent_t event) {
       
 		default: 
       Serial.printf("Event ID = %s\n", WiFiEvent_tToString(event));
-      txtWiFiDiag.printf("Event ID = %s\n", WiFiEvent_tToString(event));
+      txtWiFiDiag.printf("Ev=%s\n", WiFiEvent_tToString(event));
       break;
   }
 }
@@ -236,22 +236,21 @@ void notFound(AsyncWebServerRequest *request) {
 }
 
 void WiFiConnectedCallback() {
-    // if you get here you have connected to WiFi
-    gslc_ElemXTextboxAdd(&m_gui, m_pElemTextboxStatus,  (char*)"\nConnected to WiFI.");
-    txtWiFiDiag.printf("Connected to WiFI.\n SSID %s\n with pwd: %s\n", WiFi.SSID(), wm.getConfiguredSTAPassword());
+  // if you get here you have connected to WiFi
+  txtWiFiDiag.printf("Connected to WiFI.\n SSID %s\n with pwd: %s\n", WiFi.SSID(), wm.getConfiguredSTAPassword());
 }
 
 void ApWiFi_Setup() {
 
   txtWiFiDiag.printf("WiFi Diag\n");
-  txtBaseWiFiStrength.printf("Disconnected");
+  txtBaseWiFiStrength.printf("---");
 
   // Setup the Webserver, ready for connections...
   // Lambda function route to send web page to client defined in request->send below
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
     mySerial.enableRx(false);
-    Serial.printf("[%s], requested %s", request->client()->remoteIP().toString(), request->url());
-    txtWiFiDiag.printf("[%s], requested %s", request->client()->remoteIP().toString(), request->url());
+    Serial.printf("[%s], requested %s\n", request->client()->remoteIP().toString(), request->url());
+    txtWiFiDiag.printf("[%s], requested %s\n", request->client()->remoteIP().toString(), request->url());
 
     request->send(SPIFFS, "/index.html", "text/html");
   });

@@ -1,5 +1,6 @@
 #include "SeaTalk.h"
 #include "ApEsp32Pins.h"
+#include "main.h"
 
 // tasks to continually read SeaTalk bus, format send data to Web Client
 void readST( void *pvParameters );
@@ -454,12 +455,14 @@ uint8_t stCmd [10][4] = {
                 
   switch(cmd){
     case 0 :
+      txtDiagLog.printf("Web Standby\n");
       Serial.println("Standby ");
     break;
     case 1 :
       Serial.println("-1 ");
     break;
     case 2 : 
+      txtDiagLog.printf("Web Auto\n");
       Serial.println("Auto ");
     break;
     case 3 :
@@ -469,6 +472,7 @@ uint8_t stCmd [10][4] = {
       Serial.println("-10 ");
     break;
     case 5 :
+      txtDiagLog.printf("Web Wind\n");
       Serial.println("Wind ");
     break;
     case 6 :
@@ -478,6 +482,7 @@ uint8_t stCmd [10][4] = {
       Serial.println("Tack port ");
     break;
     case 8 :
+      txtDiagLog.printf("Web Track\n");
       Serial.println("Track ");
     break;
     case 9 :

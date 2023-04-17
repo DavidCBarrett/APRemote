@@ -71,7 +71,6 @@ extern gslc_tsElemRef* m_pElemTextWifiIp;
 extern gslc_tsElemRef* m_pElemTextWifiSSID;
 extern gslc_tsElemRef* m_pElemTextWifiStatus;
 extern gslc_tsElemRef* m_pElemTextboxDiagLog;
-extern gslc_tsElemRef* m_pElemTextboxStatus;
 extern gslc_tsElemRef* m_pElemTextboxWiFiDiag;
 extern gslc_tsElemRef* m_pTextSliderBaseStatus;
 extern gslc_tsElemRef* m_pTextSliderDiagLog;

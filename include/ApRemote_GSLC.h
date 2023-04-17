@@ -56,22 +56,23 @@ enum {E_ELEM_BOX4,E_ELEM_BTN_APR_AUTO,E_ELEM_BTN_APR_MINUS_ONE
       ,E_ELEM_BTN_APR_TRACK,E_ELEM_BTN_APR_WIND,E_ELEM_BTN_BASE_APR
       ,E_ELEM_BTN_BASE_DATA,E_ELEM_BTN_BASE_DIAG,E_ELEM_BTN_BASE_WIFI
       ,E_ELEM_BTN_DIAG_CLEAR,E_ELEM_BTN_DIAG_PAUSE,E_ELEM_BTN_DIAG_PLAY
-      ,E_ELEM_BTN_WIFI_CONNECT,E_ELEM_BTN_WIFI_DISCONNECT
-      ,E_ELEM_BTN_WIFI_RESET,E_ELEM_RADIO_APR_AUTO
+      ,E_ELEM_BTN_WIFI_CLEAR,E_ELEM_BTN_WIFI_CONNECT
+      ,E_ELEM_BTN_WIFI_DISCONNECT,E_ELEM_BTN_WIFI_PAUSE
+      ,E_ELEM_BTN_WIFI_PLAY,E_ELEM_BTN_WIFI_RESET,E_ELEM_RADIO_APR_AUTO
       ,E_ELEM_RADIO_APR_STANDBY,E_ELEM_RADIO_APR_TRACK
       ,E_ELEM_RADIO_APR_WIND,E_ELEM_TEXT10,E_ELEM_TEXT20,E_ELEM_TEXT21
       ,E_ELEM_TEXT22,E_ELEM_TEXT23,E_ELEM_TEXT24,E_ELEM_TEXT25
       ,E_ELEM_TEXT26,E_ELEM_TEXT27,E_ELEM_TEXT28,E_ELEM_TEXT29
       ,E_ELEM_TEXT30,E_ELEM_TEXT31,E_ELEM_TEXT32,E_ELEM_TEXT40
       ,E_ELEM_TEXT41,E_ELEM_TEXT43,E_ELEM_TEXT45,E_ELEM_TEXT47
-      ,E_ELEM_TEXT8,E_ELEM_TEXT9,E_ELEM_TEXTBOX_BASE_STATUS
-      ,E_ELEM_TEXTBOX_DIAG_LOG,E_ELEM_TEXTBOX_WIFI_DIAG
-      ,E_ELEM_TEXT_APR_DISPLAY,E_ELEM_TEXT_BASE_WIFI_STRENGTH
-      ,E_ELEM_TEXT_DATA_SOG,E_ELEM_TEXT_DEPTH,E_ELEM_TEXT_HDG
-      ,E_ELEM_TEXT_SOW,E_ELEM_TEXT_SW_BUILD_DATE
-      ,E_ELEM_TEXT_WIFI_CLIENT_SSID,E_ELEM_TEXT_WIFI_IP
-      ,E_ELEM_TEXT_WIFI_SSID,E_ELEM_TEXT_WIFI_STATUS,E_ELEM_TEXT_WIND
-      ,E_ELEM_TEXT_W_DIR,E_TXTSCROLL_DIAG_LOG,E_TXTSCROLL_WIFI_DIAG};
+      ,E_ELEM_TEXT50,E_ELEM_TEXT8,E_ELEM_TEXT9,E_ELEM_TEXTBOX_DIAG_LOG
+      ,E_ELEM_TEXTBOX_WIFI_DIAG,E_ELEM_TEXT_APR_DISPLAY
+      ,E_ELEM_TEXT_BASE_WIFI_STRENGTH,E_ELEM_TEXT_DATA_SOG
+      ,E_ELEM_TEXT_DEPTH,E_ELEM_TEXT_HDG,E_ELEM_TEXT_SOW
+      ,E_ELEM_TEXT_SW_BUILD_DATE,E_ELEM_TEXT_WIFI_CLIENT_SSID
+      ,E_ELEM_TEXT_WIFI_IP,E_ELEM_TEXT_WIFI_SSID
+      ,E_ELEM_TEXT_WIFI_STATUS,E_ELEM_TEXT_WIND,E_ELEM_TEXT_W_DIR
+      ,E_TXTSCROLL_DIAG_LOG,E_TXTSCROLL_WIFI_DIAG};
 enum {E_GROUP1};
 // Must use separate enum for fonts with MAX_FONT at end to use gslc_FontSet.
 enum {E_BUILTIN10X16,E_BUILTIN15X24,E_BUILTIN20X32,E_BUILTIN5X8
@@ -88,10 +89,10 @@ enum {E_BUILTIN10X16,E_BUILTIN15X24,E_BUILTIN20X32,E_BUILTIN5X8
 //<ElementDefines !Start!>
 #define MAX_PAGE                6
 
-#define MAX_ELEM_PG_BASE 6 // # Elems total on page
+#define MAX_ELEM_PG_BASE 5 // # Elems total on page
 #define MAX_ELEM_PG_BASE_RAM MAX_ELEM_PG_BASE // # Elems in RAM
 
-#define MAX_ELEM_PG_DIAG 7 // # Elems total on page
+#define MAX_ELEM_PG_DIAG 8 // # Elems total on page
 #define MAX_ELEM_PG_DIAG_RAM MAX_ELEM_PG_DIAG // # Elems in RAM
 
 #define MAX_ELEM_PG_APR 22 // # Elems total on page
@@ -103,7 +104,7 @@ enum {E_BUILTIN10X16,E_BUILTIN15X24,E_BUILTIN20X32,E_BUILTIN5X8
 #define MAX_ELEM_PG_DATA 12 // # Elems total on page
 #define MAX_ELEM_PG_DATA_RAM MAX_ELEM_PG_DATA // # Elems in RAM
 
-#define MAX_ELEM_PG_WIFI 15 // # Elems total on page
+#define MAX_ELEM_PG_WIFI 18 // # Elems total on page
 #define MAX_ELEM_PG_WIFI_RAM MAX_ELEM_PG_WIFI // # Elems in RAM
 //<ElementDefines !End!>
 
@@ -128,8 +129,6 @@ gslc_tsElem                     m_asPage3Elem[MAX_ELEM_PG_DATA_RAM];
 gslc_tsElemRef                  m_asPage3ElemRef[MAX_ELEM_PG_DATA];
 gslc_tsElem                     m_asPage4Elem[MAX_ELEM_PG_WIFI_RAM];
 gslc_tsElemRef                  m_asPage4ElemRef[MAX_ELEM_PG_WIFI];
-gslc_tsXTextbox                 m_sTextbox11;
-char                            m_acTextboxBuf11[35]; // NRows=1 NCols=35
 gslc_tsXTextbox                 m_sTextbox3;
 char                            m_acTextboxBuf3[3000]; // NRows=100 NCols=30
 gslc_tsXSlider                  m_sTextScroll3;
@@ -138,7 +137,7 @@ gslc_tsXCheckbox                m_asXRadio10;
 gslc_tsXCheckbox                m_asXRadio11;
 gslc_tsXCheckbox                m_asXRadio12;
 gslc_tsXTextbox                 m_sTextbox13;
-char                            m_acTextboxBuf13[252]; // NRows=7 NCols=36
+char                            m_acTextboxBuf13[1600]; // NRows=50 NCols=32
 gslc_tsXSlider                  m_sTextScroll13;
 
 #define MAX_STR                 100
@@ -168,9 +167,13 @@ extern gslc_tsElemRef* m_pElemBtnBaseDiag;
 extern gslc_tsElemRef* m_pElemBtnDiagClear;
 extern gslc_tsElemRef* m_pElemBtnDiagPause;
 extern gslc_tsElemRef* m_pElemBtnDiagPlay;
+extern gslc_tsElemRef* m_pElemBtnWiFiClear;
+extern gslc_tsElemRef* m_pElemBtnWiFiPause;
 extern gslc_tsElemRef* m_pElemBtnWifiConnect;
 extern gslc_tsElemRef* m_pElemBtnWifiDisconnect;
+extern gslc_tsElemRef* m_pElemBtnWifiPlay;
 extern gslc_tsElemRef* m_pElemBtnWifiReset;
+extern gslc_tsElemRef* m_pElemDiagStatus;
 extern gslc_tsElemRef* m_pElemRadioButtonAprAuto;
 extern gslc_tsElemRef* m_pElemRadioButtonAprStandby;
 extern gslc_tsElemRef* m_pElemRadioButtonAprTrack;
@@ -187,10 +190,8 @@ extern gslc_tsElemRef* m_pElemTextWifiIp;
 extern gslc_tsElemRef* m_pElemTextWifiSSID;
 extern gslc_tsElemRef* m_pElemTextWifiStatus;
 extern gslc_tsElemRef* m_pElemTextboxDiagLog;
-extern gslc_tsElemRef* m_pElemTextboxStatus;
 extern gslc_tsElemRef* m_pElemTextboxWiFiDiag;
 extern gslc_tsElemRef* m_pElemTxtBaseWiFiStrength;
-extern gslc_tsElemRef* m_pTextSliderBaseStatus;
 extern gslc_tsElemRef* m_pTextSliderDiagLog;
 extern gslc_tsElemRef* m_pTextSliderWifiDiag;
 //<Extern_References !End!>
@@ -276,15 +277,6 @@ void InitGUIslice_gen()
     (gslc_tsRect){130,290,40,20},(char*)"Data",0,E_BUILTIN5X8,&CbBtnCommon);
   gslc_ElemSetFillEn(&m_gui,pElemRef,false);
   m_pElemBtnBaseData = pElemRef;
-   
-  // Create textbox
-  pElemRef = gslc_ElemXTextboxCreate(&m_gui,E_ELEM_TEXTBOX_BASE_STATUS,E_PG_BASE,&m_sTextbox11,
-    (gslc_tsRect){14,267,212,20},E_BUILTIN5X8,
-    (char*)&m_acTextboxBuf11,1,35);
-  gslc_ElemXTextboxWrapSet(&m_gui,pElemRef,false);
-  gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_YELLOW);
-  gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_GRAY,GSLC_COL_BLACK,GSLC_COL_GRAY);
-  m_pElemTextboxStatus = pElemRef;
   
   // Create E_ELEM_TEXT_BASE_WIFI_STRENGTH runtime modifiable text
   static char m_sDisplayText49[7] = "XX%";
@@ -327,21 +319,28 @@ void InitGUIslice_gen()
   
   // create E_ELEM_BTN_DIAG_PLAY button with text label
   pElemRef = gslc_ElemCreateBtnTxt(&m_gui,E_ELEM_BTN_DIAG_PLAY,E_PG_DIAG,
-    (gslc_tsRect){10,240,40,20},(char*)"Play",0,E_BUILTIN5X8,&CbBtnCommon);
+    (gslc_tsRect){9,257,40,20},(char*)"Play",0,E_BUILTIN5X8,&CbBtnCommon);
   gslc_ElemSetRoundEn(&m_gui, pElemRef, true);
   m_pElemBtnDiagPlay = pElemRef;
   
   // create E_ELEM_BTN_DIAG_PAUSE button with text label
   pElemRef = gslc_ElemCreateBtnTxt(&m_gui,E_ELEM_BTN_DIAG_PAUSE,E_PG_DIAG,
-    (gslc_tsRect){100,240,40,20},(char*)"Pause",0,E_BUILTIN5X8,&CbBtnCommon);
+    (gslc_tsRect){99,257,40,20},(char*)"Pause",0,E_BUILTIN5X8,&CbBtnCommon);
   gslc_ElemSetRoundEn(&m_gui, pElemRef, true);
   m_pElemBtnDiagPause = pElemRef;
   
   // create E_ELEM_BTN_DIAG_CLEAR button with text label
   pElemRef = gslc_ElemCreateBtnTxt(&m_gui,E_ELEM_BTN_DIAG_CLEAR,E_PG_DIAG,
-    (gslc_tsRect){190,240,40,20},(char*)"Clear",0,E_BUILTIN5X8,&CbBtnCommon);
+    (gslc_tsRect){189,257,40,20},(char*)"Clear",0,E_BUILTIN5X8,&CbBtnCommon);
   gslc_ElemSetRoundEn(&m_gui, pElemRef, true);
   m_pElemBtnDiagClear = pElemRef;
+  
+  // Create E_ELEM_TEXT50 runtime modifiable text
+  static char m_sDisplayText50[31] = "";
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT50,E_PG_DIAG,(gslc_tsRect){20,235,180,8},
+    (char*)m_sDisplayText50,31,E_BUILTIN5X8);
+  gslc_ElemSetFillEn(&m_gui,pElemRef,false);
+  m_pElemDiagStatus = pElemRef;
 
   // -----------------------------------
   // PAGE: E_PG_APR
@@ -635,12 +634,12 @@ void InitGUIslice_gen()
   
   // create E_ELEM_BTN_WIFI_CONNECT button with text label
   pElemRef = gslc_ElemCreateBtnTxt(&m_gui,E_ELEM_BTN_WIFI_CONNECT,E_PG_WIFI,
-    (gslc_tsRect){10,235,60,25},(char*)"Connect",0,E_BUILTIN5X8,&CbBtnCommon);
+    (gslc_tsRect){10,255,60,25},(char*)"Connect",0,E_BUILTIN5X8,&CbBtnCommon);
   m_pElemBtnWifiConnect = pElemRef;
   
   // create E_ELEM_BTN_WIFI_RESET button with text label
   pElemRef = gslc_ElemCreateBtnTxt(&m_gui,E_ELEM_BTN_WIFI_RESET,E_PG_WIFI,
-    (gslc_tsRect){168,235,60,25},(char*)"Reset",0,E_BUILTIN5X8,&CbBtnCommon);
+    (gslc_tsRect){165,255,60,25},(char*)"Reset",0,E_BUILTIN5X8,&CbBtnCommon);
   m_pElemBtnWifiReset = pElemRef;
   
   // Create E_ELEM_TEXT40 text label
@@ -699,7 +698,7 @@ void InitGUIslice_gen()
   // Create textbox
   pElemRef = gslc_ElemXTextboxCreate(&m_gui,E_ELEM_TEXTBOX_WIFI_DIAG,E_PG_WIFI,&m_sTextbox13,
     (gslc_tsRect){10+2,155+4,218-4-20,70-7},E_BUILTIN5X8,
-    (char*)&m_acTextboxBuf13,7,36);
+    (char*)&m_acTextboxBuf13,50,32);
   gslc_ElemXTextboxWrapSet(&m_gui,pElemRef,true);
   gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_YELLOW);
   gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_WHITE,GSLC_COL_BLACK,GSLC_COL_BLACK);
@@ -707,15 +706,33 @@ void InitGUIslice_gen()
 
   // Create vertical scrollbar for textbox
   pElemRef = gslc_ElemXSliderCreate(&m_gui,E_TXTSCROLL_WIFI_DIAG,E_PG_WIFI,&m_sTextScroll13,
-          (gslc_tsRect){10+218-2-20,155+4,20,70-8},0,100,0,5,true);
+          (gslc_tsRect){10+218-2-20,155+4,20,70-8},0,50,0,5,true);
   gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_BLUE,GSLC_COL_BLACK,GSLC_COL_BLUE);
   gslc_ElemXSliderSetPosFunc(&m_gui,pElemRef,&CbSlidePos);
   m_pTextSliderWifiDiag = pElemRef;
   
   // create E_ELEM_BTN_WIFI_DISCONNECT button with text label
   pElemRef = gslc_ElemCreateBtnTxt(&m_gui,E_ELEM_BTN_WIFI_DISCONNECT,E_PG_WIFI,
-    (gslc_tsRect){85,235,70,25},(char*)"Disconnect",0,E_BUILTIN5X8,&CbBtnCommon);
+    (gslc_tsRect){85,255,70,25},(char*)"Disconnect",0,E_BUILTIN5X8,&CbBtnCommon);
   m_pElemBtnWifiDisconnect = pElemRef;
+  
+  // create E_ELEM_BTN_WIFI_PLAY button with text label
+  pElemRef = gslc_ElemCreateBtnTxt(&m_gui,E_ELEM_BTN_WIFI_PLAY,E_PG_WIFI,
+    (gslc_tsRect){10,230,40,20},(char*)"Play",0,E_BUILTIN5X8,&CbBtnCommon);
+  gslc_ElemSetRoundEn(&m_gui, pElemRef, true);
+  m_pElemBtnWifiPlay = pElemRef;
+  
+  // create E_ELEM_BTN_WIFI_PAUSE button with text label
+  pElemRef = gslc_ElemCreateBtnTxt(&m_gui,E_ELEM_BTN_WIFI_PAUSE,E_PG_WIFI,
+    (gslc_tsRect){100,230,40,20},(char*)"Pause",0,E_BUILTIN5X8,&CbBtnCommon);
+  gslc_ElemSetRoundEn(&m_gui, pElemRef, true);
+  m_pElemBtnWiFiPause = pElemRef;
+  
+  // create E_ELEM_BTN_WIFI_CLEAR button with text label
+  pElemRef = gslc_ElemCreateBtnTxt(&m_gui,E_ELEM_BTN_WIFI_CLEAR,E_PG_WIFI,
+    (gslc_tsRect){190,230,40,20},(char*)"Clear",0,E_BUILTIN5X8,&CbBtnCommon);
+  gslc_ElemSetRoundEn(&m_gui, pElemRef, true);
+  m_pElemBtnWiFiClear = pElemRef;
 //<InitGUI !End!>
 
 //<Startup !Start!>
