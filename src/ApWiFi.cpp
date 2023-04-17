@@ -5,7 +5,7 @@
 
 #include "main.h"
 #include "SeaTalk.h"
-#include "ApRemote_GSLC_Externs.h"
+#include "GSLC_Helpers.h"
 #include "DCBWiFiManager.h"
 #include "EnumsToStrings.h"
 
@@ -31,13 +31,13 @@ void onWebSocketEvent(AsyncWebSocket       *server,     //
     // Client has disconnected
     case WS_EVT_DISCONNECT: {
         Serial.printf("WebSocket client #%u disconnected\n", client->id());
-        gslc_ElemXTextboxPrintf(&m_gui, m_pElemTextboxWiFiDiag, "WebSocket client #%u disconnected\n", client->id());
+        txtWiFiDiag.printf("WebSocket client #%u disconnected\n", client->id());
       } break;
  
     // New client has connected
     case WS_EVT_CONNECT: {
         Serial.printf("WebSocket client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
-        gslc_ElemXTextboxPrintf(&m_gui, m_pElemTextboxWiFiDiag, "WebSocket client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
+        txtWiFiDiag.printf("WebSocket client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
     }  break;
  
     // Handle text messages from client
@@ -211,22 +211,22 @@ void onWifiEvent(WiFiEvent_t event) {
  switch (event) {
 		case WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_CONNECTED:
 			Serial.println("Connected or reconnected to WiFi");
-      gslc_ElemSetTxtPrintf(&m_gui, m_pElemTextWifiStatus,  "Connected");
-      gslc_ElemSetTxtPrintf(&m_gui, m_pElemTextWifiSSID,    "%s", WiFi.SSID());
-      gslc_ElemSetTxtPrintf(&m_gui, m_pElemTextWifiIp,      "%s", WiFi.localIP().toString());
+      txtWiFiStatus.printf("Connected");
+      txtWiFiSSID.printf("%s", WiFi.SSID());
+      txtWiFiIp.printf("%s", WiFi.localIP().toString());
       break;
 
 		case WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
       Serial.println("WiFi Disconnected.");
-      gslc_ElemSetTxtPrintf(&m_gui, m_pElemTextWifiStatus, "Disconnected");
-      gslc_ElemSetTxtPrintf(&m_gui, m_pElemTextWifiSSID,    " ");
-      gslc_ElemSetTxtPrintf(&m_gui, m_pElemTextWifiIp,      " ");
+      txtWiFiStatus.printf("Disconnected");
+      txtWiFiSSID.printf( " ");
+      txtWiFiIp.printf(" ");
 			wm.OnUserDisconnectRequest();
 			break;
       
 		default: 
       Serial.printf("Event ID = %s\n", WiFiEvent_tToString(event));
-      gslc_ElemSetTxtPrintf(&m_gui, m_pElemTextboxWiFiDiag, "Event ID = %s\n", WiFiEvent_tToString(event));
+      txtWiFiDiag.printf("Event ID = %s\n", WiFiEvent_tToString(event));
       break;
   }
 }
@@ -238,22 +238,20 @@ void notFound(AsyncWebServerRequest *request) {
 void WiFiConnectedCallback() {
     // if you get here you have connected to WiFi
     gslc_ElemXTextboxAdd(&m_gui, m_pElemTextboxStatus,  (char*)"\nConnected to WiFI.");
-    gslc_ElemXTextboxPrintf(&m_gui, m_pElemTextboxWiFiDiag, 
-      "Connected to WiFI.\n SSID %s\n with pwd: %s\n", WiFi.SSID(), wm.getConfiguredSTAPassword());
+    txtWiFiDiag.printf("Connected to WiFI.\n SSID %s\n with pwd: %s\n", WiFi.SSID(), wm.getConfiguredSTAPassword());
 }
 
 void ApWiFi_Setup() {
 
-  gslc_ElemXTextboxPrintf(&m_gui, m_pElemTextboxWiFiDiag, "WiFi Diag\n");
-  gslc_ElemSetTxtPrintf(&m_gui, m_pElemTextWifiStatus, "Disconnected");
+  txtWiFiDiag.printf("WiFi Diag\n");
+  txtBaseWiFiStrength.printf("Disconnected");
 
   // Setup the Webserver, ready for connections...
   // Lambda function route to send web page to client defined in request->send below
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
     mySerial.enableRx(false);
     Serial.printf("[%s], requested %s", request->client()->remoteIP().toString(), request->url());
-    gslc_ElemXTextboxPrintf(&m_gui, m_pElemTextboxWiFiDiag, 
-      "[%s], requested %s", request->client()->remoteIP().toString(), request->url());
+    txtWiFiDiag.printf("[%s], requested %s", request->client()->remoteIP().toString(), request->url());
 
     request->send(SPIFFS, "/index.html", "text/html");
   });

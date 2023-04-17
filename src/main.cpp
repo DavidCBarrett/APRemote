@@ -71,14 +71,15 @@ TODO'S:
 // ------------------------------------------------
 #include <Arduino.h>
 #include <PinButton.h>
-#include "HeartBeat.h"
+#include <HeartBeat.h>
 
+#include "main.h"
 #include "ApEsp32Pins.h"
 #include "ApWifi.h"
 #include "DCBWiFiManager.h"
 #include "SeaTalk.h"
 #include "ApRemote_GSLC.h"
-#include "APRemote_GSLC_Externs.h"
+#include "GSLC_Helpers.h"
 
 // ------------------------------------------------
 // Program Globals
@@ -110,7 +111,9 @@ gslc_tsElemRef* m_pElemBtnAprWind = NULL;
 gslc_tsElemRef* m_pElemBtnBaseApr = NULL;
 gslc_tsElemRef* m_pElemBtnBaseData= NULL;
 gslc_tsElemRef* m_pElemBtnBaseDiag= NULL;
-gslc_tsElemRef* m_pElemBtnBaseWiFiStrength= NULL;
+gslc_tsElemRef* m_pElemBtnDiagClear= NULL;
+gslc_tsElemRef* m_pElemBtnDiagPause= NULL;
+gslc_tsElemRef* m_pElemBtnDiagPlay= NULL;
 gslc_tsElemRef* m_pElemBtnWifiConnect= NULL;
 gslc_tsElemRef* m_pElemBtnWifiDisconnect= NULL;
 gslc_tsElemRef* m_pElemBtnWifiReset= NULL;
@@ -132,12 +135,38 @@ gslc_tsElemRef* m_pElemTextWifiStatus= NULL;
 gslc_tsElemRef* m_pElemTextboxDiagLog= NULL;
 gslc_tsElemRef* m_pElemTextboxStatus= NULL;
 gslc_tsElemRef* m_pElemTextboxWiFiDiag= NULL;
+gslc_tsElemRef* m_pElemTxtBaseWiFiStrength= NULL;
 gslc_tsElemRef* m_pTextSliderDiagLog= NULL;
 gslc_tsElemRef* m_pTextSliderWifiDiag= NULL;
 //<Save_References !End!>
 
 // Define debug message function
 static int16_t DebugOut(char ch) { if (ch == (char)'\n') Serial.println(""); else Serial.write(ch); return 0; }
+
+
+// BASE Page
+GSLC_Txt_Helper txtBaseWiFiStrength(&m_gui, &m_pElemTxtBaseWiFiStrength);
+
+// DIAG Page
+GSLC_TextBox_Helper txtDiagLog(&m_gui, &m_pElemTextboxDiagLog);
+
+// WiFi Page
+GSLC_Txt_Helper txtWiFiStatus(&m_gui, &m_pElemTextWifiStatus);
+GSLC_Txt_Helper txtWiFiSSID(&m_gui, &m_pElemTextWifiSSID);
+GSLC_Txt_Helper txtWiFiIp(&m_gui, &m_pElemTextWifiIp);
+GSLC_Txt_Helper txtWiFiClient(&m_gui, &m_pElemTextWifiClientSSID);
+GSLC_TextBox_Helper txtWiFiDiag(&m_gui, &m_pElemTextboxWiFiDiag);
+
+// APR Page
+GSLC_Txt_Helper txtAprDisplay(&m_gui, &m_pElemTextAprDisplay);
+
+// Data Page
+GSLC_Txt_Helper txtDataSog(&m_gui, &m_pElemTextDataSog);
+GSLC_Txt_Helper txtDataSow(&m_gui, &m_pElemTextDataSow);
+GSLC_Txt_Helper txtDataWind(&m_gui, &m_pElemTextDataWind);
+GSLC_Txt_Helper txtDataWDir(&m_gui, &m_pElemTextDataWDir);
+GSLC_Txt_Helper txtDataHdg(&m_gui, &m_pElemTextDataHdg);
+GSLC_Txt_Helper txtDataDepth(&m_gui, &m_pElemTextDataDepth);
 
 // ------------------------------------------------
 // Callback Methods
@@ -165,6 +194,15 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
         break;
       case E_ELEM_BTN_BASE_DATA:
         gslc_SetPageCur(&m_gui, E_PG_DATA);
+        break;
+      case E_ELEM_BTN_DIAG_PLAY:
+        txtDiagLog.setTextOutStatus(GSLC_TextBox_Helper::TxtOutStatusEnum::TxtOutPlay);
+        break;
+      case E_ELEM_BTN_DIAG_PAUSE:
+        txtDiagLog.setTextOutStatus(GSLC_TextBox_Helper::TxtOutStatusEnum::TxtOutPaused);
+        break;
+      case E_ELEM_BTN_DIAG_CLEAR:
+        txtDiagLog.clear();
         break;
       case E_ELEM_BTN_APR_STDBY:
         gslc_ElemXTextboxAdd(&m_gui, m_pElemTextboxStatus, (char*)"\nStandby");
@@ -310,28 +348,28 @@ void setup()
   gslc_InitDebug(&DebugOut);
   InitGUIslice_gen();
 
-  gslc_ElemXTextboxAdd(&m_gui, m_pElemTextboxDiagLog, (char*)"----------------------\n-- Sea Talk Web Remote\n----------------------\n");
+  txtDiagLog.printf("----------------------\n-- Sea Talk Web Remote\n----------------------\n");
   gslc_Update(&m_gui);
 
   ApWiFi_Setup();
 
-  gslc_ElemXTextboxAdd(&m_gui, m_pElemTextboxDiagLog, (char*)"ApWiFi_Init() done \n");
+  txtDiagLog.printf("ApWiFi_Init() done \n");
   gslc_Update(&m_gui);
 
   Seatalk_Init();
 
-  gslc_ElemXTextboxAdd(&m_gui, m_pElemTextboxDiagLog, (char*)"Setup Done.\n");
+  txtDiagLog.printf("Setup Done.\n");
   gslc_ElemXTextboxAdd(&m_gui, m_pElemTextboxStatus, (char*)"\nSetup Done.");
 
    // Insert some text
-  gslc_ElemXTextboxAdd(&m_gui,m_pElemTextboxDiagLog,(char*)"Welcome\n");
-  gslc_ElemXTextboxAdd(&m_gui,m_pElemTextboxDiagLog,(char*)"Hi ");
-  gslc_ElemXTextboxAdd(&m_gui,m_pElemTextboxDiagLog,(char*)"Long line here that may wrap\n");
-  gslc_ElemXTextboxAdd(&m_gui,m_pElemTextboxDiagLog,(char*)"End...\n");
+  txtDiagLog.printf("Welcome\n");
+  txtDiagLog.printf("Hi ");
+  txtDiagLog.printf("Long line here that may wrap or may not that is the purpose of this test\n");
+  txtDiagLog.printf("End...\n");
 }
 
 // Free-running counter for display
-unsigned  m_nCount = 0;
+unsigned int m_nCount = 0;
 
 // -----------------------------------
 // Main event loop
@@ -352,65 +390,50 @@ void loop()
   APWiFi_Loop();
 
   // ------------------------------------------------
-  // Update GUI Elements
+  // Update GUI Elements - Update code for any text, gauges, or sliders
   // ------------------------------------------------
   
-  //TODO - Add update code for any text, gauges, or sliders
-
   // Display WiFi Signal Strength or if not applicable, WiFi mode information.
   switch (WiFi.getMode()) 
   {
     case WIFI_MODE_NULL:
-      gslc_ElemSetTxtStr(&m_gui, m_pElemBtnBaseWiFiStrength, "NULL");
+      txtBaseWiFiStrength.printf("NULL");
       break;
     case WIFI_MODE_STA:
       // For RSSI db to 0-100% conversion see https://stackoverflow.com/questions/15797920/how-to-convert-wifi-signal-strength-from-quality-percent-to-rssi-dbm
       // Added the /20*20 bit to reduce the resolution to steps of 20 to avoid the reported number "flickering".
-      gslc_ElemSetTxtPrintf(&m_gui, m_pElemBtnBaseWiFiStrength, "%d", (std::min(std::max(2 * (WiFi.RSSI() + 100), 0), 100) /20)*20);
+      txtBaseWiFiStrength.printf("%d", (std::min(std::max(2 * (WiFi.RSSI() + 100), 0), 100) /20)*20);
       break;
     case WIFI_MODE_AP:
-      gslc_ElemSetTxtStr(&m_gui, m_pElemBtnBaseWiFiStrength, "AP");
+      txtBaseWiFiStrength.printf("AP");
       break;
     case WIFI_MODE_APSTA:
-      gslc_ElemSetTxtStr(&m_gui, m_pElemBtnBaseWiFiStrength, "APSTA");
+      txtBaseWiFiStrength.printf("APSTA");
       break;
     case WIFI_MODE_MAX:
-      gslc_ElemSetTxtStr(&m_gui, m_pElemBtnBaseWiFiStrength, "MAX");
+      txtBaseWiFiStrength.printf("MAX");
       break;
   }
 
   // Data page items.
 
-  sprintf(cDisp, "%d Mag", hdg);
-  gslc_ElemSetTxtStr(&m_gui, m_pElemTextAprDisplay, cDisp);
+  txtAprDisplay.printf("%d Mag", hdg);
 
-  sog = random(0,1000) / 50.0;
+  float Randomness = random(0,360);
 
-  sprintf(cDisp, "%.1f", sog);
-  gslc_ElemSetTxtStr(&m_gui, m_pElemTextDataSog, cDisp);
+  sog = Randomness / 60;
+  stw = Randomness * 1.5 / 60;
+  aws = Randomness * 3 / 60;
+  awa = (int)Randomness;
+  dpt = Randomness /12;
 
-  sprintf(cDisp, "%.1f", stw);
-  gslc_ElemSetTxtStr(&m_gui, m_pElemTextDataSow, cDisp);
+  txtDataSog.printf("%.1f", sog);
+  txtDataSow.printf("%.1f", stw);
+  txtDataWind.printf("%.1f", aws);
+  txtDataWDir.printf("%d Mag", awa);
+  txtDataDepth.printf("%.1f", dpt);
 
-  sprintf(cDisp, "%.1f", aws);
-  gslc_ElemSetTxtStr(&m_gui, m_pElemTextDataWind, cDisp);
-
-  sprintf(cDisp, "%d Mag", awa);
-  gslc_ElemSetTxtStr(&m_gui, m_pElemTextDataWDir, cDisp);
-
-  sprintf(cDisp, "%d Mag", hdg);
-  gslc_ElemSetTxtStr(&m_gui, m_pElemTextAprDisplay, cDisp);
-
-  sprintf(cDisp, "%.1f", dpt);
-  gslc_ElemSetTxtStr(&m_gui, m_pElemTextDataDepth, cDisp);
-
-  // General counter
-  m_nCount++;
-
-  if ((m_nCount % 5000) == 0) {
-    snprintf(cDisp,MAX_STR,"Step %u\n",m_nCount);
-    gslc_ElemXTextboxAdd(&m_gui,m_pElemTextboxDiagLog,cDisp);
-  }
+  if ((m_nCount++ % 5) == 0) txtDiagLog.printf("Step %d\n",m_nCount);
 
   // ------------------------------------------------
   // Periodically call GUIslice update function

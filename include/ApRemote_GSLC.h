@@ -55,6 +55,7 @@ enum {E_ELEM_BOX4,E_ELEM_BTN_APR_AUTO,E_ELEM_BTN_APR_MINUS_ONE
       ,E_ELEM_BTN_APR_STBD_TACK,E_ELEM_BTN_APR_STDBY
       ,E_ELEM_BTN_APR_TRACK,E_ELEM_BTN_APR_WIND,E_ELEM_BTN_BASE_APR
       ,E_ELEM_BTN_BASE_DATA,E_ELEM_BTN_BASE_DIAG,E_ELEM_BTN_BASE_WIFI
+      ,E_ELEM_BTN_DIAG_CLEAR,E_ELEM_BTN_DIAG_PAUSE,E_ELEM_BTN_DIAG_PLAY
       ,E_ELEM_BTN_WIFI_CONNECT,E_ELEM_BTN_WIFI_DISCONNECT
       ,E_ELEM_BTN_WIFI_RESET,E_ELEM_RADIO_APR_AUTO
       ,E_ELEM_RADIO_APR_STANDBY,E_ELEM_RADIO_APR_TRACK
@@ -90,7 +91,7 @@ enum {E_BUILTIN10X16,E_BUILTIN15X24,E_BUILTIN20X32,E_BUILTIN5X8
 #define MAX_ELEM_PG_BASE 6 // # Elems total on page
 #define MAX_ELEM_PG_BASE_RAM MAX_ELEM_PG_BASE // # Elems in RAM
 
-#define MAX_ELEM_PG_DIAG 4 // # Elems total on page
+#define MAX_ELEM_PG_DIAG 7 // # Elems total on page
 #define MAX_ELEM_PG_DIAG_RAM MAX_ELEM_PG_DIAG // # Elems in RAM
 
 #define MAX_ELEM_PG_APR 22 // # Elems total on page
@@ -130,7 +131,7 @@ gslc_tsElemRef                  m_asPage4ElemRef[MAX_ELEM_PG_WIFI];
 gslc_tsXTextbox                 m_sTextbox11;
 char                            m_acTextboxBuf11[35]; // NRows=1 NCols=35
 gslc_tsXTextbox                 m_sTextbox3;
-char                            m_acTextboxBuf3[756]; // NRows=21 NCols=36
+char                            m_acTextboxBuf3[3000]; // NRows=100 NCols=30
 gslc_tsXSlider                  m_sTextScroll3;
 gslc_tsXCheckbox                m_asXRadio9;
 gslc_tsXCheckbox                m_asXRadio10;
@@ -164,7 +165,9 @@ extern gslc_tsElemRef* m_pElemBtnAprWind;
 extern gslc_tsElemRef* m_pElemBtnBaseApr;
 extern gslc_tsElemRef* m_pElemBtnBaseData;
 extern gslc_tsElemRef* m_pElemBtnBaseDiag;
-extern gslc_tsElemRef* m_pElemBtnBaseWiFiStrength;
+extern gslc_tsElemRef* m_pElemBtnDiagClear;
+extern gslc_tsElemRef* m_pElemBtnDiagPause;
+extern gslc_tsElemRef* m_pElemBtnDiagPlay;
 extern gslc_tsElemRef* m_pElemBtnWifiConnect;
 extern gslc_tsElemRef* m_pElemBtnWifiDisconnect;
 extern gslc_tsElemRef* m_pElemBtnWifiReset;
@@ -186,6 +189,7 @@ extern gslc_tsElemRef* m_pElemTextWifiStatus;
 extern gslc_tsElemRef* m_pElemTextboxDiagLog;
 extern gslc_tsElemRef* m_pElemTextboxStatus;
 extern gslc_tsElemRef* m_pElemTextboxWiFiDiag;
+extern gslc_tsElemRef* m_pElemTxtBaseWiFiStrength;
 extern gslc_tsElemRef* m_pTextSliderBaseStatus;
 extern gslc_tsElemRef* m_pTextSliderDiagLog;
 extern gslc_tsElemRef* m_pTextSliderWifiDiag;
@@ -284,11 +288,11 @@ void InitGUIslice_gen()
   
   // Create E_ELEM_TEXT_BASE_WIFI_STRENGTH runtime modifiable text
   static char m_sDisplayText49[7] = "XX%";
-  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT_BASE_WIFI_STRENGTH,E_PG_BASE,(gslc_tsRect){195,5,35,8},
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT_BASE_WIFI_STRENGTH,E_PG_BASE,(gslc_tsRect){195,5,36,8},
     (char*)m_sDisplayText49,7,E_BUILTIN5X8);
   gslc_ElemSetTxtAlign(&m_gui,pElemRef,GSLC_ALIGN_MID_RIGHT);
   gslc_ElemSetFillEn(&m_gui,pElemRef,false);
-  m_pElemBtnBaseWiFiStrength = pElemRef;
+  m_pElemTxtBaseWiFiStrength = pElemRef;
 
   // -----------------------------------
   // PAGE: E_PG_DIAG
@@ -302,13 +306,13 @@ void InitGUIslice_gen()
   gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_BLACK);
    
   // Create wrapping box for textbox E_ELEM_TEXTBOX_DIAG_LOG and scrollbar
-  pElemRef = gslc_ElemCreateBox(&m_gui,GSLC_ID_AUTO,E_PG_DIAG,(gslc_tsRect){10,40,218,210});
+  pElemRef = gslc_ElemCreateBox(&m_gui,GSLC_ID_AUTO,E_PG_DIAG,(gslc_tsRect){10,40,218,190});
   gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_GRAY,GSLC_COL_BLACK,GSLC_COL_BLACK);
   
   // Create textbox
   pElemRef = gslc_ElemXTextboxCreate(&m_gui,E_ELEM_TEXTBOX_DIAG_LOG,E_PG_DIAG,&m_sTextbox3,
-    (gslc_tsRect){10+2,40+4,218-4-20,210-7},E_BUILTIN5X8,
-    (char*)&m_acTextboxBuf3,21,36);
+    (gslc_tsRect){10+2,40+4,218-4-20,190-7},E_BUILTIN5X8,
+    (char*)&m_acTextboxBuf3,100,30);
   gslc_ElemXTextboxWrapSet(&m_gui,pElemRef,true);
   gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_YELLOW);
   gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_GRAY,GSLC_COL_BLACK,GSLC_COL_BLACK);
@@ -316,10 +320,28 @@ void InitGUIslice_gen()
 
   // Create vertical scrollbar for textbox
   pElemRef = gslc_ElemXSliderCreate(&m_gui,E_TXTSCROLL_DIAG_LOG,E_PG_DIAG,&m_sTextScroll3,
-          (gslc_tsRect){10+218-2-20,40+4,20,210-8},0,100,0,5,true);
+          (gslc_tsRect){10+218-2-20,40+4,20,190-8},0,100,0,5,true);
   gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_BLUE,GSLC_COL_BLACK,GSLC_COL_BLUE);
   gslc_ElemXSliderSetPosFunc(&m_gui,pElemRef,&CbSlidePos);
   m_pTextSliderDiagLog = pElemRef;
+  
+  // create E_ELEM_BTN_DIAG_PLAY button with text label
+  pElemRef = gslc_ElemCreateBtnTxt(&m_gui,E_ELEM_BTN_DIAG_PLAY,E_PG_DIAG,
+    (gslc_tsRect){10,240,40,20},(char*)"Play",0,E_BUILTIN5X8,&CbBtnCommon);
+  gslc_ElemSetRoundEn(&m_gui, pElemRef, true);
+  m_pElemBtnDiagPlay = pElemRef;
+  
+  // create E_ELEM_BTN_DIAG_PAUSE button with text label
+  pElemRef = gslc_ElemCreateBtnTxt(&m_gui,E_ELEM_BTN_DIAG_PAUSE,E_PG_DIAG,
+    (gslc_tsRect){100,240,40,20},(char*)"Pause",0,E_BUILTIN5X8,&CbBtnCommon);
+  gslc_ElemSetRoundEn(&m_gui, pElemRef, true);
+  m_pElemBtnDiagPause = pElemRef;
+  
+  // create E_ELEM_BTN_DIAG_CLEAR button with text label
+  pElemRef = gslc_ElemCreateBtnTxt(&m_gui,E_ELEM_BTN_DIAG_CLEAR,E_PG_DIAG,
+    (gslc_tsRect){190,240,40,20},(char*)"Clear",0,E_BUILTIN5X8,&CbBtnCommon);
+  gslc_ElemSetRoundEn(&m_gui, pElemRef, true);
+  m_pElemBtnDiagClear = pElemRef;
 
   // -----------------------------------
   // PAGE: E_PG_APR

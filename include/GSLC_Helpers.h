@@ -6,15 +6,16 @@
 // This file will need manually updating from ApRemote_GSLC.h if changes are made to the GUI.
 //
 
-
-#ifndef _GUISLICE_GEN_EXTERNS_H
-#define _GUISLICE_GEN_EXTERNS_H
+#pragma once
 
 // ------------------------------------------------
 // Headers to include
 // ------------------------------------------------
+#include <Arduino.h>
 #include "GUIslice.h"
 #include "GUIslice_drv.h"
+//#include "ApRemote_GSLC.h"
+#define MAX_STR 100
 
 // Include any extended elements
 //<Includes !Start!>
@@ -78,31 +79,73 @@ extern gslc_tsElemRef* m_pTextSliderWifiDiag;
 //<Extern_References !End!>
 
 
-// DCB's Helper functions
+// DCB's GUI Slice Helper functions ...
+/*
+ A note on TextBox elements with scroll bars.
+ 1. need a scroll bar handler so when the user scroll the text box is redrawn to show the correct part of the character buffer.
+    see CbSlidePos in main .cpp
+ 2. scroll bars are ineffective unless the textbox's buffer is larger than the textbox window height (in rows). 
+    In GUISice Builder, text box proerties:
+    a. Set the text box size (in rows) to say 100 rows), the textbox will resize & be too big for the screen,
+    b. Set the text box height (in pixels) to make the textbox fit your screen design.
+    Scroll bar then works.
+ 3. when text is added to the box (e.g. below). when the screen is full, the screen doesnt auto scroll up (so you can see 
+    the last items added). This feels like a missing feature. The GUISlice XTextbox.c functions handle the buffer, adding, 
+    resetting & redrawing the text box & doesnt seem to do or have options for "autoscroll". Important items seem to be:
+    pxData->scrollPos, nBufPosY, nBufPosX nWndStart. Needs a question to the GSLC team....?? 
+*/
 
-// A printf for GSLC Textbox elements, max 100 chars
-inline void gslc_ElemXTextboxPrintf(gslc_tsGui* pGui, gslc_tsElemRef* pElemRef, const char* format, ...){
-  char cOut[100];
-  va_list args;
 
-  va_start( args, format );
-  vsprintf( cOut, format, args );
-  va_end( args );
-
-  gslc_ElemXTextboxAdd(pGui, pElemRef, cOut); 
+////
+// GSLC_TextBox_Helper 
+//
+class GSLC_Helpers
+{
+protected:
+  gslc_tsGui* pGui;
+  gslc_tsElemRef** ppElemRef;
+public:
+   GSLC_Helpers(gslc_tsGui* _pGui, gslc_tsElemRef** _ppElemRef);
+   ~GSLC_Helpers() {}
 };
 
-// A printf for GSLC Txt elements, max 100 chars
-// TODO: one that accepts a String might be good, similar to Serial.println
-inline void gslc_ElemSetTxtPrintf(gslc_tsGui* pGui, gslc_tsElemRef* pElemRef, const char* format, ...){
-  char cOut[100];
-  va_list args;
+////
+// GSLC_TextBox_Helper 
+//
 
-  va_start( args, format );
-  vsprintf( cOut, format, args );
-  va_end( args );
+class GSLC_TextBox_Helper : protected GSLC_Helpers
+{
+public:
+  typedef enum {TxtOutPlay, TxtOutPaused} TxtOutStatusEnum;
 
-  gslc_ElemSetTxtStr(pGui, pElemRef, cOut); 
+private:
+  TxtOutStatusEnum TxtOutStatus = TxtOutStatusEnum::TxtOutPlay;
+
+public:
+  GSLC_TextBox_Helper(gslc_tsGui* _pGui, gslc_tsElemRef** _ppElemRef);
+
+  ~GSLC_TextBox_Helper() {};
+
+  void setTextOutStatus(TxtOutStatusEnum Status) {TxtOutStatus=Status;}
+  TxtOutStatusEnum getTextOutStatus() {return TxtOutStatus;}
+
+  void clear();
+
+  void printf(const char* format, ...);
+
 };
 
-#endif // _GUISLICE_GEN_EXTERNS_H
+////
+// GSLC_Txt_Helper 
+//
+class GSLC_Txt_Helper : public GSLC_Helpers
+{
+private:
+   /* data */
+public:
+  GSLC_Txt_Helper(gslc_tsGui* _pGui, gslc_tsElemRef** _ppElemRef);
+  ~GSLC_Txt_Helper() {}
+
+  void printf(const char* format, ...);
+
+};

@@ -2,8 +2,7 @@
 // For statemachine class documentation see here https://www.codeproject.com/Articles/1087619/State-Machine-Design-in-Cplusplus-2
 // implementation description is in the .cpp header.
 
-#ifndef _DCBWIFIMANAGER_H
-#define _DCBWIFIMANAGER_H
+#pragma once
 
 #include <ESPAsyncWebServer.h>
 #include <Timeout.h>
@@ -110,4 +109,3 @@ private:
   void    writeFile(fs::FS &fs, const char * path, const char * message);
 
 };
-#endif 

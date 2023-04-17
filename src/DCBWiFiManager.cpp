@@ -40,7 +40,8 @@ Using Timoutout libaray from https://github.com/tfeldmann/Arduino-Timeout
 #include <AsyncTCP.h>
 #include <SPIFFS.h>
 
-#include "ApRemote_GSLC_Externs.h"
+#include "main.h"
+#include "GSLC_Helpers.h"
 
 DCBWiFiManager::DCBWiFiManager(AsyncWebServer* server, const char* APSSID) : StateMachine(ST_MAX_STATES) {
 
@@ -166,15 +167,15 @@ ENTRY_DEFINE(DCBWiFiManager,     EntryAPMode,             NoEventData) {
     Serial.print("AP IP address: ");
     Serial.println(IP); 
 
-    gslc_ElemSetTxtPrintf(&m_gui, m_pElemTextWifiStatus,  "AP Mode");
-    gslc_ElemSetTxtPrintf(&m_gui, m_pElemTextWifiSSID,    "%s", _apssid.c_str());
-    gslc_ElemSetTxtPrintf(&m_gui, m_pElemTextWifiIp,      "%s", WiFi.softAPIP().toString());
+    txtWiFiStatus.printf("AP Mode");
+    txtWiFiSSID.printf("%s", _apssid.c_str());
+    txtWiFiIp.printf("%s", WiFi.softAPIP().toString());
 
     _server->begin();
   }
   else{
     // Starting AP mode failed....
-    gslc_ElemSetTxtPrintf(&m_gui, m_pElemTextboxWiFiDiag,  "DCBWiFiManager::EntryAPMode - Starting AP Mode failed");
+    txtWiFiDiag.printf("WM::EntryAPMode - Starting AP Mode failed");
   };  
 }
 
@@ -217,7 +218,8 @@ ENTRY_DEFINE(DCBWiFiManager,     EntryConnectingToSTA,    NoEventData) {
 
 STATE_DEFINE(DCBWiFiManager,     ConnectingToSTA,         NoEventData) {
   // check for connection success, or timeout.
-  if(WiFi.status() == WL_CONNECTED) {
+  wl_status_t status = WiFi.status();
+  if(status==WL_CONNECTED) {
 
     Serial.printf("ConnectingToSTA::Connected to STA @ %s\n", WiFi.localIP().toString());
     // notify client we connected to wifi, calling their conneted function
