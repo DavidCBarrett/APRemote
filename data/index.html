@@ -2,12 +2,17 @@
     "http://www.w3.org/TR/html4/loose.dtd">
 <html lang="en">
 <head>
-<title>Auto Pilot Remote</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="stylesheet" type="text/css" href="style.css">
+   <title>Auto Pilot Remote</title>
+   <meta name="viewport" content="width=device-width, initial-scale=1">
+   <meta name="apple-mobile-web-app-capable" content="yes">
+   <link rel="stylesheet" type="text/css" href="style.css">
+   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+   <link rel="manifest" href="/site.webmanifest">
 </head>
 <body>
-   <table id="t1">
+     <table id="t1">
       <tr>
          <td colspan=3>
             <table id="t4"><tr><td id="hdgInfo" align="middle">>>1.2Nm</td></tr></table>
@@ -36,27 +41,29 @@
    <br>
   <table>
     <tr>
+      <!-- Changed all button handelers from ontouchstart to onPress 
+         (found out the hard way ontouchstart only works with touchscreens, onclick works with both  -->
       <td align="center">To Port</td>
-      <td align="center"><button class="button" ontouchstart="onPress('0');" width=80%>Standby</button></td>
+      <td align="center"><button class="button" onclick="onPress('0');" width=80%>Standby</button></td>
       <td align="center">To Stbd</td>
     </tr>
     <tr><td> </td></tr>
       <tr>
-         <td align="center"><button class="button" ontouchstart="onPress('1');">-1</button></td>
-         <td align="center"><button class="button" ontouchstart="onPress('2');">Auto</button></td>
-         <td align="center"><button class="button" ontouchstart="onPress('3');">+1</button></td>
+         <td align="center"><button class="button" onclick="onPress('1');">-1</button></td>
+         <td align="center"><button class="button" onclick="onPress('2');">Auto</button></td>
+         <td align="center"><button class="button" onclick="onPress('3');">+1</button></td>
       </tr>
       <tr><td> </td></tr>
       <tr>
-         <td align="center"><button class="button" ontouchstart="onPress('4');">-10</button></td>
-         <td align="center"><button class="button" ontouchstart="onPress('5');">Wind</button></td>
-         <td align="center"><button class="button" ontouchstart="onPress('6');">+10</button></td>
+         <td align="center"><button class="button" onclick="onPress('4');">-10</button></td>
+         <td align="center"><button class="button" onclick="onPress('5');">Wind</button></td>
+         <td align="center"><button class="button" onclick="onPress('6');">+10</button></td>
       </tr>
       <tr><td> </td></tr>
       <tr>
-         <td align="center"><button class="button" ontouchstart="onPress('7');">Tack</button></td>
-         <td align="center"><button class="button" ontouchstart="onPress('8');">Track</button></td>
-         <td align="center"><button class="button" ontouchstart="onPress('9');">Tack</button></td>
+         <td align="center"><button class="button" onclick="onPress('7');">Tack</button></td>
+         <td align="center"><button class="button" onclick="onPress('8');">Track</button></td>
+         <td align="center"><button class="button" onclick="onPress('9');">Tack</button></td>
       </tr>
    </table>
    <br>
@@ -101,68 +108,9 @@
          </td>
       </tr>
     </table>
-    
-    
-<script>
 
-   var url = "ws://192.168.1.187:1337/";
-   // request data updates every 1000 milliseconds
-   setInterval(requestData, 1000);
-   wsConnect(url);
+    <script src="reconnecting-websockets.js"></script>
+    <script src="main.js"></script>
 
-function requestData() {
-
-   var xhr = new XMLHttpRequest();
-   xhr.open('GET', 'getData');
-
-   xhr.onload = function() {
-     if (xhr.status === 200) {
-       if (xhr.responseText) { // if the returned data is not null, update the values
-          var data = JSON.parse(xhr.responseText);
-
-          document.getElementById("CTS").innerText = data.cts;
-
-          document.getElementById("LED0").innerHTML = "<div class=\"" + data.led0 + "\"></div>";
-          document.getElementById("LED1").innerHTML = "<div class=\"" + data.led1 + "\"></div>";
-          document.getElementById("LED2").innerHTML = "<div class=\"" + data.led2 + "\"></div>";
-          document.getElementById("LED3").innerHTML = "<div class=\"" + data.led3 + "\"></div>";
-
-          document.getElementById("HDG").innerText = data.hdg;
-          document.getElementById("RSA").innerText = data.rsa;  
-          document.getElementById("COG").innerText = data.cog;
-          document.getElementById("SOG").innerText = data.sog;
-          document.getElementById("AWA").innerText = data.awa;
-          document.getElementById("AWS").innerText = data.aws;
-          document.getElementById("DPT").innerText = data.dpt;
-          document.getElementById("STW").innerText = data.stw;
-          document.getElementById("XTE").innerText = data.xte;
-          document.getElementById("BTW").innerText = data.btw;
-          document.getElementById("DTW").innerText = data.dtw;
-          document.getElementById("VLW").innerText = data.vlw;
-          
-          document.getElementById("left").innerHTML = data.left;
-          document.getElementById("right").innerHTML = data.right;
-          document.getElementById("hdgInfo").innerHTML = data.hdgInfo;
-          document.getElementById("alarm").innerText = data.alm;
-        } 
-     }
-   };
-   xhr.send();
-}
-
-// Call this to connect to the WebSocket server
-function wsConnect(url) {
-    
-    // Connect to WebSocket server
-    websocket = new WebSocket(url);
-}
-// Called whenever the HTML button is pressed
-function onPress(msg) {
-    websocket.send(msg);
-}
-
-
-</script>
-   
- </body>
+</body>
 </html>
