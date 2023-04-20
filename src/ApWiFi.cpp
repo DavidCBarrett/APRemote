@@ -43,8 +43,17 @@ void onWebSocketEvent(AsyncWebSocket       *server,     //
     case WS_EVT_DATA: {
       // Print out raw message
       Serial.printf("[%u] Received text: %s\r\n", client->id(), payload);
-      newCmd = payload[0] - '0';
-      xQueueSend(queue, &newCmd, portMAX_DELAY);
+      newCmd = atoi((const char *)payload);
+
+      switch(newCmd) {
+        case 0 ... 9:
+          xQueueSend(queue, &newCmd, portMAX_DELAY);
+          break;
+        case 10:
+          int numnetworks = wm.scanWifiNetworks(&wm.indices);
+          break;
+      }
+      
       } break;
  
     // For everything else: do nothing

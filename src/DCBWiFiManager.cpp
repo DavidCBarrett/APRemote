@@ -207,7 +207,8 @@ GUARD_DEFINE(DCBWiFiManager,     GuardConnectingToSTA,   NoEventData) {
  
   // if no SSID or IP provided, don't proceed
   if(_ssid=="" || ip==""){
-      Serial.println("GuardConnectingToSTA::Undefined SSID or IP address.");
+      Serial.println("GuardConnectingToSTA::Undefined SSID or IP address, entering ApMode");
+      InternalEvent(ST_APMODE);
       return FALSE; // note use of upper BOOL, TRUE and FALSE in GUARD functions.
   }
 
@@ -218,7 +219,8 @@ GUARD_DEFINE(DCBWiFiManager,     GuardConnectingToSTA,   NoEventData) {
 
   // if configuring WiFi fails, don't proceed.
   if (!WiFi.config(localIP, localGateway, subnet)){
-    Serial.println("GuardConnectingToSTA::STA Failed to configure");
+    Serial.println("GuardConnectingToSTA::STA Failed to configure, entering ApMode");
+    InternalEvent(ST_APMODE);
     return FALSE;
   }
 
@@ -312,3 +314,162 @@ void DCBWiFiManager::writeFile(fs::FS &fs, const char * path, const char * messa
     Serial.println("- frite failed");
   }
 }
+
+//Scan for WiFiNetworks in range and sort by signal strength
+//space for indices array allocated on the heap and should be freed when no longer required
+int DCBWiFiManager::scanWifiNetworks(int **indicesptr)
+{
+  Serial.println("Scanning Network");
+
+  int n = WiFi.scanNetworks();
+
+  Serial.printf("scanWifiNetworks: Done, Scanned Networks n = %d\n", n);
+
+  //KH, Terrible bug here. WiFi.scanNetworks() returns n < 0 => malloc( negative == very big ) => crash!!!
+  //In .../esp32/libraries/WiFi/src/WiFiType.h
+  //#define WIFI_SCAN_RUNNING   (-1)
+  //#define WIFI_SCAN_FAILED    (-2)
+  //if (n == 0)
+  if (n <= 0)
+  {
+    Serial.println("No network found");
+    return (0);
+  }
+  else
+  {
+    // Allocate space off the heap for indices array.
+    // This space should be freed when no longer required.
+    int* indices = (int *)malloc(n * sizeof(int));
+
+    if (indices == NULL)
+    {
+      Serial.println("ERROR: Out of memory");
+      *indicesptr = NULL;
+      return (0);
+    }
+
+    *indicesptr = indices;
+
+    //sort networks
+    for (int i = 0; i < n; i++)
+    {
+      indices[i] = i;
+    }
+
+    Serial.println("Sorting");
+
+    // RSSI SORT
+    // old sort
+    for (int i = 0; i < n; i++)
+    {
+      for (int j = i + 1; j < n; j++)
+      {
+        if (WiFi.RSSI(indices[j]) > WiFi.RSSI(indices[i]))
+        {
+          //std::swap(indices[i], indices[j]);
+          // Using locally defined swap()
+          swap(&indices[i], &indices[j]);
+        }
+      }
+    }
+
+    Serial.println("Removing Dup");
+
+    // remove duplicates ( must be RSSI sorted )
+    if (_removeDuplicateAPs)
+    {
+      String cssid;
+
+      for (int i = 0; i < n; i++)
+      {
+        if (indices[i] == -1)
+          continue;
+
+        cssid = WiFi.SSID(indices[i]);
+
+        for (int j = i + 1; j < n; j++)
+        {
+          if (cssid == WiFi.SSID(indices[j]))
+          {
+            Serial.printf("DUP AP:", WiFi.SSID(indices[j]));
+            indices[j] = -1; // set dup aps to index -1
+          }
+        }
+      }
+    }
+
+    // Skip low quality Wi-Fi stations by marking their indicies as -1.
+    for (int i = 0; i < n; i++)
+    {
+      if (indices[i] == -1)
+        continue; // skip dups
+
+      int quality = getRSSIasQuality(WiFi.RSSI(indices[i]));
+
+      if (!(_minimumQuality == -1 || _minimumQuality < quality))
+      {
+        indices[i] = -1;
+        Serial.println("Skipping low quality");
+      }
+    }
+
+    // Print networks (for debuging) 
+    Serial.println("WiFi networks found:");
+    for (int i = 0; i < n; i++)
+    {
+      if (indices[i] == -1)
+        continue; // skip dups
+      else
+        Serial.printf("  %d: %s, %ddB\n", i + 1, WiFi.SSID(indices[i]).c_str(), WiFi.RSSI(i));
+    }
+
+    return (n);
+  }
+}
+
+//////////////////////////////////////////
+
+int DCBWiFiManager::getRSSIasQuality(const int& RSSI)
+{
+  int quality = 0;
+
+  if (RSSI <= -100)
+  {
+    quality = 0;
+  }
+  else if (RSSI >= -50)
+  {
+    quality = 100;
+  }
+  else
+  {
+    quality = 2 * (RSSI + 100);
+  }
+
+  return quality;
+}
+
+void DCBWiFiManager::swap(int *thisOne, int *thatOne)
+  {
+    int tempo;
+
+    tempo    = *thatOne;
+    *thatOne = *thisOne;
+    *thisOne = tempo;
+  }
+
+  //////////////////////////////////////////
+
+  void DCBWiFiManager::setMinimumSignalQuality(const int& quality)
+  {
+    _minimumQuality = quality;
+  }
+
+  //////////////////////////////////////////
+
+  //if this is true, remove duplicate Access Points - default true
+  void DCBWiFiManager::setRemoveDuplicateAPs(const bool& removeDuplicates)
+  {
+    _removeDuplicateAPs = removeDuplicates;
+  }
+

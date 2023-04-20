@@ -17,6 +17,8 @@ class DCBWiFiManager : public StateMachine
 {
 public:
 
+  int *indices;  // WiFi network data, filled by scan (SSID, BSSID)
+
   DCBWiFiManager(AsyncWebServer* server, const char* APSSID);
 
   // external events taken by this state machine
@@ -45,6 +47,9 @@ public:
   // called when AP mode and config portal is started
   void setWiFiConnectedCallback(std::function<void()> func) {_wificonnectedcallback = func;}
 
+  // WiFi Scanner temp call...
+  int  scanWifiNetworks(int **indicesptr);
+
 private:
 
   String _apssid;
@@ -54,6 +59,13 @@ private:
 
   // DNS server (for captivie website in AP mode)
   DNSServer *dnsServer = nullptr;
+
+  // SSID scanning ...
+  int     _paramsCount        = 0;
+  int     _minimumQuality     = -1;
+  bool    _removeDuplicateAPs = true;
+  String  ListOfSSIDs         = "";      // List of SSIDs found by scan, in HTML <option> format
+  int     WiFiNetworksFound   = 0;    // Number of SSIDs found by WiFi scan, including low quality and duplicates
 
   //Variables to save values from HTML form
   String _ssid;
@@ -111,5 +123,11 @@ private:
 
   String  readFile(fs::FS &fs, const char * path);
   void    writeFile(fs::FS &fs, const char * path, const char * message);
+
+  // SSID scanning...
+  int  getRSSIasQuality(const int& RSSI);
+  void swap(int *thisOne, int *thatOne);
+  void setMinimumSignalQuality(const int& quality);
+  void setRemoveDuplicateAPs(const bool& removeDuplicates);
 
 };

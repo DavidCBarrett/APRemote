@@ -234,7 +234,8 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
       case E_ELEM_BTN_APR_PORT_TACK:
         break;
       case E_ELEM_BTN_WIFI_CONNECT:
-        wm.OnUserConnectRequest();
+        wm.scanWifiNetworks(&wm.indices);
+        //wm.OnUserConnectRequest();
         break;
       case E_ELEM_BTN_WIFI_RESET:
         wm.resetSettings();
