@@ -5,6 +5,7 @@
 #pragma once
 
 #include <ESPAsyncWebServer.h>
+#include <DNSServer.h>
 #include <Timeout.h>
 
 #include "StateMachine\StateMachine.h"
@@ -50,6 +51,9 @@ private:
 
   // AsyncWebServer to use ...
   AsyncWebServer* _server;
+
+  // DNS server (for captivie website in AP mode)
+  DNSServer *dnsServer = nullptr;
 
   //Variables to save values from HTML form
   String _ssid;

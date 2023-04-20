@@ -43,6 +43,8 @@ Using Timoutout libaray from https://github.com/tfeldmann/Arduino-Timeout
 #include "main.h"
 #include "GSLC_Helpers.h"
 
+#define DNS_PORT      53
+
 DCBWiFiManager::DCBWiFiManager(AsyncWebServer* server, const char* APSSID) : StateMachine(ST_MAX_STATES) {
 
   _apssid = APSSID;
@@ -171,7 +173,21 @@ ENTRY_DEFINE(DCBWiFiManager,     EntryAPMode,             NoEventData) {
     txtWiFiSSID.printf("%s", _apssid.c_str());
     txtWiFiIp.printf("%s", WiFi.softAPIP().toString());
 
+    if (!dnsServer)
+    {
+      dnsServer = new DNSServer();
+    }
+
     _server->begin();
+
+    //See https://stackoverflow.com/questions/39803135/c-unresolved-overloaded-function-type?rq=1
+    if (_server && dnsServer)
+    {
+      // CaptivePortal
+      // if DNSServer is started with "*" for domain name, it will reply with provided IP to all DNS requests
+      dnsServer->start(DNS_PORT, "*", WiFi.softAPIP());
+    }
+
   }
   else{
     // Starting AP mode failed....
@@ -179,7 +195,10 @@ ENTRY_DEFINE(DCBWiFiManager,     EntryAPMode,             NoEventData) {
   };  
 }
 
-STATE_DEFINE(DCBWiFiManager,     APMode,                  NoEventData) {}
+STATE_DEFINE(DCBWiFiManager,     APMode,                  NoEventData) 
+{
+  if (dnsServer) dnsServer->processNextRequest();
+}
 
 GUARD_DEFINE(DCBWiFiManager,     GuardConnectingToSTA,   NoEventData) {
  

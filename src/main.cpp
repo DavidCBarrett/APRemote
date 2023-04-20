@@ -452,14 +452,14 @@ void loop()
   // Adjust the range of the slider based on how full the char buffer attached to the relevan text box is 
   // just for the WiFi Diag text box for now...
 
-  gslc_tsElemRef* pElemRef  = (gslc_tsElemRef*)(m_pElemTextboxDiagLog);
-  gslc_tsElem*    pElem     = gslc_GetElemFromRef(&m_gui,pElemRef);
-  // Fetch the element's extended data structure
-  gslc_tsXTextbox* pBox;
-  pBox = (gslc_tsXTextbox*)(pElem->pXData);
+  // gslc_tsElemRef* pElemRef  = (gslc_tsElemRef*)(m_pElemTextboxDiagLog);
+  // gslc_tsElem*    pElem     = gslc_GetElemFromRef(&m_gui,pElemRef);
+  // // Fetch the element's extended data structure
+  // gslc_tsXTextbox* pBox;
+  // pBox = (gslc_tsXTextbox*)(pElem->pXData);
 
-  txtDiagLog.printf("BY= %u\n", pBox->nBufPosY);
-  txtDiagStatus.printf("WRS= %u, SP= %u\n", pBox->nWndRowStart, pBox->nScrollPos);
+  // txtDiagLog.printf("BY= %u\n", pBox->nBufPosY);
+  // txtDiagStatus.printf("WRS= %u, SP= %u\n", pBox->nWndRowStart, pBox->nScrollPos);
 
   // ------------------------------------------------
   // Periodically call GUIslice update function
