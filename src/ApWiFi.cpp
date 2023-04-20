@@ -13,7 +13,6 @@
 
 AsyncWebServer server(80);
 AsyncWebSocket webSocket("/ws");
-//DNSServer dns;
 
 DCBWiFiManager wm(&server, APSSID);
 
@@ -240,6 +239,21 @@ void WiFiConnectedCallback() {
   txtWiFiDiag.printf("Connected to WiFI.\n SSID %s\n with pwd: %s\n", WiFi.SSID(), wm.getConfiguredSTAPassword());
 }
 
+class CaptiveRequestHandler : public AsyncWebHandler {
+public:
+  CaptiveRequestHandler() {}
+  virtual ~CaptiveRequestHandler() {}
+
+  bool canHandle(AsyncWebServerRequest *request){
+    //request->addInterestingHeader("ANY");
+    return true;
+  }
+
+  void handleRequest(AsyncWebServerRequest *request) {
+    request->send(SPIFFS, "/index.html", "text/html"); 
+  }
+};
+
 void ApWiFi_Setup() {
 
   txtWiFiDiag.printf("WiFi Diag\n");
@@ -266,6 +280,9 @@ void ApWiFi_Setup() {
   // Assign  WebSocket callback
   webSocket.onEvent(onWebSocketEvent);                    
   server.addHandler(&webSocket);
+
+  // for captive web page on AP mode connect.
+  server.addHandler(new CaptiveRequestHandler()).setFilter(ON_AP_FILTER);//only when requested from AP
  
   // handler for WiFi events (connect and disconnect events).
   WiFi.onEvent(onWifiEvent);                              
