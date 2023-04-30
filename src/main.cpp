@@ -70,13 +70,13 @@ TODO'S:
 // Headers to include
 // ------------------------------------------------
 #include <Arduino.h>
+#include <WiFi.h>
 #include <PinButton.h>
 #include <HeartBeat.h>
 
 #include "main.h"
 #include "ApEsp32Pins.h"
 #include "ApWifi.h"
-#include "DCBWiFiManager.h"
 #include "SeaTalk.h"
 #include "ApRemote_GSLC.h"
 #include "GSLC_Helpers.h"
@@ -234,14 +234,10 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
       case E_ELEM_BTN_APR_PORT_TACK:
         break;
       case E_ELEM_BTN_WIFI_CONNECT:
-        wm.scanWifiNetworks(&wm.indices);
-        //wm.OnUserConnectRequest();
         break;
       case E_ELEM_BTN_WIFI_RESET:
-        wm.resetSettings();
         break;
       case E_ELEM_BTN_WIFI_DISCONNECT:
-        wm.OnUserDisconnectRequest();
         break;
       case E_ELEM_BTN_WIFI_PLAY:
         txtWiFiDiag.setTextOutStatus(GSLC_TextBox_Helper::TxtOutStatusEnum::TxtOutPlay);

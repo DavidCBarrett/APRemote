@@ -3,18 +3,25 @@
 #include <WiFi.h>
 #include <ESPAsyncWebServer.h>
 
+#define DEBUG_OUTPUT  Serial          // fixes missing definition in ESPAsyncDNSServer/src/ESPAsyncDNSServer.cpp
+
+#include "defines.h"
+#include "Credentials.h"
+#include "ESPAsync_WiFiManager_Lite.h"    // custom version of https://github.com/khoih-prog/ESPAsync_WiFiManager_Lite	
+
 #include "main.h"
 #include "SeaTalk.h"
 #include "GSLC_Helpers.h"
-#include "DCBWiFiManager.h"
+
 #include "EnumsToStrings.h"
 
+//WiFi Manager configuration...
 #define APSSID "AutoPilot Remote"
 
 AsyncWebServer server(80);
 AsyncWebSocket webSocket("/ws");
 
-DCBWiFiManager wm(&server, APSSID);
+ESPAsync_WiFiManager_Lite *ESPAsync_WiFiManager;
 
 // Callback: receiving any WebSocket message
 void onWebSocketEvent(AsyncWebSocket       *server,     //
@@ -50,7 +57,8 @@ void onWebSocketEvent(AsyncWebSocket       *server,     //
           xQueueSend(queue, &newCmd, portMAX_DELAY);
           break;
         case 10:
-          int numnetworks = wm.scanWifiNetworks(&wm.indices);
+          // configure WifI pressed....
+          //int numnetworks = wm.scanWifiNetworks(&wm.indices);
           break;
       }
       
@@ -229,7 +237,7 @@ void onWifiEvent(WiFiEvent_t event) {
       txtWiFiStatus.printf("Disconnected");
       txtWiFiSSID.printf( " ");
       txtWiFiIp.printf(" ");
-			wm.OnUserDisconnectRequest();
+			// wm.OnUserDisconnectRequest();
 			break;
       
 		default: 
@@ -245,7 +253,7 @@ void notFound(AsyncWebServerRequest *request) {
 
 void WiFiConnectedCallback() {
   // if you get here you have connected to WiFi
-  txtWiFiDiag.printf("Connected to WiFI.\n SSID %s\n with pwd: %s\n", WiFi.SSID(), wm.getConfiguredSTAPassword());
+  txtWiFiDiag.printf("Connected to WiFI.\n SSID %s\n with pwd: %s\n", WiFi.SSID(), ESPAsync_WiFiManager->getWiFiPW(0));
 }
 
 class CaptiveRequestHandler : public AsyncWebHandler {
@@ -296,15 +304,17 @@ void ApWiFi_Setup() {
   // handler for WiFi events (connect and disconnect events).
   WiFi.onEvent(onWifiEvent);                              
 
-  wm.setWiFiConnectedCallback(WiFiConnectedCallback);
+ // ESP_WiFiManager.setWiFiConnectedCallback(WiFiConnectedCallback);
  
-  // give WiFiManager a kick to start the state machine...
-  wm.OnUserConnectRequest();
+  ESPAsync_WiFiManager = new ESPAsync_WiFiManager_Lite();
+  ESPAsync_WiFiManager->setConfigPortal(APSSID);
+  //Use default Hostname "ESP32-WIFI-XXXXXX"
+  ESPAsync_WiFiManager->begin(APSSID);
 }
 
 void APWiFi_Loop() {
     
   webSocket.cleanupClients();
 
-  wm.poll();  // poll / process the statemachine.
+  ESPAsync_WiFiManager->run();;  // poll / process the statemachine.
 }

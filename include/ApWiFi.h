@@ -3,9 +3,6 @@
 #define _APWIFI_H
 
 #include <Arduino.h>
-#include "DCBWiFiManager.h"
-
-extern DCBWiFiManager wm;
 
 void ApWiFi_Setup();
 
