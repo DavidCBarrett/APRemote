@@ -80,6 +80,7 @@ TODO'S:
 #include "SeaTalk.h"
 #include "ApRemote_GSLC.h"
 #include "GSLC_Helpers.h"
+#include "EnumsToStrings.h"
 
 // ------------------------------------------------
 // Program Globals
@@ -392,8 +393,6 @@ unsigned int m_nCount = 0;
 // -----------------------------------
 void loop()
 {
-  char cDisp[MAX_STR];
-
   HB.beat();
   TXHB.beat();
   RXHB.beat();
@@ -412,22 +411,14 @@ void loop()
   // Display WiFi Signal Strength or if not applicable, WiFi mode information.
   switch (WiFi.getMode()) 
   {
-    case WIFI_MODE_NULL:
-      txtBaseWiFiStrength.printf("NULL");
-      break;
     case WIFI_MODE_STA:
       // For RSSI db to 0-100% conversion see https://stackoverflow.com/questions/15797920/how-to-convert-wifi-signal-strength-from-quality-percent-to-rssi-dbm
       // Added the /20*20 bit to reduce the resolution to steps of 20 to avoid the reported number "flickering".
       txtBaseWiFiStrength.printf("%d", (std::min(std::max(2 * (WiFi.RSSI() + 100), 0), 100) /20)*20);
       break;
-    case WIFI_MODE_AP:
-      txtBaseWiFiStrength.printf("AP");
-      break;
-    case WIFI_MODE_APSTA:
-      txtBaseWiFiStrength.printf("APSTA");
-      break;
-    case WIFI_MODE_MAX:
-      txtBaseWiFiStrength.printf("MAX");
+    default:
+      // Display all other modes at text using the enum to cstr helper
+      txtWiFiStatus.printf("%s", wifi_mode_tToCStr(WiFi.getMode()));
       break;
   }
 
