@@ -341,7 +341,7 @@ void setup()
   Serial.printf("----------------------\n-- Sea Talk Web Remote\n----------------------\n");
 
   // ------------------------------------------------
-  // Initialize
+  // Initialize generic hardware
   // ------------------------------------------------
   pinMode(RX_MON, INPUT);
   pinMode(RX_LED, OUTPUT_OPEN_DRAIN);
@@ -354,7 +354,7 @@ void setup()
   RXHB.begin(RX_LED, 1);
 
   // ------------------------------------------------
-  // Create graphic elements
+  // Initialise graphic elements
   // ------------------------------------------------
   gslc_InitDebug(&DebugOut);
   InitGUIslice_gen();
@@ -362,20 +362,26 @@ void setup()
   txtDiagLog.printf("----------------------\n-- Sea Talk Web Remote\n----------------------\n");
   gslc_Update(&m_gui);
 
-  ApWiFi_Setup();
+  // ------------------------------------------------
+  // Initialise WiFi Manager
+  // Test #1 - if wifi credentials are stored, wifimanager will attempt to connect & return if successful.
+  // Test #2 - if connection fails, an AP is started, allowing user to input credentails, ESP then restarts.
+  // Test #3 - if AP times out, contoll falls through to the application (i.e. proceed without WiFi).
+  // ------------------------------------------------
+  ApWiFi_Manager_Setup();
 
-  txtDiagLog.printf("ApWiFi_Init() done \n");
+  txtDiagLog.printf("WiFi_Manager done \n");
   gslc_Update(&m_gui);
 
+   // ------------------------------------------------
+   // Init application
+   // ------------------------------------------------
+  ApWiFi_Setup();
   Seatalk_Init();
 
-  txtDiagLog.printf("Setup Done.\n");
-  
-  // Insert some text
-  txtDiagLog.printf("Welcome\n");
-  txtDiagLog.printf("Hi ");
-  txtDiagLog.printf("Long line here that may wrap or may not that is the purpose of this test\n");
-  txtDiagLog.printf("End...\n");
+  txtDiagLog.printf("App Setup Done.\n");
+  gslc_Update(&m_gui);
+
 }
 
 // Free-running counter for display

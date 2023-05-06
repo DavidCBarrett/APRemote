@@ -8,6 +8,20 @@
 #include <WiFiType.h>
 
 #define ENUM_TO_STRING(etype, e) case etype::e : return #e;
+#define ENUM_TO_USER_CSTR(etype, e, usercstr) case etype::e : return usercstr;
+
+const char* wifi_mode_tToCStr(wifi_mode_t e) noexcept
+{
+    switch (e)
+    {
+	    ENUM_TO_USER_CSTR (wifi_mode_t, WIFI_MODE_NULL, "NULL")
+	    ENUM_TO_USER_CSTR (wifi_mode_t, WIFI_MODE_STA, "STA")
+	    ENUM_TO_USER_CSTR (wifi_mode_t, WIFI_MODE_AP, "AP")
+	    ENUM_TO_USER_CSTR (wifi_mode_t, WIFI_MODE_APSTA, "APSTA")
+	    ENUM_TO_USER_CSTR (wifi_mode_t, WIFI_MODE_MAX, "MAX")
+    }
+    return "wifi_mode_tToCStr out of range";
+}
 
 const char* WiFiEvent_tToString(WiFiEvent_t e) noexcept
 {

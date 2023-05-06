@@ -16,7 +16,8 @@
 #include "EnumsToStrings.h"
 
 //WiFi Manager configuration...
-#define APSSID "AutoPilot Remote"
+#define AP_SSID "AutoPilotRemote"
+#define AP_PWD  "abc"
 
 AsyncWebServer server(80);
 AsyncWebSocket webSocket("/ws");
@@ -271,6 +272,18 @@ public:
   }
 };
 
+void ApWiFi_Manager_Setup() {
+  ESPAsync_WiFiManager = new ESPAsync_WiFiManager_Lite();
+  ESPAsync_WiFiManager->setConfigPortal(AP_SSID, AP_PWD);
+
+  ESPAsync_WiFiManager->begin(AP_SSID);
+
+  // Update TFT WiFi page status info...
+  txtWiFiStatus.printf("%s", wifi_mode_tToCStr(WiFi.getMode()));
+  txtWiFiSSID.printf("%s", ESPAsync_WiFiManager->getWiFiSSID(0).c_str());
+  txtWiFiIp.printf("%s", ESPAsync_WiFiManager->localIP());
+}
+
 void ApWiFi_Setup() {
 
   txtWiFiDiag.printf("WiFi Diag\n");
@@ -304,12 +317,6 @@ void ApWiFi_Setup() {
   // handler for WiFi events (connect and disconnect events).
   WiFi.onEvent(onWifiEvent);                              
 
- // ESP_WiFiManager.setWiFiConnectedCallback(WiFiConnectedCallback);
- 
-  ESPAsync_WiFiManager = new ESPAsync_WiFiManager_Lite();
-  ESPAsync_WiFiManager->setConfigPortal(APSSID);
-  //Use default Hostname "ESP32-WIFI-XXXXXX"
-  ESPAsync_WiFiManager->begin(APSSID);
 }
 
 void APWiFi_Loop() {
