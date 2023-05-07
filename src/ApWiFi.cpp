@@ -1,13 +1,14 @@
+#include "ApWiFi.h"
 
 #include <SPIFFS.h>
 #include <WiFi.h>
 #include <ESPAsyncWebServer.h>
 
-#define DEBUG_OUTPUT  Serial          // fixes missing definition in ESPAsyncDNSServer/src/ESPAsyncDNSServer.cpp
+//#define DEBUG_OUTPUT  Serial          // fixes missing definition in ESPAsyncDNSServer/src/ESPAsyncDNSServer.cpp
 
 #include "defines.h"
 #include "Credentials.h"
-#include "ESPAsync_WiFiManager_Lite.h"    // custom version of https://github.com/khoih-prog/ESPAsync_WiFiManager_Lite	
+#include <ESPAsync_WiFiManager_Lite.h> 
 
 #include "main.h"
 #include "SeaTalk.h"
@@ -59,6 +60,7 @@ void onWebSocketEvent(AsyncWebSocket       *server,     //
           break;
         case 10:
           // configure WifI pressed....
+          APWifi_Manager_OpenPortal();
           //int numnetworks = wm.scanWifiNetworks(&wm.indices);
           break;
       }
@@ -271,6 +273,11 @@ public:
     request->send(SPIFFS, "/index.html", "text/html"); 
   }
 };
+
+void APWifi_Manager_OpenPortal(){
+ if(ESPAsync_WiFiManager !=NULL)
+    ESPAsync_WiFiManager->begin();
+}
 
 void ApWiFi_Manager_Setup() {
   ESPAsync_WiFiManager = new ESPAsync_WiFiManager_Lite();

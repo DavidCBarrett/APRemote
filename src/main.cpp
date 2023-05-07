@@ -21,10 +21,16 @@ Main changes:
 2. Swapped out WebSockets_Generic (which caused me lots of comple problems) for the Web Socket Server already in ESPAsyncWebServer. 
    Inpiration / info for the changes taken from the tutorial at https://m1cr0lab-esp32.github.io/remote-control-with-websocket/
 
-3. Moved from hard coded WiFI credentials to using WiFiManager with AutoPilot Remote Access Point Web page at 192.168.4.1. 
-   Connecting to the AutoPilot Remote network will bring up the web page.
+3. Moved from hard coded WiFI credentials to using https://github.com/khoih-prog/ESPAsync_WiFiManager_Lite with 
+   SSID=AutoPilotRemote, PWD=abc Web page at 192.168.4.1. This is encapsulated in APWifi.h & .cpp.
+   Notes:
+    a. Need to think of WiFIManager and the main (APRemote) apps as seperate websites, with seperate servers.
+    b. Wifi will only connect to your nextwork if either:
+        i. The ESP32's USB is disconnected, or
+        ii The ESP32's USB is connected AND a terminal is displaying output.
+      It will not connect to WiFi if USB is connected but no terminal is active (dont know why, but that's the way it works)
 
-4. Added buttons to ESP32. use is up/sel/down for (future) menu items, or to start a wifimanager connect session...
+4. Added buttons to ESP32. use is up/sel/down for future use.
    using "PinButton" (AKA poelstra/MultiButton & poelstra/arduino-multi-button) library from 
    https://github.com/poelstra/arduino-multi-button/?utm_source=platformio&utm_medium=piohome
 
@@ -40,29 +46,19 @@ Main changes:
        Reconnecting websockets javascript: https://github.com/joewalnes/reconnecting-websocket; 
        Reconnecting websocketsexample: https://mpolinowski.github.io/docs/Development/Javascript/2021-09-10--websocket-recconects/2021-09-10/
    Had to change webserver setup code to include "server.serveStatic("/", SPIFFS, "/");". I beleive this serves all files requested by the 
-   client from the SPIFF file system.
+   client from the SPIFFS file system.
 
-8. Browser's inspector was grumbling "favicon.ico" was missing. Favicon files created using https://favicon.io/favicon-generator/ and added to data directory. 
-   Link tags added to HTML head as suggested on above page.
+8. On the PC, the browser's inspector was grumbling "favicon.ico" was missing. Favicon files created using 
+   https://favicon.io/favicon-generator/ and added to data directory. Link tags added to HTML head as suggested on that page.
 
 libraries used at Mar 20223 were:
 	plerup/EspSoftwareSerial@7.0.0
   esphome/AsyncTCP-esphome@^1.2.2
   esphome/ESPAsyncWebServer-esphome@^2.1.0
-  alanswx/ESPAsyncWifiManager
+  https://github.com/khoih-prog/ESPAsync_WiFiManager_Lite 
   poelstra/MultiButton@^1.2.0
   robtillaart/HeartBeat@^0.3.2
-  bodmer/TFT_eSPI@^2.5.23
-
-TODO'S:
-
- 1. Need to add WiFi reconnection code from here: https://github.com/alanswx/ESPAsyncWiFiManager/issues/92
-
- 2. Finish TFT touch screen alternative UI.
-
- 3. esp32 only works (connects to wifi) when there is an active serial monitor connected in platformio. work out why and fix.
-
- 4. Move to a GUIslice type project, for easier TFT UI updates.
+  GUIslice
 
 */
 
