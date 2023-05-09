@@ -1,6 +1,5 @@
 
-#ifndef _APWIFI_H
-#define _APWIFI_H
+#pragma once
 
 #include <Arduino.h>
 #include "DCBWiFiManager.h"
@@ -12,5 +11,3 @@ void ApWiFi_Setup();
 void ApWiFi_Disconnect();
 
 void APWiFi_Loop();
-
-#endif // _APWIFI_H

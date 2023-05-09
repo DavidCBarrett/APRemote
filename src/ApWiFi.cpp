@@ -272,8 +272,8 @@ void ApWiFi_Setup() {
   // Lambda function route to send web page to client defined in request->send below
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
     mySerial.enableRx(false);
-    Serial.printf("[%s], requested %s\n", request->client()->remoteIP().toString(), request->url());
-    txtWiFiDiag.printf("[%s], requested %s\n", request->client()->remoteIP().toString(), request->url());
+//    Serial.printf("[%s], requested %s\n", request->client()->remoteIP().toString(), request->url());
+//    txtWiFiDiag.printf("[%s], requested %s\n", request->client()->remoteIP().toString(), request->url());
 
     request->send(SPIFFS, "/index.html", "text/html");
   });
@@ -303,7 +303,7 @@ void ApWiFi_Setup() {
 }
 
 void APWiFi_Loop() {
-    
+
   webSocket.cleanupClients();
 
   wm.poll();  // poll / process the statemachine.

@@ -80,6 +80,7 @@ TODO'S:
 #include "SeaTalk.h"
 #include "ApRemote_GSLC.h"
 #include "GSLC_Helpers.h"
+#include "EnumsToStrings.h"
 
 // ------------------------------------------------
 // Program Globals
@@ -235,7 +236,7 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
         break;
       case E_ELEM_BTN_WIFI_CONNECT:
         wm.scanWifiNetworks(&wm.indices);
-        //wm.OnUserConnectRequest();
+        wm.OnUserConnectRequest();
         break;
       case E_ELEM_BTN_WIFI_RESET:
         wm.resetSettings();
@@ -374,12 +375,6 @@ void setup()
   Seatalk_Init();
 
   txtDiagLog.printf("Setup Done.\n");
-  
-  // Insert some text
-  txtDiagLog.printf("Welcome\n");
-  txtDiagLog.printf("Hi ");
-  txtDiagLog.printf("Long line here that may wrap or may not that is the purpose of this test\n");
-  txtDiagLog.printf("End...\n");
 }
 
 // Free-running counter for display
@@ -410,29 +405,21 @@ void loop()
   // Display WiFi Signal Strength or if not applicable, WiFi mode information.
   switch (WiFi.getMode()) 
   {
-    case WIFI_MODE_NULL:
-      txtBaseWiFiStrength.printf("NULL");
-      break;
     case WIFI_MODE_STA:
       // For RSSI db to 0-100% conversion see https://stackoverflow.com/questions/15797920/how-to-convert-wifi-signal-strength-from-quality-percent-to-rssi-dbm
       // Added the /20*20 bit to reduce the resolution to steps of 20 to avoid the reported number "flickering".
       txtBaseWiFiStrength.printf("%d", (std::min(std::max(2 * (WiFi.RSSI() + 100), 0), 100) /20)*20);
       break;
-    case WIFI_MODE_AP:
-      txtBaseWiFiStrength.printf("AP");
-      break;
-    case WIFI_MODE_APSTA:
-      txtBaseWiFiStrength.printf("APSTA");
-      break;
-    case WIFI_MODE_MAX:
-      txtBaseWiFiStrength.printf("MAX");
+    default:
+      // Display all other modes at text using the enum to cstr helper
+      txtWiFiStatus.printf("%s", wifi_mode_tToCStr(WiFi.getMode()));
       break;
   }
 
   // Data page items.
 
   txtAprDisplay.printf("%d Mag", hdg);
-
+/*
   float Randomness = random(0,360);
 
   sog = Randomness / 60;
@@ -440,7 +427,7 @@ void loop()
   aws = Randomness * 3 / 60;
   awa = (int)Randomness;
   dpt = Randomness /12;
-
+*/
   txtDataSog.printf("%.1f", sog);
   txtDataSow.printf("%.1f", stw);
   txtDataWind.printf("%.1f", aws);
