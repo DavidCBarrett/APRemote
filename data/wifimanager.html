@@ -1,33 +1,106 @@
+<!-- Code snippets from https://github.com/khoih-prog/ESP_WiFiManager_Lite/blob/main/src/ESP_WiFiManager_Lite.h -->  
+<!-- ESP_WM_LITE_HTML_HEAD_START -->
 <!DOCTYPE html>
 <html>
-<head>
-  <title>ESP Wi-Fi Manager</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" href="data:,">
-  <link rel="stylesheet" type="text/css" href="style.css">
-</head>
+    <head>
+        <title>Wi-Fi Manager</title>
+        <meta name='viewport' content='width=device-width, initial-scale=1'>
+        <!-- ESP_WM_LITE_HTML_HEAD_STYLE -->
+        <style>
+            div,input{padding:5px;font-size:1em;}
+            input{width:95%;}
+            body{text-align: center;}
+            button{background-color:#16A1E7;color:#fff;line-height:2.4rem;font-size:1.2rem;width:100%;}
+            fieldset{border-radius:0.3rem;margin:0px;}
+        </style>
+    <!-- ESP_WM_LITE_HTML_HEAD_END -->
+    </head>
 <body>
-  <div class="topnav">
-    <h1>ESP Wi-Fi Manager</h1>
-  </div>
-  <div class="content">
-    <div class="card-grid">
-      <div class="card">
-        <form action="/" method="POST">
-          <p>
-            <label for="ssid">SSID</label>
-            <input type="text" id ="ssid" name="ssid"><br>
-            <label for="pass">Password</label>
-            <input type="text" id ="pass" name="pass"><br>
-            <label for="ip">IP Address</label>
-            <input type="text" id ="ip" name="ip" value="192.168.0.168"><br>
-            <label for="gateway">Gateway Address</label>
-            <input type="text" id ="gateway" name="gateway" value="192.168.1.1"><br>
-            <input type ="submit" value ="Submit">
-          </p>
-        </form>
-      </div>
+    <div class="topnav">
+        <h1>Manager</h1>
     </div>
-  </div>
+
+    <div style='text-align:left;display:inline-block;min-width:260px;'>
+        <fieldset>
+            <div><label>Primary WiFi SSID</label>
+                <div>
+                    <select id='PrimarySSID'>
+<!--                         <datalist id='SSIDs'>  -->
+                            <option>Select primary network ...</option>
+<!--                         </datalist>  -->
+                    </select>
+                </div>
+            </div>
+            <div><label>PWD</label> <input value='[[pw]]' id='PrimaryPwd'></div>
+
+            <div><label>Secondary WiFi SSID</label>
+                <div>
+                    <select id='SecondarySSID'>
+                        <datalist id='SSIDs'>
+                            <option>Select secondary network ...</option>
+                        </datalist>
+                    </select>
+                </div>
+            </div>
+            <div><label>PWD</label> <input value='[[pw1]]' id='SecondardPwd'></div>
+        </fieldset>
+        <!-- ESP_WM_LITE_HTML_BUTTON -->
+        <p><button onclick="scanWiFiNetworks()">Scan</button></p>
+        <p><button onclick="saveWiFiCrendentials()">Save</button></p>
+    </div>
+
+    <!--ESP_WM_LITE_HTML_SCRIPT[]-->  
+    <script id=\"jsbin-javascript\">
+
+        function scanWiFiNetworks() {
+
+            console.log("Scanning WiFi Networks...");
+
+            // Construct the 'scanWiFiNetwork" HTTP GET request
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', 'scanWiFiNetworks');
+
+            // Define the handler for the response to the HTTP GET request:
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    if (xhr.responseText) { // if the returned data is not null, update the values
+                        var data = JSON.parse(xhr.responseText);
+                        console.log("scanWiFiNetworks response:");
+                        console.log(data);
+
+                        // Add WiFi networks to the HTML drop-down "options" lists
+                        //document.getElementById("CTS").innerText = data.cts;
+                    }
+                }
+            };
+
+            // Send the 'scanWiFiNetwork" HTTP GET request to the client
+            xhr.send();
+        }
+
+        function udVal(key,val){
+            var request=new XMLHttpRequest();
+            var url='/?key='+key+'&value='+encodeURIComponent(val);
+            request.open('GET',url,false);request.send(null);
+        }
+
+        function saveWiFiCrendentials()
+        {
+            udVal('PrimarySSID',document.getElementById('PrimarySSID').value);
+            udVal('PrimaryPwd',document.getElementById('PrimaryPwd').value);
+            udVal('SecondarySSID',document.getElementById('SecondarySSID').value);
+            udVal('SecondardPwd',document.getElementById('SecondardPwd').value);
+            // ESP_WM_LITE_HTML_SCRIPT_END
+            alert('Updated');
+        }
+        
+        function addNetworkToOptions() {
+  			var x = document.getElementById("PrimarySSID");
+  			var option = document.createElement("option");
+  			option.text = "Kiwi";
+  			x.add(option);
+		}
+    </script>
 </body>
+<!--ESP_WM_LITE_HTML_END-->
 </html>

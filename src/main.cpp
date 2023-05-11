@@ -86,6 +86,19 @@ TODO'S:
 // Program Globals
 // ------------------------------------------------
 
+typedef enum {
+  APRCMD_APR_STDBY = 0,
+  APRCMD_BTN_APR_AUTO = 2,
+  APRCMD_BTN_APR_WIND = 5,
+  APRCMD_BTN_APR_TRACK = 8,
+  APRCMD_BTN_APR_PLUS_ONE = 3,
+  APRCMD_BTN_APR_PLUS_TEN = 6,
+  APRCMD_BTN_APR_STBD_TACK = 9,
+  APRCMD_BTN_APR_MINUS_ONE = 1,
+  APRCMD_BTN_APR_MINUS_TEN = 4,
+  APRCMD_BTN_APR_PORT_TACK = 7,
+} ST_APR_CMD;
+
 //create button objects
 // PinButton btnUp(BTN_UP);
 PinButton btnDown(BTN_DOWN);
@@ -185,6 +198,8 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
   gslc_tsElemRef* pElemRef = (gslc_tsElemRef*)(pvElemRef);
   gslc_tsElem*    pElem    = gslc_GetElemFromRef(pGui,pElemRef);
 
+  uint8_t cmd;
+
   if ( eTouch == GSLC_TOUCH_UP_IN ) {
     // From the element's ID we can determine which button was pressed.
     switch (pElem->nId) {
@@ -212,30 +227,49 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
         break;
       case E_ELEM_BTN_APR_STDBY:
         txtDiagLog.printf("TFT Standby\n");
+        cmd = ST_APR_CMD::APRCMD_APR_STDBY;
+        xQueueSend(queue, &cmd, portMAX_DELAY);
         break;
       case E_ELEM_BTN_APR_AUTO:
+        cmd = ST_APR_CMD::APRCMD_BTN_APR_AUTO;
+        xQueueSend(queue, &cmd, portMAX_DELAY);
         txtDiagLog.printf("TFT Auto\n");
         break;
       case E_ELEM_BTN_APR_WIND:
+        cmd = ST_APR_CMD::APRCMD_BTN_APR_WIND;
+        xQueueSend(queue, &cmd, portMAX_DELAY);
         txtDiagLog.printf("TFT Wind\n");
         break;
       case E_ELEM_BTN_APR_TRACK:
+        cmd = ST_APR_CMD::APRCMD_BTN_APR_TRACK;
+        xQueueSend(queue, &cmd, portMAX_DELAY);
         txtDiagLog.printf("TFT Track\n");
         break;
       case E_ELEM_BTN_APR_PLUS_ONE:
+        cmd = ST_APR_CMD::APRCMD_BTN_APR_PLUS_ONE;
+        xQueueSend(queue, &cmd, portMAX_DELAY);
         break;
       case E_ELEM_BTN_APR_PLUS_TEN:
+        cmd = ST_APR_CMD::APRCMD_BTN_APR_PLUS_TEN;
+        xQueueSend(queue, &cmd, portMAX_DELAY);
         break;
       case E_ELEM_BTN_APR_STBD_TACK:
+        cmd = ST_APR_CMD::APRCMD_BTN_APR_STBD_TACK;
+        xQueueSend(queue, &cmd, portMAX_DELAY);
         break;
       case E_ELEM_BTN_APR_MINUS_ONE:
+        cmd = ST_APR_CMD::APRCMD_BTN_APR_MINUS_ONE;
+        xQueueSend(queue, &cmd, portMAX_DELAY);
         break;
       case E_ELEM_BTN_APR_MINUS_TEN:
+        cmd = ST_APR_CMD::APRCMD_BTN_APR_MINUS_TEN;
+        xQueueSend(queue, &cmd, portMAX_DELAY);
         break;
       case E_ELEM_BTN_APR_PORT_TACK:
+        cmd = ST_APR_CMD::APRCMD_BTN_APR_PORT_TACK;
+        xQueueSend(queue, &cmd, portMAX_DELAY);
         break;
       case E_ELEM_BTN_WIFI_CONNECT:
-        wm.scanWifiNetworks(&wm.indices);
         wm.OnUserConnectRequest();
         break;
       case E_ELEM_BTN_WIFI_RESET:
