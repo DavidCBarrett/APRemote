@@ -64,8 +64,14 @@ websocket.timeoutInterval = 1000;
 })
 
 // Called whenever the HTML button is pressed
-function onPress(msg) {
-  console.log(`Received a msg to send to ESP32 from ${msg.origin}`);
-  console.log(msg);
-  websocket.send(msg);
+function onPress(command) {
+  var data = {
+    Msg: "AprButtonPress",
+    MsgBody: {
+        ButtonID: command
+    }
+  }
+  const myJSON = JSON.stringify(data);
+  console.log(myJSON);
+  websocket.send(myJSON);
 }

@@ -45,6 +45,9 @@ Main changes:
 8. Browser's inspector was grumbling "favicon.ico" was missing. Favicon files created using https://favicon.io/favicon-generator/ and added to data directory. 
    Link tags added to HTML head as suggested on above page.
 
+9. Adding Wifi Network scanning, using JSON to return list of SSID's to the web client for presentation in a drop down options list
+  using https://github.com/bblanchon/ArduinoJson?utm_source=platformio&utm_medium=piohome library for JSON at server end in APWifi.cpp
+
 libraries used at Mar 20223 were:
 	plerup/EspSoftwareSerial@7.0.0
   esphome/AsyncTCP-esphome@^1.2.2
@@ -446,7 +449,7 @@ void loop()
       break;
     default:
       // Display all other modes at text using the enum to cstr helper
-      txtWiFiStatus.printf("%s", wifi_mode_tToCStr(WiFi.getMode()));
+      txtBaseWiFiStrength.printf("%s", wifi_mode_tToCStr(WiFi.getMode()));
       break;
   }
 

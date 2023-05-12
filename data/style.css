@@ -1,4 +1,4 @@
-body, html, table {
+body, html, table, select, option, label {
   font-family: sans-serif;
   margin-left: auto;
   margin-right: auto;

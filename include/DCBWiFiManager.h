@@ -7,6 +7,7 @@
 #include <ESPAsyncWebServer.h>
 #include <DNSServer.h>
 #include <Timeout.h>
+#include <ArduinoJson.h>  // needed for JSON encapsulation (send multiple variables with one string) https://github.com/bblanchon/ArduinoJson?utm_source=platformio&utm_medium=piohome
 
 #include "StateMachine\StateMachine.h"
 
@@ -48,7 +49,7 @@ public:
   void setWiFiConnectedCallback(std::function<void()> func) {_wificonnectedcallback = func;}
 
   // WiFi Scanner temp call...
-  int  scanWifiNetworks(int **indicesptr);
+  int  scanWifiNetworks(StaticJsonDocument<200>* doc);
 
 private:
 

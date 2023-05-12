@@ -1,60 +1,107 @@
 <!-- Code snippets from https://github.com/khoih-prog/ESP_WiFiManager_Lite/blob/main/src/ESP_WiFiManager_Lite.h -->  
-<!-- ESP_WM_LITE_HTML_HEAD_START -->
 <!DOCTYPE html>
 <html>
     <head>
         <title>Wi-Fi Manager</title>
         <meta name='viewport' content='width=device-width, initial-scale=1'>
-        <!-- ESP_WM_LITE_HTML_HEAD_STYLE -->
         <style>
-            div,input{padding:5px;font-size:1em;}
+            div,input{padding:5px;font-size:100%;}
+            select{text-align:left;display:inline-block;min-width:260px;font-size:100%;}
             input{width:95%;}
             body{text-align: center;}
-            button{background-color:#16A1E7;color:#fff;line-height:2.4rem;font-size:1.2rem;width:100%;}
             fieldset{border-radius:0.3rem;margin:0px;}
+            .btn-left{background-color:#16A1E7;color:#fff;line-height:2rem;font-size:100%;width:40%;float:left;}
+            .btn-right{background-color:#16A1E7;color:#fff;line-height:2rem;font-size:100%;width:40%;float:right;}
         </style>
-    <!-- ESP_WM_LITE_HTML_HEAD_END -->
     </head>
 <body>
-    <div class="topnav">
-        <h1>Manager</h1>
+    <div class="topnav" style="font-size:80%;">
+        <h1>Configure WiFi</h1>
     </div>
 
     <div style='text-align:left;display:inline-block;min-width:260px;'>
         <fieldset>
-            <div><label>Primary WiFi SSID</label>
-                <div>
-                    <select id='PrimarySSID'>
-<!--                         <datalist id='SSIDs'>  -->
-                            <option>Select primary network ...</option>
-<!--                         </datalist>  -->
-                    </select>
-                </div>
+            <label for="PrimarySSID">Primary WiFi SSID :</label><br>
+            <div>
+                <select id='PrimarySSID'>
+                    <option>Select primary network ...</option>
+                </select>
             </div>
-            <div><label>PWD</label> <input value='[[pw]]' id='PrimaryPwd'></div>
-
-            <div><label>Secondary WiFi SSID</label>
-                <div>
-                    <select id='SecondarySSID'>
-                        <datalist id='SSIDs'>
-                            <option>Select secondary network ...</option>
-                        </datalist>
-                    </select>
-                </div>
+            <label for="PrimaryPwd">Password</label> 
+            <div><input value='' id='PrimaryPwd'></div>
+            <hr>
+            <label for="SecondarySSID">Secondary WiFi SSID :</label><br>
+            <div>
+                <select id='SecondarySSID'>
+                    <option>Select secondary network ...</option>
+                </select>
             </div>
-            <div><label>PWD</label> <input value='[[pw1]]' id='SecondardPwd'></div>
+            <label for="SecondarydPwd">Password</label> 
+            <div><input value='' id='SecondarydPwd'></div>
+            <!-- <hr>
+                <label>Status: </label><label id="status"></label> -->
         </fieldset>
-        <!-- ESP_WM_LITE_HTML_BUTTON -->
-        <p><button onclick="scanWiFiNetworks()">Scan</button></p>
-        <p><button onclick="saveWiFiCrendentials()">Save</button></p>
+            <div>
+                <button class=btn-left onclick="scanWiFiNetworks()">Scan</button>
+                <button class=btn-right onclick="saveWiFiCrendentials()">Save</button>
+            </div>
     </div>
 
-    <!--ESP_WM_LITE_HTML_SCRIPT[]-->  
+    <script src="reconnecting-websockets.js"></script>
     <script id=\"jsbin-javascript\">
 
-        function scanWiFiNetworks() {
+        var url = `ws://${window.location.hostname}/ws`;
+        var Socket;
 
+        window.onload = function(event) {
+            // initial WiFi scan
+
+            // get and set current WiFi credentials.
+        }
+        
+        // Create websocket object and set up handlers.
+        document.addEventListener("DOMContentLoaded", function() {
+        Socket = new ReconnectingWebSocket(url);
+        Socket.debug = true;
+        Socket.timeoutInterval = 1000;
+
+        Socket.onopen = () => {
+            console.log("Websocket connection established")
+        }
+
+        Socket.onclose = () => {
+            console.log("Websocket connection closed")
+        }
+
+        Socket.onerror = error => {
+            console.log(error)
+        }
+
+        Socket.onmessage = function(event) {
+            processCommand(event);
+        }
+        })
+        
+        // handler for incomming websocket events
+        function processCommand(event) {
+            console.log("Websocket data received:");
+            console.log(event.data);
+        }
+
+        // Request a WiFI scan (HTTP GET), and handle scan results
+        function scanWiFiNetworks() {
+            //document.getElementById("status").innerHTML = "Scanning..."
             console.log("Scanning WiFi Networks...");
+
+            //clear any old entries in the list box...
+            var listbox, index;
+            
+            listbox= document.querySelector('#PrimarySSID');
+            index = listbox.options.length;
+            while (index-- > 1) listbox.remove(index);
+            listbox= document.querySelector('#SecondarySSID');
+            index = listbox.options.length;
+            while (index-- > 1) listbox.remove(index);
 
             // Construct the 'scanWiFiNetwork" HTTP GET request
             var xhr = new XMLHttpRequest();
@@ -64,43 +111,50 @@
             xhr.onload = function() {
                 if (xhr.status === 200) {
                     if (xhr.responseText) { // if the returned data is not null, update the values
-                        var data = JSON.parse(xhr.responseText);
                         console.log("scanWiFiNetworks response:");
-                        console.log(data);
+                        console.log(xhr.responseText);
+                        
+                        // The expected JSON document is in the format "{"SSIDs":["Net1","Net2", ...]}"
+                        // The parse turns the JSON document into a Javascript object
+                        var data = JSON.parse(xhr.responseText);
 
-                        // Add WiFi networks to the HTML drop-down "options" lists
-                        //document.getElementById("CTS").innerText = data.cts;
+                         // Add WiFi networks to the HTML drop-down options. data.SSIDs is the array of SSID's e.g a text string. 
+                         // note using "for(e of array)" returns the text, and "for(e in array)" returns the index
+                         for(SSID of data.SSIDs) {
+                            for(elem of ["PrimarySSID", "SecondarySSID"]) {
+                                var option = document.createElement("option");
+  			                    option.text = SSID;
+   			                    document.getElementById(elem).add(option);
+                            }
+                       }
                     }
                 }
+                alert('Scan Complete');
+                //document.getElementById("status").innerHTML = "Scan complete"
             };
 
             // Send the 'scanWiFiNetwork" HTTP GET request to the client
             xhr.send();
         }
 
-        function udVal(key,val){
-            var request=new XMLHttpRequest();
-            var url='/?key='+key+'&value='+encodeURIComponent(val);
-            request.open('GET',url,false);request.send(null);
-        }
-
+        // send the WiFi credentials from the UI to the server for saving / using.
         function saveWiFiCrendentials()
         {
-            udVal('PrimarySSID',document.getElementById('PrimarySSID').value);
-            udVal('PrimaryPwd',document.getElementById('PrimaryPwd').value);
-            udVal('SecondarySSID',document.getElementById('SecondarySSID').value);
-            udVal('SecondardPwd',document.getElementById('SecondardPwd').value);
-            // ESP_WM_LITE_HTML_SCRIPT_END
+            var data = {
+                Msg: "WiFiCredentials",
+                MsgBody: {
+                    PrimarySSID:    document.getElementById('PrimarySSID').value,
+                    PrimaryPwd:     document.getElementById('PrimaryPwd').value,
+                    SecondarySSID:  document.getElementById('SecondarySSID').value,
+                    SecondarydPwd:  document.getElementById('SecondarydPwd').value
+                }
+            };
+
+            const myJSON = JSON.stringify(data);
+            console.log(myJSON);
+            Socket.send(myJSON);
             alert('Updated');
         }
-        
-        function addNetworkToOptions() {
-  			var x = document.getElementById("PrimarySSID");
-  			var option = document.createElement("option");
-  			option.text = "Kiwi";
-  			x.add(option);
-		}
     </script>
 </body>
-<!--ESP_WM_LITE_HTML_END-->
 </html>

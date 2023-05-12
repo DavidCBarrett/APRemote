@@ -2,6 +2,7 @@
 #include <SPIFFS.h>
 #include <WiFi.h>
 #include <ESPAsyncWebServer.h>
+#include <ArduinoJson.h>     // needed for JSON encapsulation (send multiple variables with one string) https://github.com/bblanchon/ArduinoJson?utm_source=platformio&utm_medium=piohome
 
 #include "main.h"
 #include "SeaTalk.h"
@@ -9,7 +10,7 @@
 #include "DCBWiFiManager.h"
 #include "EnumsToStrings.h"
 
-#define APSSID "AutoPilot Remote"
+#define APSSID "AutoPilotRemote"
 
 AsyncWebServer server(80);
 AsyncWebSocket webSocket("/ws");
@@ -23,6 +24,8 @@ void onWebSocketEvent(AsyncWebSocket       *server,     //
                       void                 *arg,        // by the `AwsEventHandler` interface
                       uint8_t              *payload,    //
                       size_t                length) {   //
+
+  StaticJsonDocument<200> doc;
 
   // Figure out the type of WebSocket event
   switch(type) {
@@ -39,28 +42,46 @@ void onWebSocketEvent(AsyncWebSocket       *server,     //
         txtWiFiDiag.printf("WebSocket client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
     }  break;
  
-    // Handle text messages from client
+    // Handle messages from client
     case WS_EVT_DATA: {
-      // Print out raw message
-      Serial.printf("[%u] Received text: %s\r\n", client->id(), payload);
-      newCmd = atoi((const char *)payload);
+      // Print out raw message (%.*s is used to set the C_str precision - i.e. length - to print )
+      Serial.printf("[%u] Received text: %.*s\r\n", client->id(), length, payload);
 
-      switch(newCmd) {
-        case 0 ... 9:
-          xQueueSend(queue, &newCmd, portMAX_DELAY);
-          break;
-        case 10:
-          int numnetworks = wm.scanWifiNetworks(&wm.indices);
-          break;
+      DeserializationError error = deserializeJson(doc, payload, length);
+
+      if(error) {
+        Serial.printf("onWebSocketEvent-deserializeJson() error: %s\r\n", error.c_str());
+        break;
       }
-      
-      } break;
+
+      if(doc["Msg"]=="AprButtonPress") {
+        newCmd = atoi(doc["MsgBody"]["ButtonID"]);
+        xQueueSend(queue, &newCmd, portMAX_DELAY);
+        break;
+      }
+      else if(doc["Msg"]=="WiFiCredentials") {
+        Serial.printf("WIFi Credentials!!!!\r\n");
+      }
+    } break;
  
     // For everything else: do nothing
     case WS_EVT_PONG:
     case WS_EVT_ERROR:
       break;
   }
+}
+
+void scanWiFiNetworks(AsyncWebServerRequest *request) {
+  String jsonString;                                // create a JSON string for sending data to the client
+  StaticJsonDocument<200> doc;                      // create a JSON container
+  
+  int numWiFiNetworksFound = wm.scanWifiNetworks(&doc);
+  
+  serializeJson(doc, jsonString);                   // convert JSON object to string
+  Serial.println(jsonString);                       // print JSON string to console for debug purposes (you can comment this out)
+
+  // Send WiFiNetwork scan results to the caller 
+  request->send(200, "text/plain", jsonString); 
 }
 
 void getData(AsyncWebServerRequest *request) {
@@ -158,10 +179,6 @@ void getData(AsyncWebServerRequest *request) {
     break;
   }
 
-#ifdef DEBUG
-  Serial.print(apMode);
-#endif
-  
   APdata = "{\"hdg\":" + String(hdg);
   APdata += ",\"cts\":" + String(cts);
   if (apMode < 2) { 
@@ -284,6 +301,9 @@ void ApWiFi_Setup() {
   // Handling the getData request using the getData function handling HTTP GET request (received every second to update client display details)
   server.on("/getData", HTTP_GET, getData);
   
+  // Handling the scanWiFiNetworks request using the scanWiFiNetworks function
+  server.on("/scanWiFiNetworks", HTTP_GET, scanWiFiNetworks);
+
   server.onNotFound(notFound);
 
   // Assign  WebSocket callback

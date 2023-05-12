@@ -317,114 +317,34 @@ void DCBWiFiManager::writeFile(fs::FS &fs, const char * path, const char * messa
 
 //Scan for WiFiNetworks in range and sort by signal strength
 //space for indices array allocated on the heap and should be freed when no longer required
-int DCBWiFiManager::scanWifiNetworks(int **indicesptr)
+int DCBWiFiManager::scanWifiNetworks(StaticJsonDocument<200>* doc)
 {
+  JsonArray SSIDs = doc->createNestedArray("SSIDs");
+
   Serial.println("Scanning Network");
 
-  int n = WiFi.scanNetworks();
+  // not async, not hidden networks, passive scan, 100ms per channel.
+  // sometimes async_tcp tread is causing a watchdog reset ... trying scannetwork parameters to alleviate ... 
+  int n = WiFi.scanNetworks(false,false,true,100U);
 
-  Serial.printf("scanWifiNetworks: Done, Scanned Networks n = %d\n", n);
-
-  //KH, Terrible bug here. WiFi.scanNetworks() returns n < 0 => malloc( negative == very big ) => crash!!!
-  //In .../esp32/libraries/WiFi/src/WiFiType.h
-  //#define WIFI_SCAN_RUNNING   (-1)
-  //#define WIFI_SCAN_FAILED    (-2)
-  //if (n == 0)
+  // WiFi.scanNetworks() returns n < 0 meanings in WiFiType.h:
+  //   #define WIFI_SCAN_RUNNING   (-1)
+  //   #define WIFI_SCAN_FAILED    (-2)
   if (n <= 0)
   {
-    Serial.println("No network found");
+    SSIDs.add("No WiFi Networks Found");
     return (0);
   }
-  else
-  {
-    // Allocate space off the heap for indices array.
-    // This space should be freed when no longer required.
-    int* indices = (int *)malloc(n * sizeof(int));
+  
+  for(int i=0; i<n; i++) SSIDs.add(WiFi.SSID(i));
 
-    if (indices == NULL)
-    {
-      Serial.println("ERROR: Out of memory");
-      *indicesptr = NULL;
-      return (0);
-    }
+  // sort networks - RSSI SORT
 
-    *indicesptr = indices;
-
-    //sort networks
-    for (int i = 0; i < n; i++)
-    {
-      indices[i] = i;
-    }
-
-    Serial.println("Sorting");
-
-    // RSSI SORT
-    // old sort
-    for (int i = 0; i < n; i++)
-    {
-      for (int j = i + 1; j < n; j++)
-      {
-        if (WiFi.RSSI(indices[j]) > WiFi.RSSI(indices[i]))
-        {
-          //std::swap(indices[i], indices[j]);
-          // Using locally defined swap()
-          swap(&indices[i], &indices[j]);
-        }
-      }
-    }
-
-    Serial.println("Removing Dup");
-
-    // remove duplicates ( must be RSSI sorted )
-    if (_removeDuplicateAPs)
-    {
-      String cssid;
-
-      for (int i = 0; i < n; i++)
-      {
-        if (indices[i] == -1)
-          continue;
-
-        cssid = WiFi.SSID(indices[i]);
-
-        for (int j = i + 1; j < n; j++)
-        {
-          if (cssid == WiFi.SSID(indices[j]))
-          {
-            Serial.printf("DUP AP:", WiFi.SSID(indices[j]));
-            indices[j] = -1; // set dup aps to index -1
-          }
-        }
-      }
-    }
-
-    // Skip low quality Wi-Fi stations by marking their indicies as -1.
-    for (int i = 0; i < n; i++)
-    {
-      if (indices[i] == -1)
-        continue; // skip dups
-
-      int quality = getRSSIasQuality(WiFi.RSSI(indices[i]));
-
-      if (!(_minimumQuality == -1 || _minimumQuality < quality))
-      {
-        indices[i] = -1;
-        Serial.println("Skipping low quality");
-      }
-    }
-
-    // Print networks (for debuging) 
-    Serial.println("WiFi networks found:");
-    for (int i = 0; i < n; i++)
-    {
-      if (indices[i] == -1)
-        continue; // skip dups
-      else
-        Serial.printf("  %d: %s, %ddB\n", i + 1, WiFi.SSID(indices[i]).c_str(), WiFi.RSSI(i));
-    }
-
-    return (n);
-  }
+  // remove duplicates (must be RSSI sorted)
+  
+  // Skip low quality Wi-Fi stations by marking their indicies as -1.
+  
+  return (n);
 }
 
 //////////////////////////////////////////
