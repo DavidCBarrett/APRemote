@@ -38,8 +38,8 @@
             </div>
             <label for="SecondarydPwd">Password</label> 
             <div><input value='' id='SecondarydPwd'></div>
-            <!-- <hr>
-                <label>Status: </label><label id="status"></label> -->
+            <hr>
+                <label>Status: </label><label id="status"></label>
         </fieldset>
             <div>
                 <button class=btn-left onclick="scanWiFiNetworks()">Scan</button>
@@ -129,8 +129,7 @@
                        }
                     }
                 }
-                alert('Scan Complete');
-                //document.getElementById("status").innerHTML = "Scan complete"
+                document.getElementById("status").innerHTML = "Scan complete"
             };
 
             // Send the 'scanWiFiNetwork" HTTP GET request to the client
@@ -149,11 +148,10 @@
                     SecondarydPwd:  document.getElementById('SecondarydPwd').value
                 }
             };
-
             const myJSON = JSON.stringify(data);
             console.log(myJSON);
             Socket.send(myJSON);
-            alert('Updated');
+            document.getElementById("status").innerHTML = "Credentials Saved"
         }
     </script>
 </body>
