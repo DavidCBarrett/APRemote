@@ -7,9 +7,12 @@
 
 #include <WiFiType.h>
 #include <WiFiGeneric.h>
+#include <AsyncWebSocket.h>
 
 extern const char* wifi_mode_tToCStr(wifi_mode_t e) noexcept;
 
 extern const char* WiFiEvent_tToString(WiFiEvent_t e) noexcept;
 
 extern const char* wifi_err_reason_tToString(wifi_err_reason_t e) noexcept;
+
+extern const char* AwsEventTypeToString(AwsEventType e) noexcept;

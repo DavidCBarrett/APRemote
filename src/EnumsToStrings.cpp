@@ -129,3 +129,16 @@ const char* wifi_err_reason_tToString(wifi_err_reason_t e) noexcept
     }
     return "wifi_err_reason_t out of range";
 }
+
+const char* AwsEventTypeToString(AwsEventType e) noexcept
+{
+    switch (e)
+    {
+      ENUM_TO_STRING (AwsEventType, WS_EVT_CONNECT)
+      ENUM_TO_STRING (AwsEventType, WS_EVT_DISCONNECT)
+      ENUM_TO_STRING (AwsEventType, WS_EVT_PONG)
+      ENUM_TO_STRING (AwsEventType, WS_EVT_ERROR)
+      ENUM_TO_STRING (AwsEventType, WS_EVT_DATA)
+    }
+    return "AwsEventType out of range";
+}

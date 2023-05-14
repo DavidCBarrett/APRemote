@@ -62,11 +62,15 @@ void onWebSocketEvent(AsyncWebSocket       *server,     //
       else if(doc["Msg"]=="WiFiCredentials") {
         wm.saveWiFiCredentials(doc);
       }
+      else if (doc["Msg"]=="ClearWiFiCredentials") {
+        wm.clearWiFiCredentials();
+      }
     } break;
  
     // For everything else: do nothing
     case WS_EVT_PONG:
     case WS_EVT_ERROR:
+      Serial.printf("onWebSocketEvent-event: %s (ignored)\r\n", AwsEventTypeToString(type));
       break;
   }
 }
