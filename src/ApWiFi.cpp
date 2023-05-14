@@ -60,7 +60,7 @@ void onWebSocketEvent(AsyncWebSocket       *server,     //
         break;
       }
       else if(doc["Msg"]=="WiFiCredentials") {
-        Serial.printf("WIFi Credentials!!!!\r\n");
+        wm.saveWiFiCredentials(doc);
       }
     } break;
  
@@ -81,7 +81,7 @@ void scanWiFiNetworks(AsyncWebServerRequest *request) {
   Serial.println(jsonString);                       // print JSON string to console for debug purposes (you can comment this out)
 
   // Send WiFiNetwork scan results to the caller 
-  request->send(200, "text/plain", jsonString); 
+request->send(200, "text/plain", jsonString); 
 }
 
 void getData(AsyncWebServerRequest *request) {

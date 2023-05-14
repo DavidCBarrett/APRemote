@@ -276,7 +276,7 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
         wm.OnUserConnectRequest();
         break;
       case E_ELEM_BTN_WIFI_RESET:
-        wm.resetSettings();
+        wm.clearWiFiCredentials();
         break;
       case E_ELEM_BTN_WIFI_DISCONNECT:
         wm.OnUserDisconnectRequest();
@@ -394,6 +394,8 @@ void setup()
  
   TXHB.begin(TX_LED, 1);
   RXHB.begin(RX_LED, 1);
+
+  wm.setup();
 
   // ------------------------------------------------
   // Create graphic elements

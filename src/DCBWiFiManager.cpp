@@ -43,74 +43,32 @@ Using Timoutout libaray from https://github.com/tfeldmann/Arduino-Timeout
 #include "main.h"
 #include "GSLC_Helpers.h"
 
-#define DNS_PORT      53
+#define DNS_PORT 53
 
 DCBWiFiManager::DCBWiFiManager(AsyncWebServer* server, const char* APSSID) : StateMachine(ST_MAX_STATES) {
-
   _apssid = APSSID;
   _server = server;
-  
-  if (SPIFFS.begin(true)) {
-    // Load values saved in SPIFFS
-    _ssid   = readFile(SPIFFS, ssidPath);
-    _pass   = readFile(SPIFFS, passPath);
-    ip      = readFile(SPIFFS, ipPath);
-    gateway = readFile(SPIFFS, gatewayPath);
+}
 
-    Serial.printf("From SPIFFS - SSID:%s, PWD: %s, IP: %s, Gateway: %s\n ", _ssid, _pass, ip.c_str(), gateway.c_str());
+void DCBWiFiManager::setup(){
+
+  deserializeJson(DefaultJsonWiFiCredentials, DefaultJsonWiFiCredentialsCstr);
+
+  if (SPIFFS.begin(true)!=true) {
+    Serial.println("DCBWiFiManager::DCBWiFiManager error mounting SPIFFS, loading defaults");
+    deserializeJson(DefaultJsonWiFiCredentials, DefaultJsonWiFiCredentialsCstr);
+    return;
   }
-  else {
-    Serial.println("DCBWiFiManager::DCBWiFiManager An error has occurred while mounting SPIFFS");
-  }
+
+  // if (e.g. on first start) the credentials files doesn't exist, create it.
+  if(!SPIFFS.exists(JsonWiFiCredentialsPath))
+    clearWiFiCredentials();
+  
+  // Load values saved in SPIFFS
+  loadWiFiCredentials(&JsonWiFiCredentials);
 
   // Web Server setup. Root URL belongs to the application. the wifimanager.html page is a website page served up 
   // by "serveStatic("/", SPIFFS, "/")"" set up the applicaiton.
-
-  // Handle the posts that happen when the user updates the fields on the wifimanager.html page.
-  _server->on("/", HTTP_POST, [this](AsyncWebServerRequest *request) {
-    int params = request->params();
-    for(int i=0;i<params;i++){
-      AsyncWebParameter* p = request->getParam(i);
-      if(p->isPost()){
-        // HTTP POST ssid value
-        if (p->name() == PARAM_INPUT_1) {
-          _ssid = p->value().c_str();
-          Serial.print("SSID set to: ");
-          Serial.println(_ssid);
-          // Write file to save value
-          writeFile(SPIFFS, ssidPath, _ssid.c_str());
-        }
-        // HTTP POST _pass value
-        if (p->name() == PARAM_INPUT_2) {
-          _pass = p->value().c_str();
-          Serial.print("Password set to: ");
-          Serial.println(_pass);
-          // Write file to save value
-          writeFile(SPIFFS, passPath, _pass.c_str());
-        }
-        // HTTP POST ip value
-        if (p->name() == PARAM_INPUT_3) {
-          ip = p->value().c_str();
-          Serial.print("IP Address set to: ");
-          Serial.println(ip);
-          // Write file to save value
-          writeFile(SPIFFS, ipPath, ip.c_str());
-        }
-        // HTTP POST gateway value
-        if (p->name() == PARAM_INPUT_4) {
-          gateway = p->value().c_str();
-          Serial.print("Gateway set to: ");
-          Serial.println(gateway);
-          // Write file to save value
-          writeFile(SPIFFS, gatewayPath, gateway.c_str());
-        }
-        //Serial.printf("POST[%s]: %s\n", p->name().c_str(), p->value().c_str());
-      }
-    }
-    request->send(200, "text/plain", "Done. ESP will restart, connect to your router and go to IP address: " + ip);
-    delay(3000);
-    ESP.restart();
-  });
 }
 
 //
@@ -165,13 +123,11 @@ ENTRY_DEFINE(DCBWiFiManager,     EntryAPMode,             NoEventData) {
   Serial.println("Setting AP (Access Point)");
   
   if(WiFi.softAP(_apssid)) {
-    IPAddress IP = WiFi.softAPIP();
-    Serial.print("AP IP address: ");
-    Serial.println(IP); 
+    Serial.printf("AP IP address: %s\r\n", WiFi.softAPIP().toString().c_str());
 
     txtWiFiStatus.printf("AP Mode");
     txtWiFiSSID.printf("%s", _apssid.c_str());
-    txtWiFiIp.printf("%s", WiFi.softAPIP().toString());
+    txtWiFiIp.printf("%s", WiFi.softAPIP().toString().c_str());
 
     if (!dnsServer)
     {
@@ -187,12 +143,11 @@ ENTRY_DEFINE(DCBWiFiManager,     EntryAPMode,             NoEventData) {
       // if DNSServer is started with "*" for domain name, it will reply with provided IP to all DNS requests
       dnsServer->start(DNS_PORT, "*", WiFi.softAPIP());
     }
-
   }
   else{
     // Starting AP mode failed....
     txtWiFiDiag.printf("WM::EntryAPMode - Starting AP Mode failed");
-  };  
+  }  
 }
 
 STATE_DEFINE(DCBWiFiManager,     APMode,                  NoEventData) 
@@ -205,16 +160,20 @@ GUARD_DEFINE(DCBWiFiManager,     GuardConnectingToSTA,   NoEventData) {
   IPAddress localIP, localGateway;
   IPAddress subnet(255, 255, 0, 0);
  
-  // if no SSID or IP provided, don't proceed
-  if(_ssid=="" || ip==""){
-      Serial.println("GuardConnectingToSTA::Undefined SSID or IP address, entering ApMode");
+  // if no SSID or IP provided, don't proceed, fall back to AP mode.
+  if(JsonWiFiCredentials["MsgBody"]["PrimarySSID"]==""){
+      Serial.println("GuardConnectingToSTA::Undefined SSID entering ApMode");
       InternalEvent(ST_APMODE);
       return FALSE; // note use of upper BOOL, TRUE and FALSE in GUARD functions.
+  }
+  else{
+      Serial.printf("PrimarySSID = %s\r\n", JsonWiFiCredentials["MsgBody"]["PrimarySSID"].as<const char*>());
+      Serial.printf("PrimaryPwd  = %s\r\n", JsonWiFiCredentials["MsgBody"]["PrimaryPwd"].as<const char*>());
   }
 
   // Move to station mode, & configure, only proceed to ST_CONNECTINGTOSTA if this succeeds.
   WiFi.mode(WIFI_STA);
-  localIP.fromString(ip.c_str());
+  localIP.fromString(staip.c_str());
   localGateway.fromString(gateway.c_str());
 
   // if configuring WiFi fails, don't proceed.
@@ -231,10 +190,10 @@ GUARD_DEFINE(DCBWiFiManager,     GuardConnectingToSTA,   NoEventData) {
 ENTRY_DEFINE(DCBWiFiManager,     EntryConnectingToSTA,    NoEventData) {
   // Attempt connecion with provided info.
   Serial.println("EntryConnectingToSTA::Connecting to WiFi...");
-  WiFi.begin(_ssid.c_str(), _pass.c_str());
+  WiFi.begin(JsonWiFiCredentials["MsgBody"]["PrimarySSID"].as<const char*>(), JsonWiFiCredentials["MsgBody"]["PrimaryPwd"].as<const char*>());
 
   // start the connection timer.
-  WifiConnectTimeout.start(connectionlTimeout_ms);
+  WifiConnectTimeout.start(connectionTimeout_ms);
 }
 
 STATE_DEFINE(DCBWiFiManager,     ConnectingToSTA,         NoEventData) {
@@ -258,8 +217,8 @@ STATE_DEFINE(DCBWiFiManager,     ConnectingToSTA,         NoEventData) {
   else {
     // check for connection timeout
     if (WifiConnectTimeout.time_over()) {
-      Serial.printf("ConnectingToSTA::Connection to %s timeout.\n", _ssid);
-
+      Serial.printf("ConnectingToSTA::Connection to %s timeout.\n", JsonWiFiCredentials["MsgBody"]["PrimarySSID"].as<const char*>());
+  
       //Connecition Timed out - move to ST_STAMODE
       InternalEvent(ST_APMODE);
     }
@@ -268,55 +227,64 @@ STATE_DEFINE(DCBWiFiManager,     ConnectingToSTA,         NoEventData) {
   }
 }
 
-STATE_DEFINE(DCBWiFiManager,     STAMode,                 NoEventData) {}
-
-
-void DCBWiFiManager::resetSettings(){
-
-  // Reset settings by deleting the connection files
-  if(SPIFFS.exists(ssidPath)) SPIFFS.remove(ssidPath);
-  if(SPIFFS.exists(passPath)) SPIFFS.remove(passPath);
-  if(SPIFFS.exists(ipPath)) SPIFFS.remove(ipPath);
-  if(SPIFFS.exists(gatewayPath)) SPIFFS.remove(gatewayPath);
+STATE_DEFINE(DCBWiFiManager,     STAMode,                 NoEventData) {
+  // Nothing to do...
 }
 
-
-// Read File from SPIFFS
-String DCBWiFiManager::readFile(fs::FS &fs, const char * path){
-  Serial.printf("Reading file: %s\r\n", path);
-
-  File file = fs.open(path);
-  if(!file || file.isDirectory()){
-    Serial.println("- failed to open file for reading");
-    return String();
-  }
-  
-  String fileContent;
-  while(file.available()){
-    fileContent = file.readStringUntil('\n');
-    break;     
-  }
-  return fileContent;
-}
-
-// Write file to SPIFFS
-void DCBWiFiManager::writeFile(fs::FS &fs, const char * path, const char * message){
-  Serial.printf("Writing file: %s\r\n", path);
-
-  File file = fs.open(path, FILE_WRITE);
+bool DCBWiFiManager::saveWiFiCredentials(StaticJsonDocument<200> doc) {
+  JsonWiFiCredentials = doc;
+  File file = SPIFFS.open(JsonWiFiCredentialsPath, FILE_WRITE);
   if(!file){
     Serial.println("- failed to open file for writing");
-    return;
+    return false;
   }
-  if(file.print(message)){
-    Serial.println("- file written");
-  } else {
-    Serial.println("- frite failed");
+  serializeJson(doc, file);
+  file.close();
+  return true;
+}
+
+bool DCBWiFiManager::loadWiFiCredentials(StaticJsonDocument<200> *doc) {
+
+  StaticJsonDocument<0> doc2, filter;
+
+  JsonWiFiCredentials.clear();
+  
+  File file = SPIFFS.open(JsonWiFiCredentialsPath, FILE_READ);
+
+  // if we can't open the file, return default credentials
+  if(!file){
+    Serial.println("- failed to open file for reading");
+    deserializeJson(DefaultJsonWiFiCredentials, DefaultJsonWiFiCredentialsCstr);
+    deserializeJson(*doc, DefaultJsonWiFiCredentialsCstr);
+    return false;
   }
+
+  // i think the file can only be read once, so reading into a string for use many times.
+  // feel i need to reseach file rewinds or suchlike...
+  String JsonWiFiCredentialsString = file.readString();
+  Serial.printf("%s = %s\n\r", JsonWiFiCredentialsPath, JsonWiFiCredentialsString.c_str());
+
+  // if the file isnt a valid JSON doc, return default credentials
+  if(deserializeJson(doc2, JsonWiFiCredentialsString, DeserializationOption::Filter(filter)) != DeserializationError::Ok) {
+    Serial.printf("DCBWiFiManager::DCBWiFiManager %s isnt a valid JSON doc, defaults loaded\r\n", JsonWiFiCredentialsPath);
+    file.close();
+    deserializeJson(DefaultJsonWiFiCredentials, DefaultJsonWiFiCredentialsCstr);
+    deserializeJson(*doc, DefaultJsonWiFiCredentialsCstr);
+    return false;
+  }
+
+  // checks done - deserialise the file and return data / sucess.
+  deserializeJson(*doc, JsonWiFiCredentialsString);
+  deserializeJson(JsonWiFiCredentials, JsonWiFiCredentialsString);
+  file.close();
+  return true;
+}
+
+void DCBWiFiManager::clearWiFiCredentials(){
+  saveWiFiCredentials(DefaultJsonWiFiCredentials);
 }
 
 //Scan for WiFiNetworks in range and sort by signal strength
-//space for indices array allocated on the heap and should be freed when no longer required
 int DCBWiFiManager::scanWifiNetworks(StaticJsonDocument<200>* doc)
 {
   JsonArray SSIDs = doc->createNestedArray("SSIDs");
@@ -347,49 +315,16 @@ int DCBWiFiManager::scanWifiNetworks(StaticJsonDocument<200>* doc)
   return (n);
 }
 
-//////////////////////////////////////////
-
 int DCBWiFiManager::getRSSIasQuality(const int& RSSI)
 {
-  int quality = 0;
-
-  if (RSSI <= -100)
-  {
-    quality = 0;
-  }
-  else if (RSSI >= -50)
-  {
-    quality = 100;
-  }
-  else
-  {
-    quality = 2 * (RSSI + 100);
-  }
-
-  return quality;
+  // For RSSI db to 0-100% conversion see https://stackoverflow.com/questions/15797920/how-to-convert-wifi-signal-strength-from-quality-percent-to-rssi-dbm
+  return std::min(std::max(2 * (RSSI + 100), 0), 100);
 }
 
 void DCBWiFiManager::swap(int *thisOne, int *thatOne)
   {
     int tempo;
-
     tempo    = *thatOne;
     *thatOne = *thisOne;
     *thisOne = tempo;
   }
-
-  //////////////////////////////////////////
-
-  void DCBWiFiManager::setMinimumSignalQuality(const int& quality)
-  {
-    _minimumQuality = quality;
-  }
-
-  //////////////////////////////////////////
-
-  //if this is true, remove duplicate Access Points - default true
-  void DCBWiFiManager::setRemoveDuplicateAPs(const bool& removeDuplicates)
-  {
-    _removeDuplicateAPs = removeDuplicates;
-  }
-
