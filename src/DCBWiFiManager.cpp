@@ -122,7 +122,7 @@ ENTRY_DEFINE(DCBWiFiManager,     EntryAPMode,             NoEventData) {
   // Start WiFi in AP mode for clients to connect to.
   Serial.println("Setting AP (Access Point)");
   
-  if(WiFi.softAP(_apssid)) {
+  if(WiFi.softAP(_apssid.c_str())) {
     Serial.printf("AP IP address: %s\r\n", WiFi.softAPIP().toString().c_str());
 
     txtWiFiStatus.printf("AP Mode");

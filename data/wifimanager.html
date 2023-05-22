@@ -6,23 +6,20 @@
         <meta name='viewport' content='width=device-width, initial-scale=1'>
         <style>
             div,input{padding:5px;font-size:100%;}
-            select{text-align:left;display:inline-block;min-width:260px;font-size:100%;}
+            select{text-align:left;display:inline-block;min-width:260px;font-size:100%;padding:5px;}
             input{width:95%;}
-            body{text-align: center;}
-            .buttton{background-color:#16A1E7;color:#fff;line-height:2rem;font-size:100%;width:40%;}
-            fieldset{border-radius:0.3rem;margin:0px;}
-            .btn-left{background-color:#16A1E7;color:#fff;line-height:2rem;font-size:100%;width:40%;float:left;}
-            .btn-right{background-color:#16A1E7;color:#fff;line-height:2rem;font-size:100%;width:40%;float:right;}
+            body{text-align:center;}
+            button{background-color:#16A1E7;color:#fff;line-height:2rem;font-size:100%;width:90%;}
+            fieldset{border-radius:0.6rem;margin:0px;}
         </style>
     </head>
 <body>
-    <div class="topnav" style="font-size:80%;">
+    <div style="font-size:80%;">
         <h1>Configure WiFi</h1>
     </div>
-
     <div style='text-align:left;display:inline-block;min-width:260px;'>
         <fieldset>
-            <label for="PrimarySSID">Primary WiFi SSID :</label><br>
+            <label for="PrimarySSID"><strong>Primary Network :</strong></label><br>
             <div>
                 <select id='PrimarySSID'>
                     <option>Select primary network ...</option>
@@ -31,7 +28,7 @@
             <label for="PrimaryPwd">Password</label> 
             <div><input value='' id='PrimaryPwd'></div>
             <hr>
-            <label for="SecondarySSID">Secondary WiFi SSID :</label><br>
+            <label for="SecondarySSID"><strong>Secondary Network :</strong></label><br>
             <div>
                 <select id='SecondarySSID'>
                     <option>Select secondary network ...</option>
@@ -42,12 +39,13 @@
             <hr>
                 <label>Status: </label><label id="status"></label>
         </fieldset>
+        <div></div>
         <table style='min-width:300px;'>
             <tr>
-                <td align="center"><button class=button onclick="scanWiFiNetworks()">Scan</button></td>
-                <td align="center"><button class=button onclick="saveWiFiCrendentials()">Save</button></td>
-                <td align="center"><button class=button onclick="clearWiFiCrendentials()">Clear</button></td>
-                <td align="center"><button class=button onclick="cancel()">Cancel</button></td>
+                <td align="center"><button onclick="scanWiFiNetworks()">Scan</button></td>
+                <td align="center"><button onclick="saveWiFiCrendentials()">Save</button></td>
+                <td align="center"><button onclick="clearWiFiCrendentials()">Clear</button></td>
+                <td align="center"><button onclick="cancel()">Cancel</button></td>
             </tr>
         </table>
     </div>
@@ -98,7 +96,7 @@
             document.getElementById("status").innerHTML = "Scanning...";
             console.log("Scanning WiFi Networks...");
 
-            //clear any old entries in the list box...
+            //clear any old entries in the list box (remove all but 1st entries)...
             var listbox, index;
             
             listbox= document.querySelector('#PrimarySSID');
@@ -123,8 +121,10 @@
                         // The parse turns the JSON document into a Javascript object
                         var data = JSON.parse(xhr.responseText);
 
-                         // Add WiFi networks to the HTML drop-down options. data.SSIDs is the array of SSID's e.g a text string. 
-                         // note using "for(e of array)" returns the text, and "for(e in array)" returns the index
+                         // Add WiFi networks to the HTML drop-down options. data.SSIDs is the array 
+                         // of SSID's e.g a text string. 
+                         // note using "for(e of array)" returns the text, and "for(e in array)" 
+                         // returns just the index
                          for(SSID of data.SSIDs) {
                             for(elem of ["PrimarySSID", "SecondarySSID"]) {
                                 var option = document.createElement("option");
@@ -141,7 +141,7 @@
             xhr.send();
         }
 
-        // send the WiFi credentials from the UI to the server for saving / using.
+        // Send the WiFi credentials from the UI to the server for saving / using (via Websockets)
         function saveWiFiCrendentials()
         {
             var data = {
