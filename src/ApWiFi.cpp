@@ -17,6 +17,22 @@ AsyncWebSocket webSocket("/ws");
 
 DCBWiFiManager wm(&server, APSSID);
 
+void readWiFiCredentials() {
+  String jsonString;                                // create a JSON string for sending data to the client
+  StaticJsonDocument<200> doc;                      // create a JSON container
+  
+  wm.loadWiFiCredentials(&doc);
+  
+  // client websocket caller was "readWiFiCredentails", replace msg with "retrievedWiFiCredentials" 
+  // for clientswebsocet handler.
+  doc["Msg"] = "retrievedWiFiCredentials";
+  serializeJson(doc, jsonString);                   // convert JSON object to string
+  Serial.println(jsonString);                       // print JSON string to console for debug purposes (you can comment this out)
+
+  // Send wifi credentials to the client
+  webSocket.textAll(jsonString.c_str(), jsonString.length()); 
+}
+
 // Callback: receiving any WebSocket message
 void onWebSocketEvent(AsyncWebSocket       *server,     //
                       AsyncWebSocketClient *client,     //
@@ -59,11 +75,14 @@ void onWebSocketEvent(AsyncWebSocket       *server,     //
         xQueueSend(queue, &newCmd, portMAX_DELAY);
         break;
       }
-      else if(doc["Msg"]=="WiFiCredentials") {
+      else if(doc["Msg"]=="saveWiFiCredentials") {
         wm.saveWiFiCredentials(doc);
       }
-      else if (doc["Msg"]=="ClearWiFiCredentials") {
+      else if(doc["Msg"]=="clearWiFiCredentials") {
         wm.clearWiFiCredentials();
+      }
+      else if(doc["Msg"]=="readWiFiCredentials") {
+        readWiFiCredentials();
       }
     } break;
  
@@ -85,7 +104,7 @@ void scanWiFiNetworks(AsyncWebServerRequest *request) {
   Serial.println(jsonString);                       // print JSON string to console for debug purposes (you can comment this out)
 
   // Send WiFiNetwork scan results to the caller 
-request->send(200, "text/plain", jsonString); 
+  request->send(200, "text/plain", jsonString); 
 }
 
 void getData(AsyncWebServerRequest *request) {

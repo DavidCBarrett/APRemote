@@ -56,7 +56,7 @@ void DCBWiFiManager::setup(){
 
   if (SPIFFS.begin(true)!=true) {
     Serial.println("DCBWiFiManager::DCBWiFiManager error mounting SPIFFS, loading defaults");
-    deserializeJson(DefaultJsonWiFiCredentials, DefaultJsonWiFiCredentialsCstr);
+    deserializeJson(JsonWiFiCredentials, DefaultJsonWiFiCredentialsCstr);
     return;
   }
 
@@ -238,6 +238,9 @@ bool DCBWiFiManager::saveWiFiCredentials(StaticJsonDocument<200> doc) {
     Serial.println("- failed to open file for writing");
     return false;
   }
+
+  // Msg given should be saveWiFiCredentials, replace with WiFiCredentials in the file on disk...
+  doc["Msg"] = "WiFiCredentials";
   serializeJson(doc, file);
   file.close();
   return true;
@@ -264,7 +267,7 @@ bool DCBWiFiManager::loadWiFiCredentials(StaticJsonDocument<200> *doc) {
   String JsonWiFiCredentialsString = file.readString();
   Serial.printf("%s = %s\n\r", JsonWiFiCredentialsPath, JsonWiFiCredentialsString.c_str());
 
-  // if the file isnt a valid JSON doc, return default credentials
+  // if the file isn't a valid JSON doc, return default credentials
   if(deserializeJson(doc2, JsonWiFiCredentialsString, DeserializationOption::Filter(filter)) != DeserializationError::Ok) {
     Serial.printf("DCBWiFiManager::DCBWiFiManager %s isnt a valid JSON doc, defaults loaded\r\n", JsonWiFiCredentialsPath);
     file.close();

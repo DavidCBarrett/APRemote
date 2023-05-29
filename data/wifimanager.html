@@ -1,4 +1,7 @@
-<!-- Code snippets from https://github.com/khoih-prog/ESP_WiFiManager_Lite/blob/main/src/ESP_WiFiManager_Lite.h -->  
+<!-- 
+DCB's WiFi Manager page
+Some inspiration from https://github.com/khoih-prog/ESP_WiFiManager_Lite/blob/main/src/ESP_WiFiManager_Lite.hpage   
+-->  
 <!DOCTYPE html>
 <html>
     <head>
@@ -55,40 +58,60 @@
 
         var url = `ws://${window.location.hostname}/ws`;
         var Socket;
+        var scanWiFiResults;
+        var retrievedWiFiCredentials; 
 
         window.onload = function(event) {
+            // Create websocket object and set up handlers.
+            document.addEventListener("DOMContentLoaded", function() {
+                Socket = new ReconnectingWebSocket(url);
+                Socket.debug = true;
+                Socket.timeoutInterval = 1000;
+
+                Socket.onopen = () => {
+                    console.log("Websocket connection established")
+                }
+
+                Socket.onclose = () => {
+                    console.log("Websocket connection closed")
+                }
+
+                Socket.onerror = error => {
+                    console.log(error)
+                }
+
+                Socket.onmessage = function(event) {
+                    processCommand(event);
+                }
+            })
+
             // initial WiFi scan
-
-            // get and set current WiFi credentials.
+            scanWiFiNetworks();
+            // retrieves current WiFi credentials.
+            retrievedWiFiCredentials();
+            // TODO - need to wait for the above calls to finish first??
+            // if stored WiFi SSID is in the scan results, select it in the list
+            for(SSID of scanWiFiResults.SSIDs) {
+                for(elem of ["PrimarySSID", "SecondarySSID"]) {
+                    if(SSID = elem.value)
+                        // TODO: need to check if set attribute is the right method??
+                        document.getElementById(elem).setAttributeNode(elem.value);
+                        document.getElementById(elem).setAttributeNode(elem.value);
+                }
+            }
         }
-        
-        // Create websocket object and set up handlers.
-        document.addEventListener("DOMContentLoaded", function() {
-        Socket = new ReconnectingWebSocket(url);
-        Socket.debug = true;
-        Socket.timeoutInterval = 1000;
-
-        Socket.onopen = () => {
-            console.log("Websocket connection established")
-        }
-
-        Socket.onclose = () => {
-            console.log("Websocket connection closed")
-        }
-
-        Socket.onerror = error => {
-            console.log(error)
-        }
-
-        Socket.onmessage = function(event) {
-            processCommand(event);
-        }
-        })
         
         // handler for incomming websocket events
         function processCommand(event) {
             console.log("Websocket data received:");
             console.log(event.data);
+
+            var data = JSON.parse(event.data);   // The parse turns the JSON document into a Javascript object
+
+            if(data.Msg =="retrievedWiFiCredentials") {
+                // The expected JSON document is in the same format as saveWiFiCrendentials fuction below
+                retrievedWiFiCredentials = data.MsgBody;
+            }
         }
 
         // Request a WiFI scan (HTTP GET), and handle scan results
@@ -119,13 +142,13 @@
                         
                         // The expected JSON document is in the format "{"SSIDs":["Net1","Net2", ...]}"
                         // The parse turns the JSON document into a Javascript object
-                        var data = JSON.parse(xhr.responseText);
+                        scanWiFiResults = JSON.parse(xhr.responseText);
 
                          // Add WiFi networks to the HTML drop-down options. data.SSIDs is the array 
                          // of SSID's e.g a text string. 
                          // note using "for(e of array)" returns the text, and "for(e in array)" 
                          // returns just the index
-                         for(SSID of data.SSIDs) {
+                         for(SSID of scanWiFiResults.SSIDs) {
                             for(elem of ["PrimarySSID", "SecondarySSID"]) {
                                 var option = document.createElement("option");
   			                    option.text = SSID;
@@ -141,12 +164,21 @@
             xhr.send();
         }
 
-        // Send the WiFi credentials from the UI to the server for saving / using (via Websockets)
-        function saveWiFiCrendentials()
-        {
+        function readWiFiCrendentials() {
             var data = {
-                Msg: "WiFiCredentials",
+                Msg: "readWiFiCredentials"
+            };
+            const myJSON = JSON.stringify(data);
+            console.log(myJSON);
+            Socket.send(myJSON);
+        }
+
+        // Send the WiFi credentials from the UI to the server for saving / using (via Websockets)
+        function saveWiFiCrendentials() {
+            var data = {
+                Msg: "saveWiFiCredentials",
                 MsgBody: {
+                    // TODO: chnage this to an array of networks containig SSID & PWD pairs.
                     PrimarySSID:    document.getElementById('PrimarySSID').value,
                     PrimaryPwd:     document.getElementById('PrimaryPwd').value,
                     SecondarySSID:  document.getElementById('SecondarySSID').value,
@@ -160,12 +192,11 @@
         }
 
         // clear stored WiFi credentials
-        function clearWiFiCrendentials()
-        {
+        function clearWiFiCrendentials() {
             document.getElementById("PrimaryPwd").innerHTML = "";
             document.getElementById("SecondarydPwd").innerHTML = "";
             var data = {
-                Msg: "ClearWiFiCredentials",
+                Msg: "clearWiFiCredentials",
             };
             const myJSON = JSON.stringify(data);
             console.log(myJSON);
@@ -174,8 +205,7 @@
         }
 
         // go back to previous (main) page
-        function cancel()
-        {
+        function cancel() {
             window.history.back();
         }
     </script>
