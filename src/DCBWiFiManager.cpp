@@ -161,14 +161,14 @@ GUARD_DEFINE(DCBWiFiManager,     GuardConnectingToSTA,   NoEventData) {
   IPAddress subnet(255, 255, 0, 0);
  
   // if no SSID or IP provided, don't proceed, fall back to AP mode.
-  if(JsonWiFiCredentials["MsgBody"]["PrimarySSID"]==""){
+  if(JsonWiFiCredentials["MsgBody"][0]["SSID"]==""){
       Serial.println("GuardConnectingToSTA::Undefined SSID entering ApMode");
       InternalEvent(ST_APMODE);
       return FALSE; // note use of upper BOOL, TRUE and FALSE in GUARD functions.
   }
   else{
-      Serial.printf("PrimarySSID = %s\r\n", JsonWiFiCredentials["MsgBody"]["PrimarySSID"].as<const char*>());
-      Serial.printf("PrimaryPwd  = %s\r\n", JsonWiFiCredentials["MsgBody"]["PrimaryPwd"].as<const char*>());
+      Serial.printf("SSID[0] = %s\r\n", JsonWiFiCredentials["MsgBody"][0]["SSID"].as<const char*>());
+      Serial.printf("Pwd[0]  = %s\r\n", JsonWiFiCredentials["MsgBody"][0]["Pwd"].as<const char*>());
   }
 
   // Move to station mode, & configure, only proceed to ST_CONNECTINGTOSTA if this succeeds.
@@ -190,7 +190,7 @@ GUARD_DEFINE(DCBWiFiManager,     GuardConnectingToSTA,   NoEventData) {
 ENTRY_DEFINE(DCBWiFiManager,     EntryConnectingToSTA,    NoEventData) {
   // Attempt connecion with provided info.
   Serial.println("EntryConnectingToSTA::Connecting to WiFi...");
-  WiFi.begin(JsonWiFiCredentials["MsgBody"]["PrimarySSID"].as<const char*>(), JsonWiFiCredentials["MsgBody"]["PrimaryPwd"].as<const char*>());
+  WiFi.begin(JsonWiFiCredentials["MsgBody"][0]["SSID"].as<const char*>(), JsonWiFiCredentials["MsgBody"][0]["Pwd"].as<const char*>());
 
   // start the connection timer.
   WifiConnectTimeout.start(connectionTimeout_ms);
@@ -217,7 +217,7 @@ STATE_DEFINE(DCBWiFiManager,     ConnectingToSTA,         NoEventData) {
   else {
     // check for connection timeout
     if (WifiConnectTimeout.time_over()) {
-      Serial.printf("ConnectingToSTA::Connection to %s timeout.\n", JsonWiFiCredentials["MsgBody"]["PrimarySSID"].as<const char*>());
+      Serial.printf("ConnectingToSTA::Connection to %s timeout.\n", JsonWiFiCredentials["MsgBody"][0]["SSID"].as<const char*>());
   
       //Connecition Timed out - move to ST_STAMODE
       InternalEvent(ST_APMODE);

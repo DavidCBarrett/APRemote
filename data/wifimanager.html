@@ -25,7 +25,7 @@ Some inspiration from https://github.com/khoih-prog/ESP_WiFiManager_Lite/blob/ma
             <label for="PrimarySSID"><strong>Primary Network :</strong></label><br>
             <div>
                 <select id='PrimarySSID'>
-                    <option>Select primary network ...</option>
+                    <option value="Select primary network ...">Select primary network ...</option>
                 </select>
             </div>
             <label for="PrimaryPwd">Password</label> 
@@ -34,7 +34,7 @@ Some inspiration from https://github.com/khoih-prog/ESP_WiFiManager_Lite/blob/ma
             <label for="SecondarySSID"><strong>Secondary Network :</strong></label><br>
             <div>
                 <select id='SecondarySSID'>
-                    <option>Select secondary network ...</option>
+                    <option value="Select secondary network ...">Select secondary network ...</option>
                 </select>
             </div>
             <label for="SecondarydPwd">Password</label> 
@@ -59,48 +59,36 @@ Some inspiration from https://github.com/khoih-prog/ESP_WiFiManager_Lite/blob/ma
         var url = `ws://${window.location.hostname}/ws`;
         var Socket;
         var scanWiFiResults;
-        var retrievedWiFiCredentials; 
-
-        window.onload = function(event) {
-            // Create websocket object and set up handlers.
-            document.addEventListener("DOMContentLoaded", function() {
-                Socket = new ReconnectingWebSocket(url);
-                Socket.debug = true;
-                Socket.timeoutInterval = 1000;
-
-                Socket.onopen = () => {
-                    console.log("Websocket connection established")
-                }
-
-                Socket.onclose = () => {
-                    console.log("Websocket connection closed")
-                }
-
-                Socket.onerror = error => {
-                    console.log(error)
-                }
-
-                Socket.onmessage = function(event) {
-                    processCommand(event);
-                }
-            })
-
-            // initial WiFi scan
-            scanWiFiNetworks();
-            // retrieves current WiFi credentials.
-            retrievedWiFiCredentials();
-            // TODO - need to wait for the above calls to finish first??
-            // if stored WiFi SSID is in the scan results, select it in the list
-            for(SSID of scanWiFiResults.SSIDs) {
-                for(elem of ["PrimarySSID", "SecondarySSID"]) {
-                    if(SSID = elem.value)
-                        // TODO: need to check if set attribute is the right method??
-                        document.getElementById(elem).setAttributeNode(elem.value);
-                        document.getElementById(elem).setAttributeNode(elem.value);
-                }
-            }
-        }
+        var retrievedWiFiCredentials;       // see the "WiFi Credentials JSON format" body element in DCBWiFiManager.h
+ 
+         // Create websocket object and set up handlers.
+        document.addEventListener("DOMContentLoaded", function() {
         
+            Socket = new ReconnectingWebSocket(url);
+            Socket.debug = true;
+            Socket.timeoutInterval = 1000;
+
+            Socket.onopen = () => {
+                console.log("Websocket connection established");
+                // initial WiFi scan
+                scanWiFiNetworks();
+                // retrieves current WiFi credentials.
+                readWiFiCrendentials();
+            }
+
+            Socket.onclose = () => {
+                console.log("Websocket connection closed");
+            }
+
+            Socket.onerror = error => {
+                console.log(error);
+            }
+
+            Socket.onmessage = function(event) {
+                processCommand(event);
+            }
+        })
+
         // handler for incomming websocket events
         function processCommand(event) {
             console.log("Websocket data received:");
@@ -111,6 +99,8 @@ Some inspiration from https://github.com/khoih-prog/ESP_WiFiManager_Lite/blob/ma
             if(data.Msg =="retrievedWiFiCredentials") {
                 // The expected JSON document is in the same format as saveWiFiCrendentials fuction below
                 retrievedWiFiCredentials = data.MsgBody;
+                // if we also have wifi results update the selections in the options lists.
+                if(scanWiFiResults!=null) updateSelectedSSIDs();
             }
         }
 
@@ -118,6 +108,8 @@ Some inspiration from https://github.com/khoih-prog/ESP_WiFiManager_Lite/blob/ma
         function scanWiFiNetworks() {
             document.getElementById("status").innerHTML = "Scanning...";
             console.log("Scanning WiFi Networks...");
+
+            readWiFiCrendentials();  // refresh retrieved wificredentials.
 
             //clear any old entries in the list box (remove all but 1st entries)...
             var listbox, index;
@@ -154,12 +146,13 @@ Some inspiration from https://github.com/khoih-prog/ESP_WiFiManager_Lite/blob/ma
   			                    option.text = SSID;
    			                    document.getElementById(elem).add(option);
                             }
-                       }
+                        }
+                        // if we also have credentails, update the selections in the options lists.
+                        if(retrievedWiFiCredentials!=null) updateSelectedSSIDs();
                     }
                 }
                 document.getElementById("status").innerHTML = "Scan complete";
             };
-
             // Send the 'scanWiFiNetwork" HTTP GET request to the client
             xhr.send();
         }
@@ -173,17 +166,40 @@ Some inspiration from https://github.com/khoih-prog/ESP_WiFiManager_Lite/blob/ma
             Socket.send(myJSON);
         }
 
+        // in the dropdown / option SSID boxes, if possible set the read wifi SSID's as the selected ones.
+        // this is called when we've had responses from readWiFiCrendentials and scanWiFiNetworks.
+        function updateSelectedSSIDs() {
+            for(SSID of scanWiFiResults.SSIDs) {
+                if(SSID == retrievedWiFiCredentials[0].SSID) {
+                    // set the selected value in the option lists to match the retrieved SSID.
+                    document.getElementById("PrimarySSID").value = retrievedWiFiCredentials[0].SSID;
+                    // and the corresponding password...
+                    document.getElementById("PrimaryPwd").value = retrievedWiFiCredentials[0].Pwd;
+                }
+                if(SSID == retrievedWiFiCredentials[1].SSID) {
+                    // set the selected value in the option lists to match the retrieved SSID.
+                    document.getElementById("SecondarySSID").value = retrievedWiFiCredentials[1].SSID;
+                    // and the corresponding password...
+                    document.getElementById("SecondaryPwd").value = retrievedWiFiCredentials[1].Pwd;
+                }
+            }
+        }
+
         // Send the WiFi credentials from the UI to the server for saving / using (via Websockets)
         function saveWiFiCrendentials() {
             var data = {
                 Msg: "saveWiFiCredentials",
-                MsgBody: {
-                    // TODO: chnage this to an array of networks containig SSID & PWD pairs.
-                    PrimarySSID:    document.getElementById('PrimarySSID').value,
-                    PrimaryPwd:     document.getElementById('PrimaryPwd').value,
-                    SecondarySSID:  document.getElementById('SecondarySSID').value,
-                    SecondarydPwd:  document.getElementById('SecondarydPwd').value
-                }
+                MsgBody: 
+                [
+                    {
+                        SSID:   document.getElementById('PrimarySSID').value,
+                        Pwd:    document.getElementById('PrimaryPwd').value,
+                    },
+                    {
+                        SSID:   document.getElementById('SecondarySSID').value,
+                        Pwd:    document.getElementById('SecondarydPwd').value
+                    }
+                ]
             };
             const myJSON = JSON.stringify(data);
             console.log(myJSON);

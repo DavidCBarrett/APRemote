@@ -109,8 +109,7 @@ PinButton btnSelect(BTN_SELECT);
 
 // Heartbeat object for onboard LED 
 HeartBeatDiag HB;
-HeartBeatDiag TXHB;
-HeartBeatDiag RXHB;
+
 
 // Save some element references for direct access
 //<Save_References !Start!>
@@ -389,11 +388,11 @@ void setup()
   pinMode(RX_LED, OUTPUT_OPEN_DRAIN);
   pinMode(TX_LED, OUTPUT_OPEN_DRAIN);
 
+  digitalWrite(TX_LED, HIGH);   // start with LED off.
+
   HB.begin(LED_PIN, 1);  // PIN ID and frequency 3
   HB.setDutyCycle(17.53);
- 
-  TXHB.begin(TX_LED, 1);
-  RXHB.begin(RX_LED, 1);
+
 
   wm.setup();
 
@@ -427,8 +426,6 @@ void loop()
   char cDisp[MAX_STR];
 
   HB.beat();
-  TXHB.beat();
-  RXHB.beat();
   
   // do loop mainenance / updates
   // btnUp.update();

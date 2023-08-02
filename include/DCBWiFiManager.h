@@ -37,9 +37,9 @@ public:
   // clear the WiFiCredentials file (by wrting the default - blank - credentails).
   void clearWiFiCredentials();
 
-  String getConfiguredSTASSID(){return JsonWiFiCredentials["MsgBody"]["PrimarySSID"].as<String>();}
+  String getConfiguredSTASSID(){return JsonWiFiCredentials["MsgBody"][0]["SSID"].as<String>();}
 
-  String getConfiguredSTAPassword(){return JsonWiFiCredentials["MsgBody"]["PrimaryPwd"].as<String>();}
+  String getConfiguredSTAPassword(){return JsonWiFiCredentials["MsgBody"][0]["Pwd"].as<String>();}
 
 private:
 
@@ -60,12 +60,30 @@ private:
   bool _removeDuplicateAPs = true;
  
   // Variables to save values from HTML form
+
+  /* WiFi Credentials JSON format (an arry of SSID's and pwd's) in my message wrapper.
+     first array element is primary SSID & pwd, second is the secondard SSID & pwd.
+    {"Msg": "WiFiCredentials",
+    "MsgBody":
+      [
+          {
+            "SSID": "xxx",
+            "Pwd": "yyy"
+          },
+          {
+            "SSID": "xxx",
+            "Pwd": "yyy"
+          }
+      ]
+    }
+  */
+
   // JSON Wifi Credentails, used in WiFiManager.html, SPIFFS
   StaticJsonDocument<200> JsonWiFiCredentials;
 
-  StaticJsonDocument<128> DefaultJsonWiFiCredentials; 
+  StaticJsonDocument<200> DefaultJsonWiFiCredentials; 
   const char*DefaultJsonWiFiCredentialsCstr = 
-    "{\"Msg\": \"WiFiCredentials\",\"MsgBody\":{\"PrimarySSID\": \"\",\"PrimaryPwd\":\"\",\"SecondarySSID\":\"\",\"SecondarydPwd\":\"\"}}";
+    "{\"Msg\": \"WiFiCredentials\",\"MsgBody\":[{\"SSID\": \"\",\"Pwd\":\"\"},{\"SSID\":\"\",\"Pwd\":\"\"}]}";
 
   // File paths to save input values permanently
   const char* JsonWiFiCredentialsPath = "/WiFiCredentials.json";

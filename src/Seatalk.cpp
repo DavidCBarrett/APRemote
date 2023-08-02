@@ -58,7 +58,7 @@ void readST(void *pvParameters)
 
   Serial.printf("readST Task Stack High Water Mark = %d\n", uxTaskGetStackHighWaterMark(NULL));
 
-  mySerial.begin(4800, SWSERIAL_8S1, RX_IN, TX_OUT, true, 256, 256);
+  mySerial.begin(4800, SWSERIAL_8S1, RX_IN, TX_OUT, false, 256, 256);
   
   while(true){
 
@@ -89,6 +89,7 @@ void readST(void *pvParameters)
           Serial.print("\n\r");
         }
       }
+
       // reset counters for processing this command
       bCmd = true;
       bufCount = 0;
@@ -105,16 +106,19 @@ void readST(void *pvParameters)
         // this byte gives the number of bytes in cmd
         cmdCount = (b & 0x000F) + 3;    // cmd + byte count + mandatory 1st field
       }
+      
       if((cmdCount == bufCount) && (cmdCount > 2)){
         // received all the chars for command so start processing it
         working = true;
         
+        // DCB RX Test - print the command.
         // for(i = 0; i < cmdCount; i++){
         //   Serial.print(stBuff[i], HEX);
         //   Serial.print(" ");
         // }
         // Serial.print("\n\r");
 
+        // interprett & action the command in the rx buffer
         switch (stBuff[0]) {
 
           case 0x86 :
@@ -126,7 +130,6 @@ void readST(void *pvParameters)
             }
             Serial.print("\n\r");
 
-            
             //
             //  if apmode is wind and last command is direction change then adjust wts value
             //
@@ -492,25 +495,27 @@ uint8_t stCmd [10][4] = {
       return;
     break;
   }
-  //DCB disabled due to corruption in debug display - it it this call?? send2ST(stCmd[cmd]);
+  //DCB disabled due to corruption in debug display - it it this call?? 
+  send2ST(stCmd[cmd]);
 }
 
 void send2ST(uint8_t cmd[]){
   CheckBus();
-  digitalWrite(TX_LED, HIGH );
+  digitalWrite(TX_LED, LOW );
   for( int i = 0; i < 4; i++){
     (i == 0) ? mySerial.write(cmd[i], SWSERIAL_PARITY_MARK) : mySerial.write(cmd[i], SWSERIAL_PARITY_SPACE);
   }
   delay(100);
-  digitalWrite(TX_LED, LOW);
+  digitalWrite(TX_LED, HIGH);
 }
-
 
 // wait line idle for 7 x 256 micro secs (1.8mS) 
 void CheckBus ( void ){
 
   for(int cX = 0; cX < 255; cX++ ){
-    if(digitalRead(RX_MON) == 1 ){
+    // Reset the wait time if the RX line is active. For DCB's (Raynarine's) Seatalk electronics, 
+    // the RX line is active low, so reset the wait count if the RX_MON is low.
+    if(digitalRead(RX_MON) == 0 ){
       cX = 0;                         
     }    
     delayMicroseconds(7);   
