@@ -10,6 +10,16 @@ GSLC_Helpers::GSLC_Helpers(gslc_tsGui* _pGui, gslc_tsElemRef** _ppElemRef)
 }
 
 ////
+// GSLC_RadioBtn_Helper 
+//
+GSLC_RadioBtn_Helper::GSLC_RadioBtn_Helper(gslc_tsGui* _pGui, gslc_tsElemRef** _ppElemRef) : GSLC_Helpers(_pGui, _ppElemRef) {}
+
+void GSLC_RadioBtn_Helper::setStatus(bool Status) {
+  gslc_ElemXCheckboxSetState(pGui, *ppElemRef, Status);
+}
+
+
+////
 // GSLC_TextBox_Helper 
 //
 GSLC_TextBox_Helper::GSLC_TextBox_Helper(gslc_tsGui* _pGui, gslc_tsElemRef** _ppElemRef) : GSLC_Helpers(_pGui, _ppElemRef) {}

@@ -109,8 +109,18 @@ public:
 };
 
 ////
-// GSLC_TextBox_Helper 
+// GSLC_RadioBtn_Helper 
 //
+class GSLC_RadioBtn_Helper : protected GSLC_Helpers
+{
+public:
+  GSLC_RadioBtn_Helper(gslc_tsGui* _pGui, gslc_tsElemRef** _ppElemRef);
+
+  ~GSLC_RadioBtn_Helper() {};
+
+  void setStatus(bool Status);
+ 
+};
 
 class GSLC_TextBox_Helper : protected GSLC_Helpers
 {

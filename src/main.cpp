@@ -73,7 +73,6 @@ TODO'S:
 // Headers to include
 // ------------------------------------------------
 #include <Arduino.h>
-#include <PinButton.h>
 #include <HeartBeat.h>
 
 #include "main.h"
@@ -102,14 +101,8 @@ typedef enum {
   APRCMD_BTN_APR_PORT_TACK = 7,
 } ST_APR_CMD;
 
-//create button objects
-// PinButton btnUp(BTN_UP);
-PinButton btnDown(BTN_DOWN);
-PinButton btnSelect(BTN_SELECT);
-
 // Heartbeat object for onboard LED 
 HeartBeatDiag HB;
-
 
 // Save some element references for direct access
 //<Save_References !Start!>
@@ -180,6 +173,10 @@ GSLC_TextBox_Helper txtWiFiDiag(&m_gui, &m_pElemTextboxWiFiDiag);
 // APR Page
 GSLC_Txt_Helper txtAprDisplay(&m_gui, &m_pElemTextAprDisplay);
 
+GSLC_RadioBtn_Helper  radioStandby(&m_gui, &m_pElemRadioButtonAprStandby);
+GSLC_RadioBtn_Helper  radioAuto(&m_gui, &m_pElemRadioButtonAprAuto);
+GSLC_RadioBtn_Helper  radioWind(&m_gui, &m_pElemRadioButtonAprWind);
+GSLC_RadioBtn_Helper  radioTrack(&m_gui, &m_pElemRadioButtonAprTrack);
 
 // Data Page
 GSLC_Txt_Helper txtDataSog(&m_gui, &m_pElemTextDataSog);
@@ -313,14 +310,6 @@ bool CbCheckbox(void* pvGui, void* pvElemRef, int16_t nSelId, bool bState)
   // Determine which element issued the callback
   switch (pElem->nId) {
 //<Checkbox Enums !Start!>
-    case E_ELEM_RADIO_APR_STANDBY:
-      break;
-    case E_ELEM_RADIO_APR_AUTO:
-      break;
-    case E_ELEM_RADIO_APR_WIND:
-      break;
-    case E_ELEM_RADIO_APR_TRACK:
-      break;
 
 //<Checkbox Enums !End!>
     default:
@@ -428,9 +417,6 @@ void loop()
   HB.beat();
   
   // do loop mainenance / updates
-  // btnUp.update();
-  btnDown.update();
-  btnSelect.update();
 
   APWiFi_Loop();
 
@@ -452,9 +438,40 @@ void loop()
       break;
   }
 
-  // Data page items.
+  // APR page items.
 
   txtAprDisplay.printf("%d Mag", hdg);
+
+  // set the virtual LED's to show the current AP mode
+  switch(apMode){
+    case 0:   // standby
+      radioStandby.setStatus(true);
+      radioAuto.setStatus(false);
+      radioWind.setStatus(false);
+      radioTrack.setStatus(false);
+      break;
+    case 1:   // Auto
+      radioStandby.setStatus(false);
+      radioAuto.setStatus(true);
+      radioWind.setStatus(false);
+      radioTrack.setStatus(false);
+      break;
+    case 2:   // Wind
+      radioStandby.setStatus(false);
+      radioAuto.setStatus(false);
+      radioWind.setStatus(true);
+      radioTrack.setStatus(false);
+      break;
+    case 3:   // Track
+      radioStandby.setStatus(false);
+      radioAuto.setStatus(false);
+      radioWind.setStatus(false);
+      radioTrack.setStatus(true);
+      break;
+  }
+  
+  // Data page items.
+
 /*
   float Randomness = random(0,360);
 
@@ -467,7 +484,7 @@ void loop()
   txtDataSog.printf("%.1f", sog);
   txtDataSow.printf("%.1f", stw);
   txtDataWind.printf("%.1f", aws);
-  txtDataWDir.printf("%d Mag", awa);
+  txtDataWDir.printf("%d M", awa);
   txtDataDepth.printf("%.1f", dpt);
 
   //if ((m_nCount++ % 5) == 0) txtWiFiDiag.printf("Step %d\n",m_nCount);
@@ -490,5 +507,5 @@ void loop()
   // ------------------------------------------------
   gslc_Update(&m_gui);
   
-  delay (200);
+//  delay (200);
 }

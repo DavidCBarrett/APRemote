@@ -433,28 +433,24 @@ void InitGUIslice_gen()
   pElemRef = gslc_ElemXCheckboxCreate(&m_gui,E_ELEM_RADIO_APR_STANDBY,E_PG_APR,&m_asXRadio9,
     (gslc_tsRect){34,66,20,20},true,GSLCX_CHECKBOX_STYLE_ROUND,GSLC_COL_GREEN,true);
   gslc_ElemSetGroup(&m_gui,pElemRef,E_GROUP1);
-  gslc_ElemXCheckboxSetStateFunc(&m_gui, pElemRef, &CbCheckbox);
   m_pElemRadioButtonAprStandby = pElemRef;
   
   // Create radio button E_ELEM_RADIO_APR_AUTO
   pElemRef = gslc_ElemXCheckboxCreate(&m_gui,E_ELEM_RADIO_APR_AUTO,E_PG_APR,&m_asXRadio10,
     (gslc_tsRect){84,66,20,20},true,GSLCX_CHECKBOX_STYLE_ROUND,GSLC_COL_GREEN,false);
   gslc_ElemSetGroup(&m_gui,pElemRef,E_GROUP1);
-  gslc_ElemXCheckboxSetStateFunc(&m_gui, pElemRef, &CbCheckbox);
   m_pElemRadioButtonAprAuto = pElemRef;
   
   // Create radio button E_ELEM_RADIO_APR_WIND
   pElemRef = gslc_ElemXCheckboxCreate(&m_gui,E_ELEM_RADIO_APR_WIND,E_PG_APR,&m_asXRadio11,
     (gslc_tsRect){134,66,20,20},true,GSLCX_CHECKBOX_STYLE_ROUND,GSLC_COL_GREEN,false);
   gslc_ElemSetGroup(&m_gui,pElemRef,E_GROUP1);
-  gslc_ElemXCheckboxSetStateFunc(&m_gui, pElemRef, &CbCheckbox);
   m_pElemRadioButtonAprWind = pElemRef;
   
   // Create radio button E_ELEM_RADIO_APR_TRACK
   pElemRef = gslc_ElemXCheckboxCreate(&m_gui,E_ELEM_RADIO_APR_TRACK,E_PG_APR,&m_asXRadio12,
     (gslc_tsRect){184,66,20,20},true,GSLCX_CHECKBOX_STYLE_ROUND,GSLC_COL_GREEN,false);
   gslc_ElemSetGroup(&m_gui,pElemRef,E_GROUP1);
-  gslc_ElemXCheckboxSetStateFunc(&m_gui, pElemRef, &CbCheckbox);
   m_pElemRadioButtonAprTrack = pElemRef;
   
   // Create E_ELEM_TEXT21 text label
@@ -499,9 +495,10 @@ void InitGUIslice_gen()
   gslc_ElemSetFillEn(&m_gui,pElemRef,false);
   gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_GREEN);
   
-  // Create E_ELEM_TEXT_APR_DISPLAY text label
-  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT_APR_DISPLAY,E_PG_APR,(gslc_tsRect){30,5,180,45},
-    (char*)"",0,E_BUILTIN20X32);
+  // Create E_ELEM_TEXT_APR_DISPLAY runtime modifiable text
+  static char m_sDisplayText39[7] = "360 M";
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT_APR_DISPLAY,E_PG_APR,(gslc_tsRect){40,5,160,45},
+    (char*)m_sDisplayText39,7,E_BUILTIN20X32);
   gslc_ElemSetTxtAlign(&m_gui,pElemRef,GSLC_ALIGN_MID_MID);
   gslc_ElemSetFrameEn(&m_gui,pElemRef,true);
   gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_WHITE,GSLC_COL_BLACK,GSLC_COL_BLACK);
@@ -570,7 +567,7 @@ void InitGUIslice_gen()
   
   // Create E_ELEM_TEXT_DATA_SOG runtime modifiable text
   static char m_sDisplayText33[7] = "22";
-  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT_DATA_SOG,E_PG_DATA,(gslc_tsRect){131,24,100,26},
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT_DATA_SOG,E_PG_DATA,(gslc_tsRect){131,24,110,26},
     (char*)m_sDisplayText33,7,E_BUILTIN15X24);
   gslc_ElemSetTxtAlign(&m_gui,pElemRef,GSLC_ALIGN_MID_MID);
   gslc_ElemSetTxtMargin(&m_gui,pElemRef,1);

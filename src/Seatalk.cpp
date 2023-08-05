@@ -12,7 +12,7 @@ QueueHandle_t queue;
 float rsa, stw, sog, xte, aws, dpt, dtw, vlw;    // rudder angle, speed through water, speed over ground, cross track error
                                                  // apparent wind speed, depth, dist to waypt, trip distance
 uint16_t hdg, cts, cog, awa, btw; // heading, course to steer, course over ground, apparent wind angle, bearing to waypt
-uint8_t apMode;              // autopilot mode
+uint8_t apMode;                                 // autopilot mode 0=Standby, 1=Auto, 2=Wind, 3=Track
 bool xteValid = false, btwValid = false;       // cross track error valid
 int wts;             // wind angle to steer
 int dir;              // direction to steer
@@ -37,9 +37,9 @@ void readST(void *pvParameters)
 {
   (void) pvParameters;
 
-  bool bCmd = false;   // set true if command found
-  uint8_t bufCount = 0;  // counter for no of bytes received
-  uint8_t cmdCount;      // number of bytes in command
+  bool bCmd = false;      // set true if command has been rxd, its bytes are being read, and processed.
+  uint8_t bufCount = 0;   // counter for no of bytes in the command received so far
+  uint8_t cmdCount;       // number of bytes expected in the command
   int i;
   uint16_t b;
   uint8_t stBuff[MAX_BUF_SIZE];
@@ -51,16 +51,19 @@ void readST(void *pvParameters)
   uint8_t old_apMode = 0;
   uint8_t cmd;
   uint16_t ui16;
-  bool working= false;
   uint16_t lastAWA;
 
   char szOut[100];
 
   Serial.printf("readST Task Stack High Water Mark = %d\n", uxTaskGetStackHighWaterMark(NULL));
 
-  mySerial.begin(4800, SWSERIAL_8S1, RX_IN, TX_OUT, false, 256, 256);
+  // buffer capacity = 20 bytes, with ISR capacity of 20*11 bits worth of timing data
+  mySerial.begin(4800, SWSERIAL_8S1, RX_IN, TX_OUT, false, 80, 880);
   
   while(true){
+
+    // "yield" for 1ms, enables to RTOS / watchdog to get a look in.
+     vTaskDelay( pdMS_TO_TICKS( 1 ) );
 
     if(xQueueReceive(queue, &cmd, 0)){
       sendCMD(cmd);
@@ -74,23 +77,22 @@ void readST(void *pvParameters)
 
       if (bCmd && (cmdCount > 0)){
         if((stBuff[0] == 0x86) && (cmd >= 0)){
-          // last sent command was AP request which has clashed so resend
+          // last sent command was AP request, we caused the clash so resend last autopilot command...
           Serial.println("Re-sending AP Command");
           sendCMD(cmd);
         }
         else {
-          Serial.print("Collision found: ");
-          Serial.print(b, HEX); Serial.print(" with "); Serial.println(stBuff[0], HEX);
+          // another unit caused the clash ... just report it 
+          Serial.printf("Collision found: cmd %X received while reading cmd: %X. Only bufCount: %u, read out of expected cmdCount:%u\r\n ", b, stBuff[0], bufCount, cmdCount);
+          Serial.printf("  stBuff so far: ");
           for(i = 0; i < bufCount; i++){
-            Serial.print(stBuff[i], HEX);
-            Serial.print(" ");
+            Serial.printf(" %X", stBuff[i]);
           }
-          (working) ? Serial.print(" W ") : Serial.print(" NW "); Serial.print(bufCount); Serial.print(cmdCount); 
-          Serial.print("\n\r");
+          Serial.printf("\r\n");
         }
       }
 
-      // reset counters for processing this command
+      // reset counters for reading this command
       bCmd = true;
       bufCount = 0;
       cmdCount = 0;
@@ -109,14 +111,13 @@ void readST(void *pvParameters)
       
       if((cmdCount == bufCount) && (cmdCount > 2)){
         // received all the chars for command so start processing it
-        working = true;
         
-        // DCB RX Test - print the command.
-        // for(i = 0; i < cmdCount; i++){
-        //   Serial.print(stBuff[i], HEX);
-        //   Serial.print(" ");
-        // }
-        // Serial.print("\n\r");
+        // print the command.
+        for(i = 0; i < cmdCount; i++){
+          Serial.print(stBuff[i], HEX);
+          Serial.print(" ");
+        }
+        Serial.print("\n\r");
 
         // interprett & action the command in the rx buffer
         switch (stBuff[0]) {
@@ -270,7 +271,7 @@ void readST(void *pvParameters)
             // stw = (xx[3] * 256 + xx[2]) / 10 K
             //
              stw = (stBuff[3] * 256 + stBuff[2]) / 10.0;
-       
+
           break;
           case 0 :  // depth
             //
@@ -411,36 +412,12 @@ void readST(void *pvParameters)
         bufCount= 0;
         bCmd = false;
         cmdCount = 0;
-        working = false;
+
        }
      }
    }
 }
 
-uint8_t CheckSum(const char *msg)
-{
-  uint8_t cs = 0, ln, i;
-  const char *n = msg + 1;
-
-  ln = strlen(n) - 1;   // length of string minus final * char
- 
-  while(ln--){
-    cs ^= (uint8_t)*n;
-    n++;
-  }
-  return(cs);
-  
-}
-
-//
-//  Add checksum to the string, then send it
-//
-void processNMEA(char *msg){
-  char b[10];
-  sprintf(b, "%02x\r\n", CheckSum(msg));
-  strcat(msg, b);
-  Serial.print(msg);
-}
 
 void sendCMD(int cmd){
 
@@ -454,18 +431,18 @@ uint8_t stCmd [10][4] = {
                 0x86, 0x21, 0x08, 0xf7,            // +10
                 0x86, 0x21, 0x21, 0xde,            // tack (-1 + -10)
                 0x86, 0x21, 0x03, 0xfc,            // track
-                0x86, 0x21, 0x22, 0xdd};           // tack (+1 + +10
+                0x86, 0x21, 0x22, 0xdd};           // tack (+1 + +10)
                 
   switch(cmd){
     case 0 :
-      txtDiagLog.printf("Web Standby\n");
+      txtDiagLog.printf("Standby\n");
       Serial.println("Standby ");
     break;
     case 1 :
       Serial.println("-1 ");
     break;
     case 2 : 
-      txtDiagLog.printf("Web Auto\n");
+      txtDiagLog.printf("Auto\n");
       Serial.println("Auto ");
     break;
     case 3 :
@@ -475,7 +452,7 @@ uint8_t stCmd [10][4] = {
       Serial.println("-10 ");
     break;
     case 5 :
-      txtDiagLog.printf("Web Wind\n");
+      txtDiagLog.printf("Wind\n");
       Serial.println("Wind ");
     break;
     case 6 :
@@ -485,13 +462,14 @@ uint8_t stCmd [10][4] = {
       Serial.println("Tack port ");
     break;
     case 8 :
-      txtDiagLog.printf("Web Track\n");
+      txtDiagLog.printf("Track\n");
       Serial.println("Track ");
     break;
     case 9 :
       Serial.println("Tack Stbd ");
     break;
     default :
+      Serial.println("Cmd out of range in seatack.cpp sendCMD()");
       return;
     break;
   }
@@ -529,18 +507,18 @@ void Seatalk_Init() {
   if(queue != NULL){
     Serial.println("Queue created");
   }
-
-  disableCore0WDT();   // disable watchdog timer for serial port handler
-   
+  
   // Now set up tasks to run independently.
+  // ESP32 core 0 is used for WiFI, and i've had problems with ST data recieved. 
+  // trying this task on core 1 (application core)
   xTaskCreatePinnedToCore(
     readST
     ,  "read SeaTalk"   // A name just for humans
     ,  2048 // This stack size can be checked & adjusted by reading the Stack Highwater
     ,  NULL
-    ,   3 // Priority, with 3 (config MAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
+    ,  configMAX_PRIORITIES-10 // Priority, with 3 (config MAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
     ,  NULL 
-    ,  0);
+    ,  1);
 
   Serial.println("Seatalk Init done");
 }
