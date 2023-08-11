@@ -204,13 +204,13 @@ void getData(AsyncWebServerRequest *request) {
 
   APdata = "{\"hdg\":" + String(hdg);
   APdata += ",\"cts\":" + String(cts);
-  if (apMode < 2) { 
+  if (apMode < 2) {                               // 0 & 1 - compass & Auto mode?
     APdata += ",\"hdgInfo\":\"&nbsp;\"";
   }
-  if (apMode == 2) {
+  if (apMode == 2) {                              // 2 - Wind mode
     APdata += ",\"hdgInfo\":\"" + sWTS + "\"";
   }
-  if (apMode == 3) { 
+  if (apMode == 3) {                              // 3 - Track mode
     APdata += ",\"hdgInfo\":\"" + sXTE + "\""; 
   } 
   APdata += ",\"rsa\":\"" + sRSA + "\"";

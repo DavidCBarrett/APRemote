@@ -48,7 +48,7 @@ Main changes:
 9. Adding Wifi Network scanning, using JSON to return list of SSID's to the web client for presentation in a drop down options list
   using https://github.com/bblanchon/ArduinoJson?utm_source=platformio&utm_medium=piohome library for JSON at server end in APWifi.cpp
 
-libraries used at Mar 20223 were:
+libraries used at Mar 2023 were:
 	plerup/EspSoftwareSerial@7.0.0
   esphome/AsyncTCP-esphome@^1.2.2
   esphome/ESPAsyncWebServer-esphome@^2.1.0
@@ -440,7 +440,7 @@ void loop()
 
   // APR page items.
 
-  txtAprDisplay.printf("%d Mag", hdg);
+  txtAprDisplay.printf("%d M", hdg);
 
   // set the virtual LED's to show the current AP mode
   switch(apMode){
@@ -486,6 +486,7 @@ void loop()
   txtDataWind.printf("%.1f", aws);
   txtDataWDir.printf("%d M", awa);
   txtDataDepth.printf("%.1f", dpt);
+  txtDataHdg.printf("%d M", hdg);
 
   //if ((m_nCount++ % 5) == 0) txtWiFiDiag.printf("Step %d\n",m_nCount);
 

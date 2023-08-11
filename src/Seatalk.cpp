@@ -421,7 +421,43 @@ void readST(void *pvParameters)
 
 void sendCMD(int cmd){
 
-uint8_t stCmd [10][4] = {
+// stCmd to send depends on the apMode.
+// stcmd [apMode][cmd button num from webui or tft][the 4 bytes in the cmd]
+uint8_t stCmd [4][10][4] = {
+// (0) Standby mode
+                0x86, 0x21, 0x02, 0xfd,            // standby
+                0x86, 0x21, 0x05, 0xfa,            // -1              - retract arm - codes needed
+                0x86, 0x21, 0x01, 0xfe,            // auto
+                0x86, 0x21, 0x07, 0xf8,            // +1              - extend arm - codes needed.
+                0x86, 0x21, 0x82, 0x7D,            // -10             - retract arm - changed to 82  7D, needs testing!
+                0x86, 0x21, 0x23, 0xdc,            // wind
+                0x86, 0x21, 0x83, 0x7C,            // +10             - extend arm - changed to 83  7C, needs testing!    
+                0x00, 0x00, 0x00, 0x00,            // tack (-1 + -10) - command meaningless - zero means dont send.
+                0x86, 0x21, 0x03, 0xfc,            // track
+                0x00, 0x00, 0x00, 0x00,            // tack (+1 + +10) - command meaningless - sero means dont send.
+// (1) Auto mode              
+                0x86, 0x21, 0x02, 0xfd,            // standby
+                0x86, 0x21, 0x05, 0xfa,            // -1
+                0x86, 0x21, 0x01, 0xfe,            // auto
+                0x86, 0x21, 0x07, 0xf8,            // +1
+                0x86, 0x21, 0x06, 0xf9,            // -10
+                0x86, 0x21, 0x23, 0xdc,            // wind
+                0x86, 0x21, 0x08, 0xf7,            // +10
+                0x86, 0x21, 0x21, 0xde,            // tack (-1 + -10)
+                0x86, 0x21, 0x03, 0xfc,            // track
+                0x86, 0x21, 0x22, 0xdd,            // tack (+1 + +10)
+// (2) Wind mode
+                0x86, 0x21, 0x02, 0xfd,            // standby
+                0x86, 0x21, 0x05, 0xfa,            // -1
+                0x86, 0x21, 0x01, 0xfe,            // auto
+                0x86, 0x21, 0x07, 0xf8,            // +1
+                0x86, 0x21, 0x06, 0xf9,            // -10
+                0x86, 0x21, 0x23, 0xdc,            // wind
+                0x86, 0x21, 0x08, 0xf7,            // +10
+                0x86, 0x21, 0x21, 0xde,            // tack (-1 + -10)
+                0x86, 0x21, 0x03, 0xfc,            // track
+                0x86, 0x21, 0x22, 0xdd,            // tack (+1 + +10)
+ // (3) Track mode 
                 0x86, 0x21, 0x02, 0xfd,            // standby
                 0x86, 0x21, 0x05, 0xfa,            // -1
                 0x86, 0x21, 0x01, 0xfe,            // auto
@@ -432,7 +468,7 @@ uint8_t stCmd [10][4] = {
                 0x86, 0x21, 0x21, 0xde,            // tack (-1 + -10)
                 0x86, 0x21, 0x03, 0xfc,            // track
                 0x86, 0x21, 0x22, 0xdd};           // tack (+1 + +10)
-                
+
   switch(cmd){
     case 0 :
       txtDiagLog.printf("Standby\n");
@@ -473,8 +509,8 @@ uint8_t stCmd [10][4] = {
       return;
     break;
   }
-  //DCB disabled due to corruption in debug display - it it this call?? 
-  send2ST(stCmd[cmd]);
+  
+  send2ST(stCmd[apMode][cmd]);
 }
 
 void send2ST(uint8_t cmd[]){
@@ -483,7 +519,8 @@ void send2ST(uint8_t cmd[]){
   for( int i = 0; i < 4; i++){
     (i == 0) ? mySerial.write(cmd[i], SWSERIAL_PARITY_MARK) : mySerial.write(cmd[i], SWSERIAL_PARITY_SPACE);
   }
-  delay(100);
+  // this delay isnt really necessary ... remove?? well i've reduced it from 100ms to 5 ms.
+  delay(5);
   digitalWrite(TX_LED, HIGH);
 }
 
@@ -494,8 +531,8 @@ void CheckBus ( void ){
     // Reset the wait time if the RX line is active. For DCB's (Raynarine's) Seatalk electronics, 
     // the RX line is active low, so reset the wait count if the RX_MON is low.
     if(digitalRead(RX_MON) == 0 ){
-      cX = 0;                         
-    }    
+      cX = 0;
+    }
     delayMicroseconds(7);   
   }
 }
