@@ -432,9 +432,9 @@ uint8_t stCmd [4][10][4] = {
                 0x86, 0x21, 0x82, 0x7D,            // -10             - retract arm - changed to 82  7D, needs testing!
                 0x86, 0x21, 0x23, 0xdc,            // wind
                 0x86, 0x21, 0x83, 0x7C,            // +10             - extend arm - changed to 83  7C, needs testing!    
-                0x00, 0x00, 0x00, 0x00,            // tack (-1 + -10) - command meaningless - zero means dont send.
+                0x00, 0x00, 0x00, 0x00,            // tack (-1 + -10) - command meaningless - zero means don't send.
                 0x86, 0x21, 0x03, 0xfc,            // track
-                0x00, 0x00, 0x00, 0x00,            // tack (+1 + +10) - command meaningless - sero means dont send.
+                0x00, 0x00, 0x00, 0x00,            // tack (+1 + +10) - command meaningless - zero means don't send.
 // (1) Auto mode              
                 0x86, 0x21, 0x02, 0xfd,            // standby
                 0x86, 0x21, 0x05, 0xfa,            // -1
@@ -469,6 +469,9 @@ uint8_t stCmd [4][10][4] = {
                 0x86, 0x21, 0x03, 0xfc,            // track
                 0x86, 0x21, 0x22, 0xdd};           // tack (+1 + +10)
 
+  // if the stcmd byte is zero, there is nothing to send so just return here.
+  if(stCmd[apMode][cmd] == 0) return;
+  
   switch(cmd){
     case 0 :
       txtDiagLog.printf("Standby\n");
