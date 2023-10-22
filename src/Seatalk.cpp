@@ -534,6 +534,7 @@ void CheckBus ( void ){
     // Reset the wait time if the RX line is active. For DCB's (Raynarine's) Seatalk electronics, 
     // the RX line is active low, so reset the wait count if the RX_MON is low.
     if(digitalRead(RX_MON) == 0 ){
+      // ** potentially blocking? Might get stuck here waiting for the ST bus to become free... ** //
       cX = 0;
     }
     delayMicroseconds(7);   
@@ -549,8 +550,7 @@ void Seatalk_Init() {
   }
   
   // Now set up tasks to run independently.
-  // ESP32 core 0 is used for WiFI, and i've had problems with ST data recieved. 
-  // trying this task on core 1 (application core)
+  // ESP32 core 0 is used for WiFI, Expressif recomend appication runs on Core 1.
   xTaskCreatePinnedToCore(
     readST
     ,  "read SeaTalk"   // A name just for humans
