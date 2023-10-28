@@ -312,7 +312,7 @@ void InitGUIslice_gen()
 
   // Create vertical scrollbar for textbox
   pElemRef = gslc_ElemXSliderCreate(&m_gui,E_TXTSCROLL_DIAG_LOG,E_PG_DIAG,&m_sTextScroll3,
-          (gslc_tsRect){10+218-2-20,40+4,20,190-8},0,100,0,5,true);
+          (gslc_tsRect){10+218-2-20,40+4,20,190-8},0,79,0,5,true);
   gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_BLUE,GSLC_COL_BLACK,GSLC_COL_BLUE);
   gslc_ElemXSliderSetPosFunc(&m_gui,pElemRef,&CbSlidePos);
   m_pTextSliderDiagLog = pElemRef;
@@ -567,7 +567,7 @@ void InitGUIslice_gen()
   
   // Create E_ELEM_TEXT_DATA_SOG runtime modifiable text
   static char m_sDisplayText33[7] = "22";
-  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT_DATA_SOG,E_PG_DATA,(gslc_tsRect){131,24,110,26},
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT_DATA_SOG,E_PG_DATA,(gslc_tsRect){131,24,100,26},
     (char*)m_sDisplayText33,7,E_BUILTIN15X24);
   gslc_ElemSetTxtAlign(&m_gui,pElemRef,GSLC_ALIGN_MID_MID);
   gslc_ElemSetTxtMargin(&m_gui,pElemRef,1);

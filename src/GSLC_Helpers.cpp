@@ -22,10 +22,16 @@ void GSLC_RadioBtn_Helper::setStatus(bool Status) {
 ////
 // GSLC_TextBox_Helper 
 //
-GSLC_TextBox_Helper::GSLC_TextBox_Helper(gslc_tsGui* _pGui, gslc_tsElemRef** _ppElemRef) : GSLC_Helpers(_pGui, _ppElemRef) {}
+GSLC_TextBox_Helper::GSLC_TextBox_Helper(gslc_tsGui* _pGui, gslc_tsElemRef** _ppElemRef, gslc_tsElemRef** _ppSliderRef) : GSLC_Helpers(_pGui, _ppElemRef) 
+{
+  ppSliderRef = _ppSliderRef;
+}
 
 void GSLC_TextBox_Helper::clear() {
   gslc_ElemXTextboxReset(pGui, *ppElemRef);
+
+  // also reset the slider / scrollbar.
+  gslc_ElemXSliderSetPos(pGui, *ppSliderRef, 0);
 }
 
 // A printf for GSLC Textbox elements, max 100 chars
@@ -39,7 +45,23 @@ void GSLC_TextBox_Helper::printf(const char* format, ...){
   va_end( args );
 
   // Only output if we are in play mode, otherwize lines are discarded.
-  if (getTextOutStatus()== TxtOutStatusEnum::TxtOutPlay)  gslc_ElemXTextboxAdd(pGui, *ppElemRef, cDisp); 
+  if (getTextOutStatus()== TxtOutStatusEnum::TxtOutPlay){
+      gslc_ElemXTextboxAdd(pGui, *ppElemRef, cDisp); 
+
+    // Get textbox extended data...
+    gslc_tsElem*      pElem = gslc_GetElemFromRef(pGui,*ppElemRef);
+    gslc_tsXTextbox*  pBox = (gslc_tsXTextbox*)(pElem->pXData);
+
+    // DCB if the line added scrolls off the bottom of the visible screen, scrollup
+    if (pBox->nBufPosY >= pBox->nScrollPos+pBox->nWndRows) {
+      // update the scroll position...
+      pBox->nScrollPos = pBox->nBufPosY-pBox->nWndRows+1;
+      gslc_ElemXSliderSetPos(pGui,*ppSliderRef, pBox->nScrollPos);
+
+      // Ensure all rows get redrawn
+      pBox->nRedrawRow = XTEXTBOX_REDRAW_ALL;
+    }
+  }
 };
 
 ////
