@@ -72,7 +72,7 @@ void onWebSocketEvent(AsyncWebSocket       *server,     //
 
       if(doc["Msg"]=="AprButtonPress") {
         newCmd = atoi(doc["MsgBody"]["ButtonID"]);
-        xQueueSend(queue, &newCmd, portMAX_DELAY);
+        xQueueSend(queue, &newCmd, 0);
         break;
       }
       else if(doc["Msg"]=="saveWiFiCredentials") {
