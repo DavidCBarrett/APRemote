@@ -23,7 +23,7 @@ SoftwareSerial mySerial;
 
 // Function Prototypes ...
 void sendCMD(int cmd);
-void CheckBus(void);
+boolean CheckBus(void);
 void send2ST(uint8_t cmd[]);
 
 //
@@ -517,18 +517,24 @@ uint8_t stCmd [4][10][4] = {
 }
 
 void send2ST(uint8_t cmd[]){
-  CheckBus();
-  digitalWrite(TX_LED, LOW );
-  for( int i = 0; i < 4; i++){
-    (i == 0) ? mySerial.write(cmd[i], SWSERIAL_PARITY_MARK) : mySerial.write(cmd[i], SWSERIAL_PARITY_SPACE);
+  if(CheckBus() == true){
+    // We have the bus - send the cmd
+    for( int i = 0; i < 4; i++){
+      (i == 0) ? mySerial.write(cmd[i], SWSERIAL_PARITY_MARK) : mySerial.write(cmd[i], SWSERIAL_PARITY_SPACE);
+    }
+    // allow a delay between commands we send - to stop us flodding the bus and give other seatalk units a chance.
+    delay(100);
   }
-  // this delay isnt really necessary ... remove?? well i've reduced it from 100ms to 5 ms.
-  delay(5);
-  digitalWrite(TX_LED, HIGH);
-}
+  else{
+    // We timed out waiting for the bus. dump command and move on...
+    Serial.printf("Timed out Waiting for ST bus.\n\r");
+  }
+
+ }
 
 // wait line idle for 7 x 256 micro secs (1.8mS) 
-void CheckBus ( void ){
+boolean CheckBus ( void ){
+long waittime = 0;
 
   for(int cX = 0; cX < 255; cX++ ){
     // Reset the wait time if the RX line is active. For DCB's (Raynarine's) Seatalk electronics, 
@@ -537,8 +543,16 @@ void CheckBus ( void ){
       // ** potentially blocking? Might get stuck here waiting for the ST bus to become free... ** //
       cX = 0;
     }
-    delayMicroseconds(7);   
+    waittime +=7;
+    delayMicroseconds(7);
+
+    // if we have been waiting longer than 1 second for the bus, then give up!
+    if(waittime > 1000000/7){
+      return false;
+    }
   }
+  // the bus has been inactive for more than 255*7 u seconds (1.785ms)
+  return true;
 }
 
 void Seatalk_Init() {
