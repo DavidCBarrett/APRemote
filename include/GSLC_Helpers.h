@@ -122,16 +122,24 @@ public:
  
 };
 
+//
+// GSLC_TextBox_Helper assumes in GUISliceBuilder control properties "DisplayRows" is bigger than the Textboxes nWndRows and scrolling is enabled. 
+// in GUISliceBuilder, the "scroll bar max" value must be = DisplayRows-nWndRows.
+// Note nWndRows is calculated by GUISlice at runtime, best to find out what it is through debugging.
+// In the scroll bar handler (actually a slider), the same "scroll bar max" should be used. i.e. in main.cpp, CbSlidePos handler, in call to 
+// gslc_ElemXTextboxScrollSet, set parameter nScrollMax to "scroll bar max".
+// 
 class GSLC_TextBox_Helper : protected GSLC_Helpers
 {
 public:
   typedef enum {TxtOutPlay, TxtOutPaused} TxtOutStatusEnum;
 
 private:
+  gslc_tsElemRef** ppSliderRef;
   TxtOutStatusEnum TxtOutStatus = TxtOutStatusEnum::TxtOutPlay;
 
 public:
-  GSLC_TextBox_Helper(gslc_tsGui* _pGui, gslc_tsElemRef** _ppElemRef);
+  GSLC_TextBox_Helper(gslc_tsGui* _pGui, gslc_tsElemRef** _ppElemRef, gslc_tsElemRef** _ppSliderRef);
 
   ~GSLC_TextBox_Helper() {};
 
