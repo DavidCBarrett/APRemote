@@ -83,6 +83,8 @@ TODO'S:
 #include "ApRemote_GSLC.h"
 #include "GSLC_Helpers.h"
 #include "EnumsToStrings.h"
+#include "Beeper.h"
+#include "TFTBacklight.h"
 
 // ------------------------------------------------
 // Program Globals
@@ -103,6 +105,9 @@ typedef enum {
 
 // Heartbeat object for onboard LED 
 HeartBeatDiag HB;
+
+Beeper Beeps (BEEPERPIN);
+TFTBacklight AprTFTBacklight (TFTBACKLIGHTPIN);
 
 // Save some element references for direct access
 //<Save_References !Start!>
@@ -160,7 +165,7 @@ static int16_t DebugOut(char ch) { if (ch == (char)'\n') Serial.println(""); els
 GSLC_Txt_Helper txtBaseWiFiStrength(&m_gui, &m_pElemTxtBaseWiFiStrength);
 
 // DIAG Page
-GSLC_TextBox_Helper txtDiagLog(&m_gui, &m_pElemTextboxDiagLog);
+GSLC_TextBox_Helper txtDiagLog(&m_gui, &m_pElemTextboxDiagLog, &m_pTextSliderDiagLog);
 GSLC_Txt_Helper txtDiagStatus(&m_gui, &m_pElemDiagStatus);
 
 // WiFi Page
@@ -168,7 +173,7 @@ GSLC_Txt_Helper txtWiFiStatus(&m_gui, &m_pElemTextWifiStatus);
 GSLC_Txt_Helper txtWiFiSSID(&m_gui, &m_pElemTextWifiSSID);
 GSLC_Txt_Helper txtWiFiIp(&m_gui, &m_pElemTextWifiIp);
 GSLC_Txt_Helper txtWiFiClient(&m_gui, &m_pElemTextWifiClientSSID);
-GSLC_TextBox_Helper txtWiFiDiag(&m_gui, &m_pElemTextboxWiFiDiag);
+GSLC_TextBox_Helper txtWiFiDiag(&m_gui, &m_pElemTextboxWiFiDiag, &m_pTextSliderWifiDiag);
 
 // APR Page
 GSLC_Txt_Helper txtAprDisplay(&m_gui, &m_pElemTextAprDisplay);
@@ -198,21 +203,27 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
   gslc_tsElem*    pElem    = gslc_GetElemFromRef(pGui,pElemRef);
 
   uint8_t cmd;
+  BaseType_t QueueSendResult=pdTRUE;
+
 
   if ( eTouch == GSLC_TOUCH_UP_IN ) {
     // From the element's ID we can determine which button was pressed.
     switch (pElem->nId) {
 //<Button Enums !Start!>
       case E_ELEM_BTN_BASE_DIAG:
+        AprTFTBacklight.SetBacklightBrightness(25);
         gslc_SetPageCur(&m_gui, E_PG_DIAG);
         break;
       case E_ELEM_BTN_BASE_APR:
+        AprTFTBacklight.SetBacklightBrightness(64);
         gslc_SetPageCur(&m_gui, E_PG_APR);
         break;
       case E_ELEM_BTN_BASE_WIFI:
+        AprTFTBacklight.SetBacklightBrightness(128);
         gslc_SetPageCur(&m_gui, E_PG_WIFI);
         break;
       case E_ELEM_BTN_BASE_DATA:
+        AprTFTBacklight.SetBacklightBrightness(255);
         gslc_SetPageCur(&m_gui, E_PG_DATA);
         break;
       case E_ELEM_BTN_DIAG_PLAY:
@@ -227,46 +238,46 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
       case E_ELEM_BTN_APR_STDBY:
         txtDiagLog.printf("TFT Standby\n");
         cmd = ST_APR_CMD::APRCMD_APR_STDBY;
-        xQueueSend(queue, &cmd, portMAX_DELAY);
+        QueueSendResult=xQueueSend(queue, &cmd, 0);
         break;
       case E_ELEM_BTN_APR_AUTO:
         cmd = ST_APR_CMD::APRCMD_BTN_APR_AUTO;
-        xQueueSend(queue, &cmd, portMAX_DELAY);
+        QueueSendResult=xQueueSend(queue, &cmd, 0);
         txtDiagLog.printf("TFT Auto\n");
         break;
       case E_ELEM_BTN_APR_WIND:
         cmd = ST_APR_CMD::APRCMD_BTN_APR_WIND;
-        xQueueSend(queue, &cmd, portMAX_DELAY);
+        QueueSendResult=xQueueSend(queue, &cmd, 0);
         txtDiagLog.printf("TFT Wind\n");
         break;
       case E_ELEM_BTN_APR_TRACK:
         cmd = ST_APR_CMD::APRCMD_BTN_APR_TRACK;
-        xQueueSend(queue, &cmd, portMAX_DELAY);
+        QueueSendResult=xQueueSend(queue, &cmd, 0);
         txtDiagLog.printf("TFT Track\n");
         break;
       case E_ELEM_BTN_APR_PLUS_ONE:
         cmd = ST_APR_CMD::APRCMD_BTN_APR_PLUS_ONE;
-        xQueueSend(queue, &cmd, portMAX_DELAY);
+        QueueSendResult=xQueueSend(queue, &cmd, 0);
         break;
       case E_ELEM_BTN_APR_PLUS_TEN:
         cmd = ST_APR_CMD::APRCMD_BTN_APR_PLUS_TEN;
-        xQueueSend(queue, &cmd, portMAX_DELAY);
+        QueueSendResult=xQueueSend(queue, &cmd, 0);
         break;
       case E_ELEM_BTN_APR_STBD_TACK:
         cmd = ST_APR_CMD::APRCMD_BTN_APR_STBD_TACK;
-        xQueueSend(queue, &cmd, portMAX_DELAY);
+        QueueSendResult=xQueueSend(queue, &cmd, 0);
         break;
       case E_ELEM_BTN_APR_MINUS_ONE:
         cmd = ST_APR_CMD::APRCMD_BTN_APR_MINUS_ONE;
-        xQueueSend(queue, &cmd, portMAX_DELAY);
+        QueueSendResult=xQueueSend(queue, &cmd, 0);
         break;
       case E_ELEM_BTN_APR_MINUS_TEN:
         cmd = ST_APR_CMD::APRCMD_BTN_APR_MINUS_TEN;
-        xQueueSend(queue, &cmd, portMAX_DELAY);
+        QueueSendResult=xQueueSend(queue, &cmd, 0);
         break;
       case E_ELEM_BTN_APR_PORT_TACK:
         cmd = ST_APR_CMD::APRCMD_BTN_APR_PORT_TACK;
-        xQueueSend(queue, &cmd, portMAX_DELAY);
+        QueueSendResult=xQueueSend(queue, &cmd, 0);
         break;
       case E_ELEM_BTN_WIFI_CONNECT:
         wm.OnUserConnectRequest();
@@ -290,7 +301,15 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
       default:
         break;
     }
+
+    if (QueueSendResult==pdTRUE) {
+      Beeps.ShortBeep();
+    }
+    else{
+      Beeps.FailBeep();
+    }
   }
+ 
   return true;
 }
 // Checkbox / radio callbacks
@@ -338,15 +357,15 @@ bool CbSlidePos(void* pvGui,void* pvElemRef,int16_t nPos)
   switch (pElem->nId) {
 //<Slider Enums !Start!>
     case E_TXTSCROLL_DIAG_LOG:
-      // Fetch the slider position
+      // Fetch the slider position & set text box scroll posn with it.
       nVal = gslc_ElemXSliderGetPos(pGui,m_pTextSliderDiagLog);
-      gslc_ElemXTextboxScrollSet(pGui,m_pElemTextboxDiagLog,nVal,100);  // DCB: use slider position to set text box scroll posn
+      gslc_ElemXTextboxScrollSet(pGui,m_pElemTextboxDiagLog,nVal,100-21);  // 100 buffer row - 21 display rows (from debugging)
       break;
 
     case E_TXTSCROLL_WIFI_DIAG:
-      // Fetch the slider position
+      // Fetch the slider position & set text box scroll posn with it.
       nVal = gslc_ElemXSliderGetPos(pGui,m_pTextSliderWifiDiag);
-      gslc_ElemXTextboxScrollSet(pGui,m_pElemTextboxWiFiDiag,nVal,100);  // DCB: use slider position to set text box scroll posn
+      gslc_ElemXTextboxScrollSet(pGui,m_pElemTextboxWiFiDiag,nVal,50-6);  // 50 buffer row - 6 display rows (from a UI row count)
       break;
 //<Slider Enums !End!>
     default:
@@ -374,14 +393,14 @@ void setup()
   // Initialize
   // ------------------------------------------------
   pinMode(RX_MON, INPUT);
-  pinMode(RX_LED, OUTPUT_OPEN_DRAIN);
-  pinMode(TX_LED, OUTPUT_OPEN_DRAIN);
-
-  digitalWrite(TX_LED, HIGH);   // start with LED off.
-
+ 
   HB.begin(LED_PIN, 1);  // PIN ID and frequency 3
   HB.setDutyCycle(17.53);
 
+  Beeps.Setup();
+
+  AprTFTBacklight.Setup();
+  AprTFTBacklight.SetBacklightBrightness(128);
 
   wm.setup();
 
@@ -403,9 +422,6 @@ void setup()
 
   txtDiagLog.printf("Setup Done.\n");
 }
-
-// Free-running counter for display
-unsigned int m_nCount = 0;
 
 // -----------------------------------
 // Main event loop
@@ -488,25 +504,9 @@ void loop()
   txtDataDepth.printf("%.1f", dpt);
   txtDataHdg.printf("%d M", hdg);
 
-  //if ((m_nCount++ % 5) == 0) txtWiFiDiag.printf("Step %d\n",m_nCount);
-
-  // Slider / Scroll bar updates
-  // Adjust the range of the slider based on how full the char buffer attached to the relevan text box is 
-  // just for the WiFi Diag text box for now...
-
-  // gslc_tsElemRef* pElemRef  = (gslc_tsElemRef*)(m_pElemTextboxDiagLog);
-  // gslc_tsElem*    pElem     = gslc_GetElemFromRef(&m_gui,pElemRef);
-  // // Fetch the element's extended data structure
-  // gslc_tsXTextbox* pBox;
-  // pBox = (gslc_tsXTextbox*)(pElem->pXData);
-
-  // txtDiagLog.printf("BY= %u\n", pBox->nBufPosY);
-  // txtDiagStatus.printf("WRS= %u, SP= %u\n", pBox->nWndRowStart, pBox->nScrollPos);
-
   // ------------------------------------------------
   // Periodically call GUIslice update function
   // ------------------------------------------------
   gslc_Update(&m_gui);
-  
-//  delay (200);
+
 }
